@@ -45,6 +45,7 @@ def list_geotiff_dive(dive_path):
     pattern_lc = re.compile("^PR_([0-9]{8})_([0-9]{6})_([0-9]{3})_LC16.tif$")  # left right images
     pattern_fc = re.compile("^PR_([0-9]{8})_([0-9]{6})_([0-9]{3})_FC16.tif$")  # fore images
     pattern_ac = re.compile("^PR_([0-9]{8})_([0-9]{6})_([0-9]{3})_AC16.tif$")  # aft images
+    pattern_rm = re.compile("^PR_([0-9]{8})_([0-9]{6})_([0-9]{3})_RM16.tif$")  # rear(? only one dive under WA201403 has these...) images
 
     for file in os.listdir(geotiff_dir_dive_path):
         if pattern_lc.match(file) is not None:
@@ -52,6 +53,8 @@ def list_geotiff_dive(dive_path):
         elif pattern_fc.match(file) is not None:
             geotiff_list.append(os.path.join(geotiff_dir_dive_path, file))
         elif pattern_ac.match(file) is not None:
+            geotiff_list.append(os.path.join(geotiff_dir_dive_path, file))
+        elif pattern_rm.match(file) is not None:
             geotiff_list.append(os.path.join(geotiff_dir_dive_path, file))
 
     geotiff_list.sort()
@@ -417,9 +420,9 @@ def match_csv_track_info_with_geotiff(csv_track_data, geotiff_metadata, campaign
     """
     for row, rest in enumerate(geotiff_metadata):
         try:
-            if 'AC16' in geotiff_metadata[row]['image_filename'] or 'RC16' in geotiff_metadata[row]['image_filename']:
+            if 'AC16' in geotiff_metadata[row]['image_filename'] or 'RC16' in geotiff_metadata[row]['image_filename'] or 'RM16' in geotiff_metadata[row]['image_filename']:
                 idx = csv_track_data['rightimage'].index(geotiff_metadata[row]['image_filename'])
-            elif 'FC16' in geotiff_metadata[row]['image_filename'] or 'LC16' in geotiff_metadata[row]['image_filename']:
+            elif 'FC16' in geotiff_metadata[row]['image_filename'] or 'LC16' in geotiff_metadata[row]['image_filename'] or 'RM16' in geotiff_metadata[row]['image_filename']:
                 idx = csv_track_data['leftimage'].index(geotiff_metadata[row]['image_filename'])
 
             geotiff_metadata[row]['altitude_sensor'] = csv_track_data['altitude'][idx]
@@ -844,7 +847,7 @@ def process_campaign(campaign_path, create_thumbnail=True, push_data_to_incoming
         csv_track_data   = read_track_csv(dive_path)
         geotiff_list     = list_geotiff_dive(dive_path)
         if not geotiff_list:
-            raise Exception('No Geotiffs file matched the following patterns *AC16* *FC16* *LC16* *RC16*')
+            raise Exception('No Geotiffs file matched the following patterns *AC16* *FC16* *LC16* *RC16* *RM16*')
 
         # order is important, creating geotiff_metadata list of dict, containing
         # matching data between images, track file and netcdf files

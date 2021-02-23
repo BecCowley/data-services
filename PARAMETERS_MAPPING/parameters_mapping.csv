@@ -306,62 +306,62 @@ ANMN;AM;real-time;XCO2_AIR;31;513;;1
 ANMN;AM;real-time;XCO2_AIR_standard_deviation;31;513;;1
 ANMN;AM;real-time;SSTI;13;429;;1
 ANMN;AM;real-time;SSS;12;481;;1
-ABOS;;timeseries;LATITUDE;4;440;Degrees North;1
-ABOS;;timeseries;LONGITUDE;5;440;Degrees East;1
-ABOS;;timeseries;DEPTH;19;431;;1
-ABOS;;timeseries;TEMP;13;429;;1
-ABOS;;timeseries;CNDC;2;483;;1
-ABOS;;timeseries;PSAL;12;481;;1
-ABOS;;timeseries;PRES;23;445;;1
-ABOS;;timeseries;PRES_REL;24;445;;1
-ABOS;SOFS;surface properties;LATITUDE;4;440;Degrees North;4
-ABOS;SOFS;surface properties;LONGITUDE;5;440;Degrees East;4
-ABOS;SOFS;surface properties;TEMP;13;429;;4
-ABOS;SOFS;surface properties;TEMP_2;13;429;;4
-ABOS;SOFS;surface properties;CNDC;2;483;;4
-ABOS;SOFS;surface properties;CNDC_2;2;483;;4
-ABOS;SOFS;surface properties;PSAL;12;481;;4
-ABOS;SOFS;surface properties;PSAL_2;12;481;;4
-ABOS;SOFS;surface properties;AIRT;1;429;;4
-ABOS;SOFS;surface properties;AIRT_2;1;429;;4
-ABOS;SOFS;surface properties;ATMP;10;511;;4
-ABOS;SOFS;surface properties;ATMP_2;10;511;;4
-ABOS;SOFS;surface properties;PL_CMP;74;441;;4
-ABOS;SOFS;surface properties;PL_CMP_2;74;441;;4
-ABOS;SOFS;surface properties;RELH;14;446;;4
-ABOS;SOFS;surface properties;RELH_2;14;446;;4
-ABOS;SOFS;surface properties;RAIN_AMOUNT;38;507;;4
-ABOS;SOFS;surface properties;RAIN_AMOUNT_2;38;507;;4
-ABOS;SOFS;surface properties;SW;40;442;;4
-ABOS;SOFS;surface properties;SW_2;40;442;;4
-ABOS;SOFS;surface properties;LW;37;442;;4
-ABOS;SOFS;surface properties;LW_2;37;442;;4
-ABOS;SOFS;surface properties;UWND;57;433;;4
-ABOS;SOFS;surface properties;UWND_2;57;433;;4
-ABOS;SOFS;surface properties;VWND;58;433;;4
-ABOS;SOFS;surface properties;VWND_2;58;433;;4
-ABOS;SOFS;surface properties;WDIR;40;441;Clockwise from true north;4
-ABOS;SOFS;surface properties;WDIR_2;40;441;Clockwise from true north;4
-ABOS;SOFS;surface properties;WSPD;9;433;;4
-ABOS;SOFS;surface properties;WSPD_2;9;433;;4
-ABOS;SOFS;surface properties;WSPD_3;9;433;;4
-ABOS;SOFS;surface properties;WSPD_4;9;433;;4
-ABOS;SOFS;surface fluxes;LATITUDE;4;440;Degrees North;4
-ABOS;SOFS;surface fluxes;LONGITUDE;5;440;Degrees East;4
-ABOS;SOFS;surface fluxes;WSPD;9;433;;4
-ABOS;SOFS;surface fluxes;ATMP;10;506;;4
-ABOS;SOFS;surface fluxes;AIRT;1;429;;4
-ABOS;SOFS;surface fluxes;AIRT1_5M;1;429;;4
-ABOS;SOFS;surface fluxes;AIRT2_0M;1;429;;4
-ABOS;SOFS;surface fluxes;PL_CMP;74;441;;4
-ABOS;SOFS;surface fluxes;RELH;14;446;;4
-ABOS;SOFS;surface fluxes;RELH1_5M;14;446;;4
-ABOS;SOFS;surface fluxes;RELH2_0M;14;446;;4
-ABOS;SOFS;surface fluxes;TEMP;13;429;;4
-ABOS;SOFS;surface fluxes;RAIN_AMOUNT;38;507;;4
-ABOS;SOFS;surface fluxes;SW;40;442;;4
-ABOS;SOFS;surface fluxes;LW;37;442;;4
-ABOS;SOFS;surface fluxes;TAU;42;594;;4
+DWM;;timeseries;LATITUDE;4;440;Degrees North;1
+DWM;;timeseries;LONGITUDE;5;440;Degrees East;1
+DWM;;timeseries;DEPTH;19;431;;1
+DWM;;timeseries;TEMP;13;429;;1
+DWM;;timeseries;CNDC;2;483;;1
+DWM;;timeseries;PSAL;12;481;;1
+DWM;;timeseries;PRES;23;445;;1
+DWM;;timeseries;PRES_REL;24;445;;1
+DWM;SOFS;surface properties;LATITUDE;4;440;Degrees North;4
+DWM;SOFS;surface properties;LONGITUDE;5;440;Degrees East;4
+DWM;SOFS;surface properties;TEMP;13;429;;4
+DWM;SOFS;surface properties;TEMP_2;13;429;;4
+DWM;SOFS;surface properties;CNDC;2;483;;4
+DWM;SOFS;surface properties;CNDC_2;2;483;;4
+DWM;SOFS;surface properties;PSAL;12;481;;4
+DWM;SOFS;surface properties;PSAL_2;12;481;;4
+DWM;SOFS;surface properties;AIRT;1;429;;4
+DWM;SOFS;surface properties;AIRT_2;1;429;;4
+DWM;SOFS;surface properties;ATMP;10;511;;4
+DWM;SOFS;surface properties;ATMP_2;10;511;;4
+DWM;SOFS;surface properties;PL_CMP;74;441;;4
+DWM;SOFS;surface properties;PL_CMP_2;74;441;;4
+DWM;SOFS;surface properties;RELH;14;446;;4
+DWM;SOFS;surface properties;RELH_2;14;446;;4
+DWM;SOFS;surface properties;RAIN_AMOUNT;38;507;;4
+DWM;SOFS;surface properties;RAIN_AMOUNT_2;38;507;;4
+DWM;SOFS;surface properties;SW;40;442;;4
+DWM;SOFS;surface properties;SW_2;40;442;;4
+DWM;SOFS;surface properties;LW;37;442;;4
+DWM;SOFS;surface properties;LW_2;37;442;;4
+DWM;SOFS;surface properties;UWND;57;433;;4
+DWM;SOFS;surface properties;UWND_2;57;433;;4
+DWM;SOFS;surface properties;VWND;58;433;;4
+DWM;SOFS;surface properties;VWND_2;58;433;;4
+DWM;SOFS;surface properties;WDIR;40;441;Clockwise from true north;4
+DWM;SOFS;surface properties;WDIR_2;40;441;Clockwise from true north;4
+DWM;SOFS;surface properties;WSPD;9;433;;4
+DWM;SOFS;surface properties;WSPD_2;9;433;;4
+DWM;SOFS;surface properties;WSPD_3;9;433;;4
+DWM;SOFS;surface properties;WSPD_4;9;433;;4
+DWM;SOFS;surface fluxes;LATITUDE;4;440;Degrees North;4
+DWM;SOFS;surface fluxes;LONGITUDE;5;440;Degrees East;4
+DWM;SOFS;surface fluxes;WSPD;9;433;;4
+DWM;SOFS;surface fluxes;ATMP;10;506;;4
+DWM;SOFS;surface fluxes;AIRT;1;429;;4
+DWM;SOFS;surface fluxes;AIRT1_5M;1;429;;4
+DWM;SOFS;surface fluxes;AIRT2_0M;1;429;;4
+DWM;SOFS;surface fluxes;PL_CMP;74;441;;4
+DWM;SOFS;surface fluxes;RELH;14;446;;4
+DWM;SOFS;surface fluxes;RELH1_5M;14;446;;4
+DWM;SOFS;surface fluxes;RELH2_0M;14;446;;4
+DWM;SOFS;surface fluxes;TEMP;13;429;;4
+DWM;SOFS;surface fluxes;RAIN_AMOUNT;38;507;;4
+DWM;SOFS;surface fluxes;SW;40;442;;4
+DWM;SOFS;surface fluxes;LW;37;442;;4
+DWM;SOFS;surface fluxes;TAU;42;594;;4
 SRS;;altimetry;LATITUDE;4;440;Degrees North;1
 SRS;;altimetry;LONGITUDE;5;440;Degrees East;1
 SRS;;altimetry;DEPTH;19;431;;1
@@ -452,13 +452,13 @@ SOOP;ASF;MFT;LW_NET;130;442;;4
 SOOP;ASF;MFT;SW_NET;131;442;;4
 SOOP;ASF;MFT;HEAT_NET;132;442;;4
 SOOP;ASF;MFT;MASS_NET;133;593;;4
-ABOS;SOFS;surface fluxes;HS;128;442;;4
-ABOS;SOFS;surface fluxes;HL;127;442;;4
-ABOS;SOFS;surface fluxes;H_RAIN;129;442;;4
-ABOS;SOFS;surface fluxes;LW_NET;130;442;;4
-ABOS;SOFS;surface fluxes;SW_NET;131;442;;4
-ABOS;SOFS;surface fluxes;HEAT_NET;132;442;;4
-ABOS;SOFS;surface fluxes;MASS_NET;133;593;;4
+DWM;SOFS;surface fluxes;HS;128;442;;4
+DWM;SOFS;surface fluxes;HL;127;442;;4
+DWM;SOFS;surface fluxes;H_RAIN;129;442;;4
+DWM;SOFS;surface fluxes;LW_NET;130;442;;4
+DWM;SOFS;surface fluxes;SW_NET;131;442;;4
+DWM;SOFS;surface fluxes;HEAT_NET;132;442;;4
+DWM;SOFS;surface fluxes;MASS_NET;133;593;;4
 SOOP;CO2;NRT;LATITUDE;4;440;Degrees North;0
 SOOP;CO2;NRT;LONGITUDE;5;440;Degrees East;0
 SOOP;CO2;NRT;TEMP_raw;13;429;;0
