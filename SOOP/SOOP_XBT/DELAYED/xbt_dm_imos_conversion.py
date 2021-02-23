@@ -744,17 +744,20 @@ def generate_xbt_nc(gatts_ed, data_ed, annex_ed, output_folder, *argv):
                 output_netcdf_obj["HISTORY_DATE"][idx] = history_date_obj[idx]
                 output_netcdf_obj["HISTORY_PARAMETER"][idx] = annex_ed['act_parm'][idx]
                 output_netcdf_obj["HISTORY_PREVIOUS_VALUE"][idx] = annex_ed['previous_val'][idx]
-                output_netcdf_obj["HISTORY_START_DEPTH"][idx] = annex_ed['aux_id'][idx]
                 output_netcdf_obj["HISTORY_QC_FLAG"][idx] = annex_ed['act_code'][idx]
 
                 #QC,RE, TE, PE and EF flag applies to entire profile
                 res = annex_ed['act_code'][idx] in act_code_full_profile
                 if res:
+                    output_netcdf_obj["HISTORY_START_DEPTH"][idx] = vals[0]
                     output_netcdf_obj["HISTORY_STOP_DEPTH"][idx] = output_netcdf_obj.geospatial_vertical_max
                     continue
                     
                 # Find stop depth depending on which flags are in place
-                start_idx =  np.int_(np.where(vals == annex_ed['aux_id'][idx]))
+                start_idx =  np.int_(np.where(np.logical_and(vals <= annex_ed['aux_id'][idx]+0.1, vals >= annex_ed['aux_id'][idx]-0.1)))
+                # make the start depth equal to actual depth in depth array
+                output_netcdf_obj["HISTORY_START_DEPTH"][idx] = vals[start_idx]
+
                 #find next deepest flag depth
                 stop_depth = [i for i in annex_ed['aux_id'] if i > annex_ed['aux_id'][idx]]
                 # if the flag is in act_code_single_point list, then stop depth is same as start
@@ -767,7 +770,7 @@ def generate_xbt_nc(gatts_ed, data_ed, annex_ed, output_folder, *argv):
                 res = annex_ed['act_code'][idx] in act_code_next_flag
                 if res:
                     if stop_depth:  # if not the last flag, next greatest depth
-                        stop_idx =  np.int_(np.where(np.round(vals,2) == np.round(stop_depth[0],2)))
+                        stop_idx =  np.int_(np.where(np.logical_and(vals <= stop_depth[0]+0.1, vals >= stop_depth[0]-0.1)))
                         stopdepth = vals[stop_idx-1]
                         output_netcdf_obj["HISTORY_STOP_DEPTH"][idx] = stopdepth
                     else:
@@ -786,7 +789,7 @@ def generate_xbt_nc(gatts_ed, data_ed, annex_ed, output_folder, *argv):
                     if flag in [1,2,5]: #single point, same stop depth
                         output_netcdf_obj["HISTORY_STOP_DEPTH"][idx] = annex_ed['aux_id'][idx]
                     elif stop_depth:  # if not the last flag, next greatest depth
-                        stop_idx =  np.int_(np.where(np.round(vals,2) == np.round(stop_depth[0],2)))
+                        stop_idx =  np.int_(np.where(np.logical_and(vals <= stop_depth[0]+0.1, vals >= stop_depth[0]-0.1)))
                         stopdepth = vals[stop_idx-1]
                         output_netcdf_obj["HISTORY_STOP_DEPTH"][idx] = stopdepth
                     else:
@@ -794,7 +797,7 @@ def generate_xbt_nc(gatts_ed, data_ed, annex_ed, output_folder, *argv):
                     continue
 
             # raw file, only do this if there are flags to add from the raw file
-            if is_raw_parsed and annex_raw['aux_id'][:]:
+            if np.logical_and(is_raw_parsed, annex_raw['aux_id'][:]):
                 for idx, date in enumerate(annex_raw['prc_date']):
                     if annex_raw['act_code'][idx] in act_code_list:
                         act_code_def = act_code_list[annex_raw['act_code'][idx]]
@@ -841,17 +844,20 @@ def generate_xbt_nc(gatts_ed, data_ed, annex_ed, output_folder, *argv):
                     output_netcdf_obj["HISTORY_DATE"][idx] = history_date_obj[idx]
                     output_netcdf_obj["HISTORY_PARAMETER"][idx] = annex_raw['act_parm'][idx]
                     output_netcdf_obj["HISTORY_PREVIOUS_VALUE"][idx] = annex_raw['previous_val'][idx]
-                    output_netcdf_obj["HISTORY_START_DEPTH"][idx] = annex_raw['aux_id'][idx]
                     output_netcdf_obj["HISTORY_QC_FLAG"][idx] = annex_raw['act_code'][idx]
 
                     #QC,RE, PE, TE and EF flag applies to entire profile
                     res = annex_raw['act_code'][idx] in act_code_full_profile
                     if res:
+                        output_netcdf_obj["HISTORY_START_DEPTH"][idx] = vals[0]
                         output_netcdf_obj["HISTORY_STOP_DEPTH"][idx] = output_netcdf_obj.geospatial_vertical_max
                         continue
                         
                     # Find stop depth depending on which flags are in place
-                    start_idx =  np.int_(np.where(vals == annex_raw['aux_id'][idx]))
+                    start_idx =  np.int_(np.where(np.logical_and(vals <= annex_ed['aux_id'][idx]+0.1, vals >= annex_ed['aux_id'][idx]-0.1)))
+                    # make the start depth equal to actual depth in depth array
+                    output_netcdf_obj["HISTORY_START_DEPTH"][idx] = vals[start_idx]
+
                     #find next deepest flag depth
                     stop_depth = [i for i in annex_raw['aux_id'] if i > annex_raw['aux_id'][idx]]
                     # if the flag is in act_code_single_point list, then stop depth is same as start
@@ -864,7 +870,7 @@ def generate_xbt_nc(gatts_ed, data_ed, annex_ed, output_folder, *argv):
                     res = annex_raw['act_code'][idx] in act_code_next_flag
                     if res:
                         if stop_depth:  # if not the last flag, next greatest depth
-                            stop_idx =  np.int_(np.where(np.round(vals,2) == np.round(stop_depth[0],2)))
+                            stop_idx =  np.int_(np.where(np.logical_and(vals <= stop_depth[0]+0.1, vals >= stop_depth[0]-0.1)))
                             stopdepth = vals[stop_idx-1]
                             output_netcdf_obj["HISTORY_STOP_DEPTH"][idx] = stopdepth
                         else:
@@ -883,7 +889,7 @@ def generate_xbt_nc(gatts_ed, data_ed, annex_ed, output_folder, *argv):
                         if flag in [1,2,5]: #single point, same stop depth
                             output_netcdf_obj["HISTORY_STOP_DEPTH"][idx] = annex_raw['aux_id'][idx]
                         elif stop_depth:  # if not the last flag, next greatest depth
-                            stop_idx =  np.int_(np.where(np.round(vals,2) == np.round(stop_depth[0],2)))
+                            stop_idx =  np.int_(np.where(np.logical_and(vals <= stop_depth[0]+0.1, vals >= stop_depth[0]-0.1)))
                             stopdepth = vals[stop_idx-1]
                             output_netcdf_obj["HISTORY_STOP_DEPTH"][idx] = stopdepth
                         else:
@@ -937,8 +943,7 @@ def clean_temp_val(netcdf_filepath, annex_ed, *argv):
 
         for idx, ii_logic in enumerate(idx_ed_cs_flag):
             if ii_logic:
-                print(depth_ed_flags_val[idx],np.round(output_netcdf_obj["DEPTH"][0:5],2))
-                idx_val_to_modify = np.round(depth_ed_flags_val[idx],2) == np.round(output_netcdf_obj["DEPTH"][:],2)
+                idx_val_to_modify = np.logical_and(output_netcdf_obj["DEPTH"][:] <= depth_ed_flags_val[idx]+0.1,output_netcdf_obj["DEPTH"][:] >= depth_ed_flags_val[idx]-0.1)
                 if sum(idx_val_to_modify) > 1:
                     _error("Cleaning TEMP: more than one depth value matching") #TODO improve msg
                 elif sum(idx_val_to_modify) == 0:
@@ -959,7 +964,7 @@ def clean_temp_val(netcdf_filepath, annex_ed, *argv):
 
             for idx, ii_logic in enumerate(idx_raw_cs_flag):
                 if ii_logic:
-                    idx_val_to_modify = depth_raw_flags_val[idx] == output_netcdf_obj["DEPTH_RAW"][:]
+                    idx_val_to_modify = np.logical_and(output_netcdf_obj["DEPTH_RAW"][:] <= depth_ed_flags_val[idx]+0.1,output_netcdf_obj["DEPTH_RAW"][:] >= depth_ed_flags_val[idx]-0.1)
                     if sum(idx_val_to_modify) > 1:
                         _error("Cleaning TEMP_RAW: more than one depth value matching") #TODO improve msg
                     elif sum(idx_val_to_modify) == 0:
