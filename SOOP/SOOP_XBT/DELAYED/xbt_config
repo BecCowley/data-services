@@ -26,7 +26,7 @@ UVRS = Graphical_User_Interface_Version,str
 WAIT = Recorder_system_wait_time_seconds_used_with_FREQ_to_calculate_depth,float
 FREQ = Recorder_system_frequency_Hz_used_with_WAIT_to_calculate_depth,float
 
-#QC codes that apply to the entire profile
+#QC codes whose flags apply to the entire profile
 [ACT_CODES_FULL_PROFILE]
 QC = Scientific Quality Control applied
 EF = Eddy Front / Current
@@ -34,34 +34,45 @@ RE = Repeat Drop
 PE = Profile position error or correction to latitude and/or longitude
 TE = Date-Time error or correction to date and/or time
 NT = No Trace
+ST = Step-like structure in temperature
+FS = Fine structure in temperature
+PS = Fine structure (step-like) Probable
+TP = Test probe
 
-#QC codes that only apply to the place they are put
+#QC codes whose flags only apply to the place they are put
 [ACT_CODES_SINGLE_POINT]
-CS = Surface Spike
+CS = Surface Transient
 
-#QC codes that apply from where they are to the next flag or the bottom
+#QC codes whose flags apply from where they are to the next flag or the bottom
 [ACT_CODES_TO_NEXT_FLAG]
 CT = Constant Temperature
 DO = Depth offset
-FS = Fine structure in temperature
 HB = Hit Bottom
-HF = High Frequency Interference
 IV = Inversion confirmed
 PI = Inversion probable
 LE = Leakage
 NG = No good trace
 NU = Inversion in Mixed Layer Confirmed (nub)
 PL = Premature Launch
-PS = Fine structure (step-like) Probable
 SA = Temperature Surface Anomaly
 SO = Surface offset in temperature
-ST = Step-like structure in temperature
 TD = Temperature Difference
 TO = Temperature offset
 WB = Wire Break
 WS = Wire Stretch
+SP = Spike
+IP = Insulation penetration
+HF = High Frequency Interference
 
-#QC codes that can apply to where they are (ACCEPT flag 1/2 or REPLACE flag 5) or to the next flag/bottom (REJECT flag 3/4)
+#QC codes whose values could have been changed due to interpolation or filtering
+[ACT_CODES_CHANGED]
+SP = Spike
+IP = Insulation penetration
+HF = High Frequency Interference
+PE = Profile position error or correction to latitude and/or longitude
+TE = Date-Time error or correction to date and/or time
+
+#For older converter:
 [ACT_CODES_BOTH]
 SP = Spike
 IP = Insulation penetration
