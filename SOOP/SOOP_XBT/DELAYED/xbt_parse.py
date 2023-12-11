@@ -170,10 +170,6 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     # adjust date and time QC flags if required
     profile_qc = adjust_time_qc_flags(profile_qc)
 
-    # some extras
-    profile_qc.data_type = ''.join(chr(x) for x in bytearray(profile_qc.netcdf_file_obj['Data_Type'][:].data)).strip()
-    profile_qc.duplicate_flag = ''.join(chr(x) for x in bytearray(profile_qc.netcdf_file_obj['Dup_Flag'][0].data)).strip()
-
     # Probe type goes into a variable with coefficients as attributes, and assign QC to probe types
     profile_qc = get_fallrate_eq_coef(profile_qc, profile_noqc)
 
@@ -279,7 +275,7 @@ def parse_globalatts_nc(profile):
         profile.global_atts['Callsign'] = profile.global_atts['Platform_code']
     elif difflib.get_close_matches(profile.global_atts['Platform_code'], ships, n=1, cutoff=0.8) != []:
         profile.global_atts['Callsign'] = \
-        difflib.get_close_matches(profile.global_atts['Platform_code'], ships, n=1, cutoff=0.8)[0]
+            difflib.get_close_matches(profile.global_atts['Platform_code'], ships, n=1, cutoff=0.8)[0]
         profile.global_atts['Platform_code'] = profile.global_atts['Callsign']
         profile.global_atts['ship_name'] = ships[profile.global_atts['Callsign']]
         LOGGER.warning('Vessel call sign %s seems to be wrong. Using the closest match to the AODN vocabulary: %s' % (
@@ -361,7 +357,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     woce_date = profile_qc.netcdf_file_obj['woce_date'][0]
     woce_time = profile_qc.netcdf_file_obj['woce_time'][0]
 
-    #AW Add Original date_time from the raw .nc - date-time could be changed thru QC
+    # AW Add Original date_time from the raw .nc - date-time could be changed thru QC
     woce_date_raw = profile_noqc.netcdf_file_obj['woce_date'][0]
     woce_time_raw = profile_noqc.netcdf_file_obj['woce_time'][0]
 
@@ -374,13 +370,13 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     str1 = [x.replace(' ', '0') for x in xbt_date]
     xbt_date = ''.join(str1)
     xbt_date = datetime.strptime(xbt_date, '%Y%m%dT%H%M%S')
-    #AW Add Raw date
+    # AW Add Raw date
     xbt_date_raw = '%sT%s' % (woce_date_raw, str(woce_time_raw).zfill(6))  # add leading 0
     str1 = [x.replace(' ', '0') for x in xbt_date_raw]
     xbt_date_raw = ''.join(str1)
     xbt_date_raw = datetime.strptime(xbt_date_raw, '%Y%m%dT%H%M%S')
 
-    #AW - TIME_RAW is original date-time - set it too
+    # AW - TIME_RAW is original date-time - set it too
     profile_qc.data['TIME'] = xbt_date
     profile_qc.data['TIME_quality_control'] = q_date_time
     profile_qc.data['TIME_RAW'] = xbt_date_raw
@@ -830,7 +826,7 @@ def create_flag_feature(profile):
     # the version 2.1 release.
     # could also consider using hex encoding to represent these numbers if that looks more user-friendly
 
-    #23 codes - New Cookbook
+    # 23 codes - New Cookbook
     df = pd.DataFrame(
         {'Code': ['QC', 'CS', 'WB', 'WS', 'HB', 'LE', 'EIA', 'EIR', 'HFA', 'HFR', 'NG', 'RE', 'IV', 'TO', 'EF',
                   'ST', 'DO', 'CT', 'TEA', 'TER', 'LA', 'LO', 'PER', 'DU', 'TP', 'PR'],
@@ -866,7 +862,8 @@ def create_flag_feature(profile):
     # append the new codes with the old ones and change a couple:
     dfoldc = pd.concat([df, dfold])
     dfoldc = dfoldc.replace(
-        ['EIA', 'EIR', 'PR', 'electrical_interference_interpolated', 'electrical_interference_failed', 'probe_type_error'],
+        ['EIA', 'EIR', 'PR', 'electrical_interference_interpolated', 'electrical_interference_failed',
+         'probe_type_error'],
         ['SPA', 'SPR', 'DT', 'spike_interpolated', 'spike_failed', 'data_type_corrected'])
 
     # add the mappings to the new code
@@ -877,13 +874,13 @@ def create_flag_feature(profile):
     for i in range(1, len(dfoldc['Code'])):
         n.append(n[i - 1] * 2)
 
-    #print("masks",n)
+    # print("masks",n)
 
     # add the byte values for each code:
-    df['byte_value'] = np.array(n[0:len(df['Code'])]) #52 elements
+    df['byte_value'] = np.array(n[0:len(df['Code'])])  # 52 elements
 
     dfoldc['byte_value'] = np.array(n)
-    #print('len(dfoldc[byte_value]),dfoldc[byte_value]',len(dfoldc['byte_value']),dfoldc['byte_value'])
+    # print('len(dfoldc[byte_value]),dfoldc[byte_value]',len(dfoldc['byte_value']),dfoldc['byte_value'])
 
     # set the fields to zeros to start
     profile.data['XBT_fault_and_feature_type'] = profile.data['DEPTH'] * 0
@@ -895,10 +892,10 @@ def create_flag_feature(profile):
     profile.fft['flag_masks'] = dfoldc['byte_value'].values
     profile.fft['flag_meanings'] = dfoldc['Meaning'].values
     profile.fft['flag_codes'] = dfoldc['Code'].values
-    #profile.ffot = {}
-    #profile.ffot['flag_masks'] = dfoldc['byte_value'].values
-    #profile.ffot['flag_meanings'] = dfoldc['Meaning'].values
-    #profile.ffot['flag_codes'] = dfoldc['Code'].values
+    # profile.ffot = {}
+    # profile.ffot['flag_masks'] = dfoldc['byte_value'].values
+    # profile.ffot['flag_meanings'] = dfoldc['Meaning'].values
+    # profile.ffot['flag_codes'] = dfoldc['Code'].values
 
     # perform the flag mapping on the original flags and create the two new variables
     codes = profile.histories
@@ -909,8 +906,8 @@ def create_flag_feature(profile):
                                       keep='first')
         LOGGER.warning('Duplicate QC code encountered, and removed. Please review')
 
-    #print("dfoldc",dfoldc)
-    #print("codes",codes)
+    # print("dfoldc",dfoldc)
+    # print("codes",codes)
 
     mapold = pd.merge(dfoldc, codes, how='right', left_on='Code', right_on='HISTORY_QC_CODE')
     if mapold.empty:
@@ -969,11 +966,11 @@ def create_flag_feature(profile):
         # Add byte values (masks)
         profile.data['XBT_fault_and_feature_type'] = profile.data['XBT_fault_and_feature_type'] + nullarray
 
-    #for idx, row in mapold.iterrows():
+    # for idx, row in mapold.iterrows():
     #    nullarray = deps * 0
     #    ii = (deps >= row['HISTORY_START_DEPTH']) * (deps <= row['HISTORY_STOP_DEPTH'])
     #    nullarray[ii] = row['byte_value']
-        # adding them together - is there a more correct way to do this?
+    # adding them together - is there a more correct way to do this?
     #    profile.data['XBT_fault_and_feature_type_original'] = profile.data[
     #                                                              'XBT_fault_and_feature_type_original'] + nullarray
 
@@ -986,15 +983,21 @@ def check_nc_to_be_created(profile):
     # sometimes we have non-XBT data in the files, skip this
     # will probably need to think about XCTD data!!
 
-    if profile.data_type != 'XB':
+    data_type = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Data_Type'][:].data)).strip()
+    duplicate_flag = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Dup_Flag'][0].data)).strip()
+    nhist = int(profile.netcdf_file_obj['Num_Hists'][0].data)
+    histcodes = [''.join(chr(x) for x in bytearray(xx)).strip()
+                 for xx in profile.netcdf_file_obj['Act_Code'][0:nhist].data if bytearray(xx).strip()]
+
+    if data_type != 'XB':
         LOGGER.error('Profile not processed as it is not an XBT')
         return False
 
-    if profile.duplicate_flag == 'D':
+    if duplicate_flag == 'D':
         LOGGER.error('Profile not processed. Tagged as duplicate in original netcdf file')
         return False
 
-    if 'TP' in profile.histories['HISTORY_QC_CODE'] or 'DU' in profile.histories['HISTORY_QC_CODE']:
+    if 'TP' in histcodes or 'DU' in histcodes:
         LOGGER.error('Profile not processed. Tagged as test probe in original netcdf file')
         return False
 
@@ -1002,7 +1005,8 @@ def check_nc_to_be_created(profile):
     #        LOGGER.error('Profile not processed. No_Prof variable is greater than 0')
     #        return False
 
-    if profile.temp_prof is None:
+    no_prof, prof_type, temp_prof = temp_prof_info(profile.netcdf_file_obj)
+    if temp_prof is None:
         LOGGER.error('Profile not processed. Main variable is not TEMP')
         return False
 
@@ -1087,7 +1091,7 @@ def write_output_nc(output_folder, profile):
 
         fftype = output_netcdf_obj.createVariable("XBT_fault_and_feature_type", "u8", dimensions=('DEPTH',),
                                                   fill_value=0)
-        #ffotype = output_netcdf_obj.createVariable("XBT_fault_and_feature_type_original", "u8", dimensions=('DEPTH',),
+        # ffotype = output_netcdf_obj.createVariable("XBT_fault_and_feature_type_original", "u8", dimensions=('DEPTH',),
         #                                          fill_value=0)
 
         # If the turo profile is handed in:
@@ -1113,15 +1117,15 @@ def write_output_nc(output_folder, profile):
         generate_netcdf_att(output_netcdf_obj, conf_file, conf_file_point_of_truth=True)
         # add the flag and feature type attributes:
         setattr(fftype, 'valid_max', int(profile.fft['flag_masks'].sum()))
-        #AW use type  - 64 bit unsigned int, basic int type only up to 32 bit, this is same type as variable XBT_fault_and_feature_type
-        #setattr(fftype, 'flag_masks', profile.fft['flag_masks'].astype(int))
+        # AW use type  - 64 bit unsigned int, basic int type only up to 32 bit, this is same type as variable XBT_fault_and_feature_type
+        # setattr(fftype, 'flag_masks', profile.fft['flag_masks'].astype(int))
         setattr(fftype, 'flag_masks', profile.fft['flag_masks'].astype(np.uint64))
         setattr(fftype, 'flag_meanings', ' '.join(profile.fft['flag_meanings']))
         setattr(fftype, 'flag_codes', ' '.join(profile.fft['flag_codes']))
-        #setattr(ffotype, 'valid_max', int(profile.ffot['flag_masks'].sum()))
-        #setattr(ffotype, 'flag_masks', profile.ffot['flag_masks'].astype(int))
-        #setattr(ffotype, 'flag_meanings', ' '.join(profile.ffot['flag_meanings']))
-        #setattr(ffotype, 'flag_codes', ' '.join(profile.ffot['flag_codes']))
+        # setattr(ffotype, 'valid_max', int(profile.ffot['flag_masks'].sum()))
+        # setattr(ffotype, 'flag_masks', profile.ffot['flag_masks'].astype(int))
+        # setattr(ffotype, 'flag_meanings', ' '.join(profile.ffot['flag_meanings']))
+        # setattr(ffotype, 'flag_codes', ' '.join(profile.ffot['flag_codes']))
 
         # write coefficients out to the attributes. In the PROBE_TYPE, PROBE_TYPE_RAW, DEPTH, DEPTH_RAW
         varnames = ['PROBE_TYPE', 'DEPTH']
@@ -1144,7 +1148,7 @@ def write_output_nc(output_folder, profile):
                     "Variable not written: \"%s\". Please check!!" % v)
                 continue
             if v == 'TIME' or v == 'TIME_RAW':
-                #AW DEBUG
+                # AW DEBUG
                 '''
                 for attr in output_netcdf_obj[v].ncattrs():
                     print("attr",attr)
@@ -1180,6 +1184,7 @@ def write_output_nc(output_folder, profile):
         #    setattr(output_netcdf_obj, 'abstract', output_netcdf_obj.title)
         for key, item in profile.global_atts.items():
             setattr(output_netcdf_obj, key, item)
+
 
 def _call_parser(conf_file):
     """ parse a config file """
@@ -1260,8 +1265,8 @@ if __name__ == '__main__':
     global_vars(vargs)
 
     # read the keys file into a keys object
-    #print("vargs",vargs)
-    #Vargs contains:
+    # print("vargs",vargs)
+    # Vargs contains:
     '''
     input_xbt_campaign_path='filename_keys.nc', 
     output_folder='output_directory_pathname', 
@@ -1287,11 +1292,10 @@ if __name__ == '__main__':
             # profile_turo = turoProfile(profile_ed)
             profile_turo = []
 
-            # for example where depths are different, metadata is different etc between the ed and raw files.
-            profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo)
-
             # now write it out to the new netcdf format
             if check_nc_to_be_created(profile_ed):
+                # for example where depths are different, metadata is different etc between the ed and raw files.
+                profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo)
                 write_output_nc(vargs.output_folder, profile_ed)
         else:
             LOGGER.warning('file %s is in keys file, but does not exist' % f)
