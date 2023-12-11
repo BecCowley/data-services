@@ -151,6 +151,8 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
             # TODO: figure out a handling here if there are extra histories in the RAW file or ones that aren't in ED file
             breakpoint()
 
+    # handle special case of premature launch where raw and edited files have different profile lengths:
+    profile_qc = check_for_PL_flag(profile_qc)
 
     # replace missing temperature data with actual values and appropriate QC flags
     # applies to CS flag in particular
@@ -495,7 +497,9 @@ def adjust_time_qc_flags(profile):
         # change to flag 2 for temperature for all depths where qc is less than 2
         tempqc[tempqc < 2] = 2
         # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
-        if profile.histories.loc[profile.histories['HISTORY_QC_CODE'].str.contains('TEA'), 'HISTORY_PREVIOUS_VALUE'].values != profile.data['TIME_RAW']:
+        if profile.histories.loc[
+            profile.histories['HISTORY_QC_CODE'].str.contains('TEA'), 'HISTORY_PREVIOUS_VALUE'].values != profile.data[
+            'TIME_RAW']:
             LOGGER.error('TIME_RAW not the same as the PREVIOUS_value!')
             exit(1)
 
@@ -786,6 +790,27 @@ def parse_histories_nc(profile):
     profile.histories = df
 
     return profile
+
+def check_for_PL_flag(profile):
+    # Special case, where the PLA code has been used, the temperature values are shifted up and the edited file
+    # therefore has a different number of records to the raw file. Need to pad the edited to the same size as raw
+    # since we are using the same DEPTH dimension for both:
+    if profile.histories['HISTORY_QC_CODE'].str.contains('PL').any():
+        # double check the length of the records is different, log it
+        if len(profile.data['TEMP']) < len(profile.data['TEMP_RAW']):
+            LOGGER.warning('Raw and edited profiles are different length due to PLA flag. Amending.')
+            # edited temp is shorter, add blanks at end
+            dd = len(profile.data['TEMP_RAW']) - len(profile.data['TEMP'])
+            tt = profile.data['TEMP']
+            profile.data['TEMP'] = ma.resize(tt, (dd + len(tt)))
+            tt = profile.data['TEMP_quality_control']
+            profile.data['TEMP_quality_control'] = ma.resize(tt, (dd + len(tt)))
+            tt = profile.data['DEPTH']
+            profile.data['DEPTH'] = ma.resize(tt, (dd + len(tt)))
+            tt = profile.data['DEPTH_quality_control']
+            profile.data['DEPTH_quality_control'] = ma.resize(tt, (dd + len(tt)))
+
+    return(profile)
 
 
 def restore_temp_val(profile):
