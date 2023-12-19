@@ -146,11 +146,11 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
         profile_noqc.data['DEPTH'] = profile_qc.data['DEPTH_RAW']
         profile_noqc.data['TEMP_quality_control'] = profile_qc.data['TEMP_quality_control']
         profile_noqc = parse_histories_nc(profile_noqc)
-        # check for extra histories that we don't already have in the edited file
-        df = profile_qc.histories.merge(profile_noqc.histories, 'outer')
-        if len(df) != len(profile_qc.histories):
+        # check for histories in the noqc file and reconcile:
+        if len(profile_noqc.histories) > 0:
             # TODO: figure out a handling here if there are extra histories in the RAW file or ones that aren't in ED file
-            breakpoint()
+            # reconcile histories where they exist in the noqc profile
+            profile_qc = combine_histories(profile_qc, profile_noqc)
 
     # handle special case of premature launch where raw and edited files have different profile lengths:
     profile_qc = check_for_PL_flag(profile_qc)
@@ -477,32 +477,34 @@ def adjust_position_qc_flags(profile):
     # get the temperature QC codes
     tempqc = profile.data['TEMP_quality_control']
     if profile.histories['HISTORY_QC_CODE'].str.contains('LA').any():
+        # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
+        if np.round(profile.histories.loc[
+                        profile.histories['HISTORY_QC_CODE'].str.contains('LA'), 'HISTORY_PREVIOUS_VALUE'].values,
+                    4) != np.round(profile.data['LATITUDE_RAW'], 4):
+            LOGGER.error('LATITUDE_RAW not the same as the PREVIOUS_value!')
+            exit(1)
         if profile.data['LATITUDE_quality_control'] != 5:
             # PEA on latitude
             profile.data['LATITUDE_quality_control'] = 5
             LOGGER.info('LATITUDE correction (PEA) in original file, changing LATITUDE flag to level 5.')
             # change to flag 2 for temperature for all depths where qc is less than 2
             tempqc[tempqc < 2] = 2
-            # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
-            if np.round(profile.histories.loc[
-                            profile.histories['HISTORY_QC_CODE'].str.contains('LA'), 'HISTORY_PREVIOUS_VALUE'].values,
-                        4) != np.round(profile.data['LATITUDE_RAW'], 4):
-                LOGGER.error('LATITUDE_RAW not the same as the PREVIOUS_value!')
-                exit(1)
+
 
     if profile.histories['HISTORY_QC_CODE'].str.contains('LO').any():
+        # check HISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value
+        if np.round(profile.histories.loc[
+                        profile.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'].values,
+                    4) != np.round(profile.data['LONGITUDE_RAW'], 4):
+            LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_value!')
+            exit(1)
         if profile.data['LONGITUDE_quality_control'] != 5:
             # PEA on longitude
             profile.data['LONGITUDE_quality_control'] = 5
             LOGGER.info('LONGITUDE correction (PEA) in original file, changing LONGITUDE flag to level 5.')
             # change to flag 2 for temperature for all depths where qc is less than 2
             tempqc[tempqc < 2] = 2
-            # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
-            if np.round(profile.histories.loc[
-                            profile.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'].values,
-                        4) != np.round(profile.data['LONGITUDE_RAW'], 4):
-                LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_value!')
-                exit(1)
+
 
     if profile.histories['HISTORY_QC_CODE'].str.contains('PER').any():
         # PER on longitude and latitude
@@ -827,6 +829,24 @@ def parse_histories_nc(profile):
     profile.histories = df
 
     return profile
+
+
+def combine_histories(profile_qc, profile_noqc):
+    # check for global attributes in the noqc file and update the global atts as required
+    # handle the longitude change where data was imported from dataset with a negative longitude where it should
+    # have been positive. The *raw.nc previous value and *ed.nc previous value should be the same, update the LONG_RAW.
+    if len(profile_noqc.histories) > 0:
+        # copy this information to the LONGITUDE_RAW value if it isn't the same
+        if np.round(profile_noqc.histories.loc[profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'),
+                                               'HISTORY_PREVIOUS_VALUE'], 4).values != np.round(profile_qc.data['LONGITUDE_RAW'], 4):
+                LOGGER.warning('Updating raw longitude to match the previous value in *raw.nc file')
+                profile_qc.data['LONGITUDE_RAW'] = profile_noqc.histories.loc[
+                        profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'][0]
+    # TODO: handle other extra histories in noqc file here:
+    if len(profile_noqc.histories) > 1:
+        breakpoint()
+
+    return profile_qc
 
 def check_for_PL_flag(profile):
     # Special case, where the PLA code has been used, the temperature values are shifted up and the edited file
