@@ -857,15 +857,19 @@ def check_for_PL_flag(profile):
         if len(profile.data['TEMP']) < len(profile.data['TEMP_RAW']):
             LOGGER.warning('Raw and edited profiles are different length due to PLA flag. Amending.')
             # edited temp is shorter, add blanks at end
-            dd = len(profile.data['TEMP_RAW']) - len(profile.data['TEMP'])
-            tt = profile.data['TEMP']
-            profile.data['TEMP'] = ma.resize(tt, (dd + len(tt)))
-            tt = profile.data['TEMP_quality_control']
-            profile.data['TEMP_quality_control'] = ma.resize(tt, (dd + len(tt)))
-            tt = profile.data['DEPTH']
-            profile.data['DEPTH'] = ma.resize(tt, (dd + len(tt)))
-            tt = profile.data['DEPTH_quality_control']
-            profile.data['DEPTH_quality_control'] = ma.resize(tt, (dd + len(tt)))
+            for var in ['TEMP', 'DEPTH']:
+                tr = profile.data[var + '_RAW']
+                tt = profile.data[var]
+                t2 = np.ma.empty_like(tr)
+                t2[0:len(tt)] = tt
+                t2[len(tt):] = ma.masked
+                profile.data[var] = t2
+                tr = profile.data[var + '_RAW_quality_control']
+                tt = profile.data[var + '_quality_control']
+                t2 = np.ma.empty_like(tr)
+                t2[0:len(tt)] = tt
+                t2[len(tt):] = ma.masked
+                profile.data[var + '_quality_control'] = t2
 
     return(profile)
 
