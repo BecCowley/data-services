@@ -1090,9 +1090,9 @@ def check_nc_to_be_created(profile):
     #        LOGGER.error('Profile not processed. No_Prof variable is greater than 0')
     #        return False
 
-    no_prof, prof_type, temp_prof = temp_prof_info(profile.netcdf_file_obj)
-    if temp_prof is None:
-        LOGGER.error('Profile not processed. Main variable is not TEMP')
+    data_vars = temp_prof_info(profile.netcdf_file_obj)
+    if 'TEMP' not in data_vars.values():
+        LOGGER.error('Profile not processed, no TEMP in file.')
         return False
 
     return True
