@@ -258,32 +258,38 @@ def parse_globalatts_nc(profile):
         if srfc_code_iter in list(srfc_code_list.keys()):
             att_name = srfc_code_list[srfc_code_iter].split(',')[0]
             att_type = srfc_code_list[srfc_code_iter].split(',')[1]
-            att_val = decode_bytearray(srfc_parm[i].data)
-            if att_val.replace(' ', '') != '':
-                profile.global_atts[att_name] = att_val
-                try:
-                    if att_type == 'float':
-                        profile.global_atts[att_name] = float(profile.global_atts[att_name].replace(' ', ''))
-                    elif att_type == 'int':
-                        profile.global_atts[att_name] = int(profile.global_atts[att_name].replace(' ', ''))
-                except ValueError:
-                    LOGGER.warning(
-                        '"%s = %s" could not be converted to %s()' % (att_name, profile.global_atts[att_name],
-                                                                      att_type.upper()))
+            att_val = decode_bytearray(srfc_parm[i])
+            profile.global_atts[att_name] = att_val
+            try:
+                if att_type == 'float':
+                    profile.global_atts[att_name] = float(profile.global_atts[att_name].replace(' ', ''))
+                elif att_type == 'int':
+                    profile.global_atts[att_name] = int(profile.global_atts[att_name].replace(' ', ''))
+            except ValueError:
+                LOGGER.warning(
+                    '"%s = %s" could not be converted to %s()' % (att_name, profile.global_atts[att_name],
+                                                                  att_type.upper()))
         else:
             if srfc_code_iter != '':
                 LOGGER.warning('%s code is not defined in srfc_code in xbt_config file. Please edit xbt_config'
                                % srfc_code_iter)
 
+    # if the platform code didn't come through, need to stop
+    if 'Platform_code' not in profile.global_atts.keys():
+        LOGGER.error('Platform_code is missing, GCLL has not been read or is missing')
+        breakpoint()
+
     # get the ship details
+    # note that the callsign and ship name are filled from the original file values, but will be replaced here if they exist in the AODN vocabulary
+    # for these older historical files, the Callsign and Platform_code are the same. In newer files, the platform_code
+    # will be the GTSID or SOTID.
+    profile.global_atts['Callsign'] = profile.global_atts['Platform_code'] # set here as can't have duplicate assignments in the config file
     ships = SHIP_CALL_SIGN_LIST
     if profile.global_atts['Platform_code'] in ships:
         profile.global_atts['ship_name'] = ships[profile.global_atts['Platform_code']]
-        profile.global_atts['Callsign'] = profile.global_atts['Platform_code']
     elif difflib.get_close_matches(profile.global_atts['Platform_code'], ships, n=1, cutoff=0.8) != []:
         profile.global_atts['Callsign'] = \
             difflib.get_close_matches(profile.global_atts['Platform_code'], ships, n=1, cutoff=0.8)[0]
-        profile.global_atts['Platform_code'] = profile.global_atts['Callsign']
         profile.global_atts['ship_name'] = ships[profile.global_atts['Callsign']]
         LOGGER.warning('Vessel call sign %s seems to be wrong. Using the closest match to the AODN vocabulary: %s' % (
             profile.global_atts['Platform_code'], profile.global_atts['Callsign']))
