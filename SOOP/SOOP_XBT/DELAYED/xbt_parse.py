@@ -265,6 +265,8 @@ def parse_globalatts_nc(profile):
                     profile.global_atts[att_name] = float(profile.global_atts[att_name].replace(' ', ''))
                 elif att_type == 'int':
                     profile.global_atts[att_name] = int(profile.global_atts[att_name].replace(' ', ''))
+                else:
+                    profile.global_atts[att_name] = profile.global_atts[att_name].replace(' ', '')
             except ValueError:
                 LOGGER.warning(
                     '"%s = %s" could not be converted to %s()' % (att_name, profile.global_atts[att_name],
