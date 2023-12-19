@@ -378,16 +378,41 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     if not q_date_time:
         LOGGER.info('Missing time QC, flagging time with flag 1 %s' % profile_qc.XBT_input_filename)
         q_date_time = 1
-    # insert zeros into dates with spaces
-    xbt_date = '%sT%s' % (woce_date, str(woce_time).zfill(6))  # add leading 0
-    str1 = [x.replace(' ', '0') for x in xbt_date]
-    xbt_date = ''.join(str1)
-    xbt_date = datetime.strptime(xbt_date, '%Y%m%dT%H%M%S')
-    # AW Add Raw date
-    xbt_date_raw = '%sT%s' % (woce_date_raw, str(woce_time_raw).zfill(6))  # add leading 0
-    str1 = [x.replace(' ', '0') for x in xbt_date_raw]
-    xbt_date_raw = ''.join(str1)
-    xbt_date_raw = datetime.strptime(xbt_date_raw, '%Y%m%dT%H%M%S')
+
+    # need to be a bit more specific as some times have missing padding at the end, some at the start.
+    # could break if hour is 00 and there are no zeros!
+    # Let's try padding left and right, then convert to time for both
+    rpad = str(woce_time).ljust(6, '0')
+    lpad = str(woce_time).zfill(6)
+
+    try:
+        # insert zeros into dates with spaces
+        xbt_date = '%sT%s' % (woce_date, rpad)
+        str1 = [x.replace(' ', '0') for x in xbt_date]
+        xbt_date = ''.join(str1)
+        xbt_date = datetime.strptime(xbt_date, '%Y%m%dT%H%M%S')
+    except:
+        xbt_date = '%sT%s' % (woce_date, lpad)
+        str1 = [x.replace(' ', '0') for x in xbt_date]
+        xbt_date = ''.join(str1)
+        xbt_date = datetime.strptime(xbt_date, '%Y%m%dT%H%M%S')
+
+    # Raw date
+    rpad = str(woce_time_raw).ljust(6, '0')
+    lpad = str(woce_time_raw).zfill(6)
+
+    try:
+        # insert zeros into dates with spaces
+        xbt_date_raw = '%sT%s' % (woce_date_raw, rpad)
+        str1 = [x.replace(' ', '0') for x in xbt_date_raw]
+        xbt_date_raw = ''.join(str1)
+        xbt_date_raw = datetime.strptime(xbt_date_raw, '%Y%m%dT%H%M%S')
+    except:
+        xbt_date_raw = '%sT%s' % (woce_date_raw, lpad)
+        str1 = [x.replace(' ', '0') for x in xbt_date_raw]
+        xbt_date_raw = ''.join(str1)
+        xbt_date_raw = datetime.strptime(xbt_date_raw, '%Y%m%dT%H%M%S')
+
 
     # AW - TIME_RAW is original date-time - set it too
     profile_qc.data['TIME'] = xbt_date
