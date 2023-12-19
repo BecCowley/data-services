@@ -587,7 +587,8 @@ def add_uncertainties(profile):
         tunc = 0
         dunc = 0
     # temp uncertainties
-    profile.data['TEMP_uncertainty'] = np.ma.MaskedArray(tunc, mask=False)
+    profile.data['TEMP_uncertainty'] = ma.empty_like(profile.data['TEMP'])
+    profile.data['TEMP_uncertainty'][:] = tunc
     # depth uncertainties:
     unc = np.ma.MaskedArray(profile.data['DEPTH'] * dunc[0], mask=False)
     if len(dunc) > 1:
