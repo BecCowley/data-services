@@ -1199,6 +1199,11 @@ def write_output_nc(output_folder, profile, profile_raw=None):
             output_netcdf_obj.createVariable(vv + "_RAW", datatype=get_imos_parameter_info(vv, '__data_type'),
                                              dimensions=('DEPTH',),
                                              fill_value=get_imos_parameter_info(vv, '_FillValue'))
+            # create a QC variable for the _RAW data if there are flags included
+            # (some files are converted from QC'd datasets and therefore have flags associated with the 'raw' data
+            if profile.data[vv + '_RAW_quality_control'].any() > 0:
+                LOGGER.warning("QC values have been written to file for \"%s\" variable. Review." % vv)
+                output_netcdf_obj.createVariable(vv + "_RAW_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
 
             if vv == 'TEMP' and profile_raw is not None:
                 # add the recording system variable:
