@@ -384,46 +384,83 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     profile_qc.data['TIME_RAW'] = xbt_date_raw
 
     # Pressure/depth information from both noqc and qc files
-    no_prof, prof_type, profile_qc.temp_prof = temp_prof_info(profile_qc.netcdf_file_obj)
+    # read into a dataframe
+    df = pd.DataFrame()
     for s in [profile_qc, profile_noqc]:
-        depth_press = s.netcdf_file_obj.variables['Depthpress'][profile_qc.temp_prof, :]
-        depth_press_flag = s.netcdf_file_obj.variables['DepresQ'][profile_qc.temp_prof, :, 0].flatten()
-        depth_press_flag = np.ma.masked_array(invalid_to_ma_array(depth_press_flag, fillvalue=0))
-        if isinstance(s.netcdf_file_obj.variables['Profparm'][profile_qc.temp_prof, 0, :, 0, 0], np.ma.MaskedArray):
-            prof = np.ma.masked_where(
-                s.netcdf_file_obj.variables['Profparm'][profile_qc.temp_prof, 0, :, 0, 0].data > 50,
-                s.netcdf_file_obj.variables['Profparm'][profile_qc.temp_prof, 0, :, 0, 0])
-        else:
-            prof = np.ma.masked_where(s.netcdf_file_obj.variables['Profparm'][profile_qc.temp_prof, 0, :, 0, 0] > 50,
-                                      s.netcdf_file_obj.variables['Profparm'][profile_qc.temp_prof, 0, :, 0, 0])
+        # cycle through the variables identified in the file:
+        data_vars = temp_prof_info(s.netcdf_file_obj)
+        for ivar, var in data_vars.items():
+            if s is profile_noqc:
+                var = var + '_RAW'
+            # we want the DEPTH to be a single dataset, but read all depths for each variable
+            if 'D' in decode_bytearray(s.netcdf_file_obj.variables['D_P_Code'][ivar]):
+                depcode = 'depth'
+            else:
+                depcode = 'press'
+            df[var + depcode] = s.netcdf_file_obj.variables['Depthpress'][ivar, :]
+            depth_press_flag = s.netcdf_file_obj.variables['DepresQ'][ivar, :, 0].flatten()
+            df[var + depcode + '_quality_control'] = np.ma.masked_array(invalid_to_ma_array(depth_press_flag, fillvalue=0))
+
+            prof = np.ma.masked_values(
+                s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0], 99.99) #mask the 99.99 from CSA flagging of TEMP
+            prof = np.ma.masked_invalid(prof) # mask nan and inf values
             prof.set_fill_value(-99.99)
 
-        prof_flag = s.netcdf_file_obj.variables['ProfQP'][profile_qc.temp_prof, 0, :, 0, 0].flatten()
-        prof_flag = np.ma.masked_array(
-            invalid_to_ma_array(prof_flag, fillvalue=99))  # replace masked values for IMOS IODE flags
+            prof_flag = s.netcdf_file_obj.variables['ProfQP'][ivar, 0, :, 0, 0].flatten()
+            prof_flag = np.ma.masked_array(
+                invalid_to_ma_array(prof_flag, fillvalue=99))  # replace masked values for IMOS IODE flags
+            df[var] = prof
+            df[var + '_quality_control'] = prof_flag
 
-        if s is profile_qc:
-            vv = ['DEPTH', 'TEMP']
+    # check the depth columns for consistency and remove redundant ones
+    dep_cols = [col for col in df.columns if 'depth' in col
+                and not ('TEMPdepth' in col or 'TEMP_RAWdepth' in col or '_quality_control' in col)]
+
+    for dat in dep_cols:
+        if df['TEMPdepth'].equals(df[dat]):
+            # delete the column
+            df = df.drop(dat, axis=1)
+            continue
         else:
-            vv = ['DEPTH_RAW', 'TEMP_RAW']
-        if isinstance(depth_press, np.ma.MaskedArray):
-            profile_qc.data[vv[0]] = depth_press[
-                ~ma.getmask(depth_press)].flatten()  # DEPTH is a dimension, so we remove mask values, ie FillValues
-            profile_qc.data[vv[0] + '_quality_control'] = depth_press_flag[~ma.getmask(depth_press)].flatten()
-            profile_qc.data[vv[1]] = prof[~ma.getmask(depth_press)].flatten()
-            profile_qc.data[vv[1] + '_quality_control'] = prof_flag[~ma.getmask(depth_press)].flatten()
-        else:
-            profile_qc.data[vv[0]] = depth_press
-            profile_qc.data[vv[0] + '_quality_control'] = depth_press_flag
-            profile_qc.data[vv[1]] = prof
-            profile_qc.data[vv[1] + '_quality_control'] = prof_flag
+            LOGGER.error('%s does not match depths for TEMP depth' % dat)
+            # TODO: handle these problems as they arise here
+            break
 
-    # tidy the DEPTH_quality_control values up if there are flags in here. Shouldn't be for historically QC'd data
-    if any(profile_qc.data['DEPTH_quality_control'] > 0):
-        LOGGER.warning('Removing DEPTH_quality_control flags')
-        profile_qc.data['DEPTH_quality_control'] = profile_qc.data['DEPTH_quality_control'] * 0
+    # check we only have two depth columns left
+    dep_cols = [col for col in df.columns if 'depth' in col
+                and not ('TEMPdepth' in col or 'TEMP_RAWdepth' in col or '_quality_control' in col)]
+    if dep_cols:
+        LOGGER.error('Still multiple depth variables that need resolving, debug!!')
+        breakpoint()
+        # TODO: handle these problems as they arise here
 
-    return profile_qc
+    # rename and tidy
+    # TODO: Check the salinity and conductivity variables when we get a profile with them in
+    dd = {"TEMPdepth": "DEPTH",
+           "TEMP_RAWdepth": "DEPTH_RAW",
+           "SVEL": "SSPD",
+           "SALT": "PSAL"
+           }
+    for key, val in dd.items():
+        df.columns = df.columns.str.replace(key, val)
+
+    # if we have other variables, there will be *depth_quality_control data left, let's remove it
+    irem = [col for col in df.columns if 'depth' in col]
+    df = df.drop(irem, axis=1)
+
+    # drop rows where all NaN values which does happen in these old files sometimes
+    df = df.dropna(how='all')
+
+    # how many parameters do we have, not including DEPTH?
+    profile_qc.nprof = len([col for col in df.columns if ('_quality_control' not in col and 'RAW'
+                                                          not in col and 'DEPTH' not in col)])
+    profile_noqc.nprof = profile_qc.nprof
+
+    # let's write these out to the profile_qc in the appropriate format to suit the rest of the code
+    for var in df.columns:
+        profile_qc.data[var] = df[var].to_numpy()
+
+    return profile_qc, profile_noqc
 
 
 def adjust_position_qc_flags(profile):
@@ -716,7 +753,7 @@ def parse_histories_nc(profile):
     # sort the flags by depth order to help with finding STOP_DEPTH
     # TODO: will keep the stop depth for now. Consider re-writing to loop over each of the lists of act_code types
     df = df.sort_values('HISTORY_START_DEPTH')
-    vals = profile.data['DEPTH'].data
+    vals = profile.data['DEPTH']
     tempqc = profile.data['TEMP_quality_control']
     for idx, row in df.iterrows():
         # Ensure start depth is the same as the value in the depth array
@@ -1087,7 +1124,10 @@ def write_output_nc(output_folder, profile):
                                              fill_value=get_imos_parameter_info(vv, '_FillValue'))
 
         # Create the dimensioned variables:
-        varslist = ["DEPTH", "TEMP"]
+        varslist = [key for key in profile.data.keys() if ('_quality_control' not in key and 'RAW' not in key
+                                                           and 'TUDE' not in key and 'XBT' not in key
+                                                           and 'TIME' not in key and 'uncertainty' not in key
+                                                           and 'PROBE' not in key)]
         for vv in varslist:
             output_netcdf_obj.createVariable(vv, datatype=get_imos_parameter_info(vv, '__data_type'),
                                              dimensions=('DEPTH',),
@@ -1101,7 +1141,7 @@ def write_output_nc(output_folder, profile):
                                              dimensions=('DEPTH',),
                                              fill_value=get_imos_parameter_info(vv, '_FillValue'))
 
-            if vv == 'TEMP' and profile_raw in locals():
+            if vv == 'TEMP' and profile_raw is not None:
                 # add the recording system variable:
                 output_netcdf_obj.createVariable(vv + "_RECORDING_SYSTEM", "f", dimensions=('DEPTH',),
                                                  fill_value=999999.0)
@@ -1120,7 +1160,7 @@ def write_output_nc(output_folder, profile):
         #                                          fill_value=0)
 
         # If the turo profile is handed in:
-        if profile_raw in locals():
+        if profile_raw is not None:
             output_netcdf_obj.createVariable("RESISTANCE", "f", dimensions=('DEPTH',), fill_value=float("nan"))
             output_netcdf_obj.createVariable("SAMPLE_TIME", "f", dimensions=('DEPTH',), fill_value=float("nan"))
 

@@ -248,3 +248,63 @@ Conventions = Australian XBT Cookbook v1.1 or v2.0, https://doi.org/10.25919/3tm
 long_name                   = quality applied to variable named in HISTORY_PARAMETER
 standard_name               = status_flag
 quality_control_conventions = IMOS standard flags
+
+[PSAL]
+long_name                 = sea_water_salinity
+standard_name             = sea_water_salinity
+units                     = 1
+valid_min                 = 2
+valid_max                 = 41.
+coordinates               = TIME LATITUDE LONGITUDE DEPTH
+ancillary_variables       = PSAL_quality_control
+axis                      = Z
+positive                  = down
+
+[PSAL_quality_control]
+long_name                   = quality flag for sea_water_salinity
+standard_name               = sea_water_salinity status_flag
+quality_control_conventions = IMOS standard flags
+
+[PSAL_uncertainty]
+axis 			= Z
+standard_name 		= sea_water_salinity standard_error
+units 			= 1
+long_name 		= seawater salinity uncertainty
+
+[PSAL_RAW]
+long_name                 = seawater salinity raw
+coordinates               = TIME LATITUDE LONGITUDE DEPTH
+units                     = 1
+valid_min                 = 2
+valid_max                 = 41.
+axis                      = Z
+positive                  = down
+
+[SSPD]
+long_name                 = speed_of_sound_in_sea_water
+standard_name             = speed_of_sound_in_sea_water
+ancillary_variables       = SSPD_quality_control
+units                     = m s-1
+coordinates               = TIME LATITUDE LONGITUDE DEPTH
+axis                      = Z
+positive                  = down
+
+[SSPD_quality_control]
+long_name                   = quality flag for speed_of_sound_in_sea_water
+standard_name               = speed_of_sound_in_sea_water status_flag
+quality_control_conventions = IMOS standard flags
+
+[SSPD_uncertainty]
+axis 			= Z
+standard_name 		= speed_of_sound_in_sea_water standard_error
+units 			= 1
+long_name 		= speed_of_sound_in_sea_water uncertainty
+
+[SSPD_RAW]
+long_name                 = speed_of_sound_in_sea_water raw
+coordinates               = TIME LATITUDE LONGITUDE DEPTH
+units                     = 1
+valid_min                 = 2
+valid_max                 = 41.
+axis                      = Z
+positive                  = down
