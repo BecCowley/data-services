@@ -37,8 +37,10 @@ def decode_bytearray(byte_array):
     '''
     decode a numpy masked array of bytes into a regular string
     '''
-    return ''.join(chr(x) for x in bytearray(byte_array[:]).strip())
-    #return ''.join([a.decode('UTF-8') for i, a in enumerate(byte_array) if not byte_array.mask[i]])
+    if byte_array.mask.size != byte_array.data.size or len(byte_array) == 1:
+        return ''.join(chr(x) for x in bytearray(byte_array[:]).strip())
+    else:
+        return ''.join([a.decode('UTF-8') for i, a in enumerate(byte_array) if not byte_array.mask[i]])
 
 
 def temp_prof_info(netcdf_file_obj):

@@ -122,11 +122,12 @@ class XbtKeys(object):
 
 def coordinate_data(profile_qc, profile_noqc, profile_raw):
     # perform checks and adjustments and combine data in preparation for writing out
-    profile_qc = parse_data_nc(profile_qc, profile_noqc, profile_raw)
+    profile_qc, profile_noqc = parse_data_nc(profile_qc, profile_noqc, profile_raw)
 
     # get global attributes
     profile_qc = parse_globalatts_nc(profile_qc)
     profile_noqc = parse_globalatts_nc(profile_noqc)
+
     # assign the geospatial_vertical* to the no_qc file for checking consistency. Doesn't get assigned in previous call
     # because the data doesn't get written to the noqc profile
     profile_noqc.global_atts['geospatial_vertical_max'] = max(profile_qc.data['DEPTH_RAW'])
@@ -210,10 +211,10 @@ def parse_globalatts_nc(profile):
 
     # voyage/cruise identifier
     profile.global_atts['XBT_cruise_ID'] = decode_bytearray(
-        profile.netcdf_file_obj.variables['Cruise_ID'][:].data).strip()
+        profile.netcdf_file_obj.variables['Cruise_ID'][:]).strip()
     # which node the data entered into the GTS
     profile.global_atts['gts_insertion_node'] = \
-        decode_bytearray(profile.netcdf_file_obj['Source_ID'][:].data).replace('\x00', '').strip()
+        decode_bytearray(profile.netcdf_file_obj['Source_ID'][:]).replace('\x00', '').strip()
     # source_id = 'AMMC' if source_id == '' else source_id
     profile.global_atts['digitisation_method_code'] = \
         decode_bytearray(profile.netcdf_file_obj['Digit_Code'][:].data).replace('\x00', '').strip()
@@ -249,7 +250,7 @@ def parse_globalatts_nc(profile):
     # read a list of srfc code defined in the srfc_code conf file. Create a
     # dictionary of matching values
     for i in range(nsrf_codes):
-        srfc_code_iter = decode_bytearray(srfc_code_nc[i].data)
+        srfc_code_iter = decode_bytearray(srfc_code_nc[i])
         if srfc_code_iter in list(srfc_code_list.keys()):
             att_name = srfc_code_list[srfc_code_iter].split(',')[0]
             att_type = srfc_code_list[srfc_code_iter].split(',')[1]
@@ -689,8 +690,7 @@ def parse_histories_nc(profile):
     df['HISTORY_SOFTWARE_RELEASE'] = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in
                                       profile.netcdf_file_obj['Version'][0:nhist].data if bytearray(xx).strip()]
 
-    # TODO: check this bug. Leave in place for now.
-    # AW Bug - problem here if the previous value string contains a non-numeric char like :
+    # AW - problem here if the previous value string contains a non-numeric char like :
     # which occurs when time is changed with TEA flag
     # get error converting e,g, 22:12 to a float - Python error invalid literal for float() -
     # simple fix - strip the ':' character
@@ -870,9 +870,9 @@ def restore_temp_val(profile):
         deps = profile.data['DEPTH' + vv]
         tempsp = profile.data['TEMP' + vv]
         ind = np.in1d(np.round(deps, 2), np.round(depths, 2)).nonzero()[0]
-        if tempsp[ind].mask.any():
+        if np.isnan(tempsp[ind]).any():
             # we need to replace these with their original temperatures
-            tempsp[ind] = np.array(temps)
+            tempsp[ind] = temps
             profile.data['TEMP' + vv] = tempsp
             # and update the flag to 3 from 5
             profile.data['TEMP' + vv + '_quality_control'][ind] = '3'
@@ -1024,7 +1024,6 @@ def create_flag_feature(profile):
         # set that depth to byte value for that QC code from hist table
         nullarray[ii] = row['byte_value']
         # adding them together - is there a more correct way to do this?
-        # TODO: check the outputs from these files can be decoded correctly
         # Add byte values (masks)
         profile.data['XBT_fault_and_feature_type'] = profile.data['XBT_fault_and_feature_type'] + nullarray
 
@@ -1100,7 +1099,7 @@ def create_filename_output(profile):
     return filename
 
 
-def write_output_nc(output_folder, profile):
+def write_output_nc(output_folder, profile, profile_raw=None):
     """output the data to the IMOS format netcdf version"""
 
     # now begin write out to new format
@@ -1352,7 +1351,7 @@ if __name__ == '__main__':
             profile_ed = XbtProfile(fname)
             # read the raw profile
             profile_raw = XbtProfile(fname.replace('ed.nc', 'raw.nc'))
-
+            # TODO: check the keys data (date/time/lat/long etc) against what is in the data file
             # TODO: find the matching TURO profile if it is available:
             # profile_turo = turoProfile(profile_ed)
             profile_turo = []
