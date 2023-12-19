@@ -47,15 +47,12 @@ def temp_prof_info(netcdf_file_obj):
     """
     #TODO: if there is more than one profile (eg, from XCTD) need to handle this somewhere,
     # if the converter is to be used for other data types
-    no_prof = netcdf_file_obj['No_Prof'][0]
-    temp_prof = None
-    for i in range(no_prof):
-        prof_type = ''.join(chr(x) for x in bytearray(netcdf_file_obj['Prof_Type'][:][i].data)).strip()
-        if prof_type == 'TEMP':
-            temp_prof = i
-            break
+    no_prof = netcdf_file_obj['No_Prof'][:]
+    prof_type = dict()
+    for i in range(no_prof.item()):
+        prof_type[i] = decode_bytearray(netcdf_file_obj['Prof_Type'][i])
 
-    return no_prof, prof_type, temp_prof
+    return prof_type
 
 
 def invalid_to_ma_array(invalid_array, fillvalue=0):
