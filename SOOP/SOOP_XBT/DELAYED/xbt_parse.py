@@ -216,10 +216,14 @@ def parse_globalatts_nc(profile):
     profile.global_atts['gts_insertion_node'] = \
         decode_bytearray(profile.netcdf_file_obj['Source_ID'][:]).replace('\x00', '').strip()
     # source_id = 'AMMC' if source_id == '' else source_id
-    profile.global_atts['digitisation_method_code'] = \
-        decode_bytearray(profile.netcdf_file_obj['Digit_Code'][:].data).replace('\x00', '').strip()
-    profile.global_atts['gtspp_precision_code'] \
-        = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Standard'][:].data)).replace('\x00', '').strip()
+    # these two variable are dimensioned by nprof
+    profile.global_atts['digitisation_method_code'] = np.empty(profile.nprof)
+    profile.global_atts['gtspp_precision_code'] = np.empty(profile.nprof)
+    for count in range(profile.nprof):
+        profile.global_atts['digitisation_method_code'][count] = \
+            decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count]).replace('\x00', '').strip()
+        profile.global_atts['gtspp_precision_code'][count] \
+            = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Standard'][count].data)).replace('\x00', '').strip()
     try:
         profile.global_atts['predrop_comments'] \
             = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['PreDropComments'][:].data)).replace(
