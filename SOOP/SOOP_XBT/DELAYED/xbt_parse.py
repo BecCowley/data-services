@@ -317,6 +317,8 @@ def parse_globalatts_nc(profile):
     isline = profile.global_atts.get('XBT_line')
     if not isline:
         profile.global_atts['XBT_line'] = 'NOLINE'
+        # TODO: need to allow the user to assign a line to this cruise ID. Need to retain this information and apply to
+        # all the profiles with this cruise ID.
 
     xbt_line_conf_section = [s for s in xbt_config.sections() if profile.global_atts['XBT_line'] in s]
     xbt_alt_codes = [s for s in list(XBT_LINE_INFO.keys()) if
