@@ -220,10 +220,14 @@ def parse_globalatts_nc(profile):
     profile.global_atts['digitisation_method_code'] = np.empty(profile.nprof)
     profile.global_atts['gtspp_precision_code'] = np.empty(profile.nprof)
     for count in range(profile.nprof):
-        profile.global_atts['digitisation_method_code'][count] = \
-            decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count]).replace('\x00', '').strip()
-        profile.global_atts['gtspp_precision_code'][count] \
-            = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Standard'][count].data)).replace('\x00', '').strip()
+        try:
+            profile.global_atts['digitisation_method_code'][count] = \
+                decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count]).replace('\x00', '').strip()
+            profile.global_atts['gtspp_precision_code'][count] \
+                = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Standard'][count].data)).replace('\x00', '').strip()
+        except:
+            profile.global_atts['digitisation_method_code'][count] = np.nan
+            profile.global_atts['gtspp_precision_code'][count] = np.nan
     try:
         profile.global_atts['predrop_comments'] \
             = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['PreDropComments'][:].data)).replace(
