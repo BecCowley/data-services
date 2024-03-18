@@ -192,8 +192,8 @@ def get_recorder_type(profile):
     att_name = 'XBT_recorder_type'
     if att_name in list(profile.global_atts.keys()):
         item_val = str(int(profile.global_atts[att_name]))
-        if item_val in list(syst_list.keys()):
-            item_val = syst_list[item_val].split(',')[0]
+#        if item_val in list(syst_list.keys()):
+#            item_val = syst_list[item_val].split(',')[0]
 
         if item_val in list(rct_list.keys()):
             return item_val, rct_list[item_val].split(',')[0]
