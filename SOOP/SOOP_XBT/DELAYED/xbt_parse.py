@@ -102,8 +102,8 @@ class XbtKeys(object):
             station_number = list(set(station_number))
 
             # read in the position information
-            latitude = netcdf_file_obj['obslat'][:].data
-            longitude = netcdf_file_obj['obslng'][:].data
+            latitude = np.round(netcdf_file_obj['obslat'][:].data,4)
+            longitude = np.round(netcdf_file_obj['obslng'][:].data,4)
 
             # decode date/time information
 
@@ -347,8 +347,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     profile_qc.data = dict()
 
     # Location information
-    profile_qc.data['LATITUDE'] = profile_qc.netcdf_file_obj['latitude'][0].__float__()
-    profile_qc.data['LATITUDE_RAW'] = profile_noqc.netcdf_file_obj['latitude'][0].__float__()
+    profile_qc.data['LATITUDE'] = np.round(profile_qc.netcdf_file_obj['latitude'][0].__float__(), 4)
+    profile_qc.data['LATITUDE_RAW'] = np.round(profile_noqc.netcdf_file_obj['latitude'][0].__float__(), 4)
 
     # check if scale factor has been applied, shouldn't have a negative longitude:
     lon = profile_noqc.netcdf_file_obj['longitude'][0].__float__()
@@ -359,8 +359,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
         else:
             LOGGER.error('Negative longitude value with no scale factor %s' % lon)
             exit(1)
-    profile_qc.data['LONGITUDE'] = lon
-    profile_qc.data['LONGITUDE_RAW'] = profile_noqc.netcdf_file_obj['longitude'][0].__float__()
+    profile_qc.data['LONGITUDE'] = np.round(lon, 4)
+    profile_qc.data['LONGITUDE_RAW'] = np.round(profile_noqc.netcdf_file_obj['longitude'][0].__float__(), 4)
 
     # position and time QC - check this is not empty. Assume 1 if it is
     q_pos = int(profile_qc.netcdf_file_obj['Q_Pos'][0].data)
@@ -437,12 +437,12 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 depcode = 'depth'
             else:
                 depcode = 'press'
-            df[var + depcode] = s.netcdf_file_obj.variables['Depthpress'][ivar, :]
+            df[var + depcode] = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 2)
             depth_press_flag = s.netcdf_file_obj.variables['DepresQ'][ivar, :, 0].flatten()
             df[var + depcode + '_quality_control'] = np.ma.masked_array(invalid_to_ma_array(depth_press_flag, fillvalue=0))
 
             prof = np.ma.masked_values(
-                s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0], 99.99) #mask the 99.99 from CSA flagging of TEMP
+                np.round(s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0],2), 99.99) #mask the 99.99 from CSA flagging of TEMP
             prof = np.ma.masked_invalid(prof) # mask nan and inf values
             prof.set_fill_value(-99.99)
 
@@ -632,7 +632,7 @@ def add_uncertainties(profile):
     unc = np.ma.MaskedArray(profile.data['DEPTH'] * dunc[0], mask=False)
     if len(dunc) > 1:
         unc[profile.data['DEPTH'] <= 230] = dunc[1]
-    profile.data['DEPTH_uncertainty'] = unc
+    profile.data['DEPTH_uncertainty'] = np.round(unc, 2)
 
     return profile
 
