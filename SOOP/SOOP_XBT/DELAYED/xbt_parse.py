@@ -925,7 +925,7 @@ def combine_histories(profile_qc, profile_noqc):
                         profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'][0]
     # TODO: handle other extra histories in noqc file here:
     if len(profile_noqc.histories) > 1:
-        breakpoint()
+        print('QC flags and codes in the raw file')
 
     return profile_qc
 
