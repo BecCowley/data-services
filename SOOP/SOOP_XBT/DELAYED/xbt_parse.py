@@ -135,6 +135,10 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     # because the data doesn't get written to the noqc profile
     profile_noqc.global_atts['geospatial_vertical_max'] = max(profile_qc.data['DEPTH_RAW'])
     profile_noqc.global_atts['geospatial_vertical_min'] = min(profile_qc.data['DEPTH_RAW'])
+    profile_noqc.global_atts['geospatial_lat_max'] = profile_qc.data['LATITUDE_RAW']
+    profile_noqc.global_atts['geospatial_lat_min'] = profile_qc.data['LATITUDE_RAW']
+    profile_noqc.global_atts['geospatial_lon_max'] = profile_qc.data['LONGITUDE_RAW']
+    profile_noqc.global_atts['geospatial_lon_min'] = profile_qc.data['LONGITUDE_RAW']
 
     # let's check if there are histories to parse and then handle
     if int(profile_qc.netcdf_file_obj['Num_Hists'][0].data) == 0:
@@ -242,12 +246,24 @@ def parse_globalatts_nc(profile):
         profile.global_atts['predrop_comments'] = ''
         profile.global_atts['postdrop_comments'] = ''
 
+    profile.global_atts['geospatial_vertical_units'] = 'meters'
+    profile.global_atts['geospatial_vertical_positive'] = 'down'
+
     try:
+        profile.global_atts['geospatial_lat_max'] = profile.data['LATITUDE']
+        profile.global_atts['geospatial_lat_min'] = profile.data['LATITUDE']
+        profile.global_atts['geospatial_lon_max'] = profile.data['LONGITUDE']
+        profile.global_atts['geospatial_lon_min'] = profile.data['LONGITUDE']
         profile.global_atts['geospatial_vertical_max'] = max(profile.data['DEPTH'])
         profile.global_atts['geospatial_vertical_min'] = min(profile.data['DEPTH'])
     except:
+        profile.global_atts['geospatial_lat_max'] = []
+        profile.global_atts['geospatial_lat_min'] = []
+        profile.global_atts['geospatial_lon_max'] = []
+        profile.global_atts['geospatial_lon_min'] = []
         profile.global_atts['geospatial_vertical_max'] = []
         profile.global_atts['geospatial_vertical_min'] = []
+
 
     profile.global_atts['date_created'] = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
