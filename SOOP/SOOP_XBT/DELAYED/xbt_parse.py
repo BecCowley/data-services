@@ -860,16 +860,29 @@ def parse_histories_nc(profile):
            ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LO', 2
 
     # Combine duplicated TEA flags to a single TEA for TIME variable TEMP_QC_CODE_VALUE is set to 2, not 5
+    # Also change just DATE TEA flags to TIME
     df_dups = df.loc[df['HISTORY_QC_CODE'].str.contains('TEA')]
     if len(df_dups) > 0:
         ti = df.loc[df['HISTORY_PARAMETER'].str.contains('TIME'), 'HISTORY_PREVIOUS_VALUE'].values
+        if len(ti) == 0:
+            # get the time value from the TIME variable as this hasn't been changed
+            ti = str(profile.data['TIME'].hour).ljust(2, '0') + str(profile.data['TIME'].minute).ljust(2, '0')
         dat = df.loc[df['HISTORY_PARAMETER'].str.contains('DATE'), 'HISTORY_PREVIOUS_VALUE'].values
-        dt = datetime.strptime(str(int(dat)) + str(int(ti)), '%Y%m%d%H%M')
-        # drop the 'DATE' line from histories
-        df = df[~((df['HISTORY_PARAMETER'].str.contains('DATE')) & (df['HISTORY_QC_CODE'].str.contains('TEA')))]
-        # update the TEA PREVIOUS_VALUE to the new datetime value
-        df.loc[((df['HISTORY_PARAMETER'].str.contains('TIME')) & (df['HISTORY_QC_CODE'].str.contains('TEA'))),
-               ['HISTORY_PREVIOUS_VALUE']] = dt
+        if len(dat) == 0:
+            # get the date value from the TIME variable as this hasn't been changed
+            ti = str(profile.data['TIME'].year).ljust(4, '0') + str(profile.data['TIME'].month).ljust(2, '0') + \
+                 str(profile.data['TIME'].day).ljust(2, '0')
+        try:
+            dt = datetime.strptime(str(int(dat)) + str(int(ti)), '%Y%m%d%H%M')
+        except:
+            dt = datetime.strptime(str(int(dat)) + str(int(ti)), '%d%m%Y%H%M')
+
+        # change the 'DATE' label to TIME  and update the TEA PREVIOUS_VALUE to the new datetime value
+        df.loc[((df['HISTORY_PARAMETER'].str.contains('DATE')) &
+                (df['HISTORY_QC_CODE'].str.contains('TEA'))), ['HISTORY_PARAMETER', 'HISTORY_PREVIOUS_VALUE']] = 'TIME', dt
+
+        # remove any duplicated lines
+        df = df[~(df.duplicated(['HISTORY_PARAMETER','HISTORY_QC_CODE']) & df.HISTORY_PARAMETER.eq('TIME'))]
     profile.histories = df
 
     return profile
