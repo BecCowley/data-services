@@ -204,7 +204,9 @@ def get_recorder_type(profile):
         if item_val in list(rct_list.keys()):
             return item_val, rct_list[item_val].split(',')[0]
         else:
-            _error('{item_val} missing from recorder type part in xbt_config file'.format(item_val=item_val))
+            LOGGER.warning('{item_val} missing from recorder type part in xbt_config file, using unknown for recorder'.format(item_val=item_val))
+            item_val = '99'
+            return item_val, rct_list[item_val].split(',')[0]
     else:
         _error('XBT_recorder_type missing from {input_nc_path}'.format(input_nc_path=profile.XBT_input_filename))
 
