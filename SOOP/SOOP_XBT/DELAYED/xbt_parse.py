@@ -99,26 +99,28 @@ class XbtKeys(object):
         with Dataset(self.keys_file_path, 'r', format='NETCDF4') as netcdf_file_obj:
             station_number = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in
                               netcdf_file_obj['stn_num'][:].data if bytearray(xx).strip()]
-            # TODO: check if this is where the unique is done, if so, how to apply to the other variables?
-            station_number = list(set(station_number))
+            # change station number to a numpy array
+            station_number = np.asarray(station_number, dtype=np.int32)
+            # sort it and keep unique station numbers where sometimes the keys has multiple values
+            station_number, istn = np.unique(station_number, return_index=True)
 
             # read in the position information
             latitude = np.round(netcdf_file_obj['obslat'][:].data,4)
             longitude = np.round(netcdf_file_obj['obslng'][:].data,4)
-
+            # sort them as per the station number
+            latitude = latitude[istn]
+            longitude = longitude[istn]
             # decode date/time information
 
             # callsign
             calls = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in netcdf_file_obj['callsign'][:].data
                      if bytearray(xx).strip()]
-            calls = list(set(calls))
+            # sort the same as station number
+            calls = [x for _, x in sorted(zip(istn, calls))]
 
-            # make sure we have a unique list of IDs.
-            # Sometimes they are repeated in the keys file (a fault in some of them)
-            # TODO: ensure all the other variables are associated in this dictionary and in the same sorted order
             self.data = {}
-            self.data = {'station_number': [int(x) for x in station_number], 'latitude': [int(x) for x in latitude],
-                         'longitude': [int(x) for x in longitude], 'callsign': [x for x in calls]}
+            self.data = {'station_number': [int(x) for x in station_number], 'latitude': [x for x in latitude],
+                         'longitude': [x for x in longitude], 'callsign': [x for x in calls]}
 
 
 def coordinate_data(profile_qc, profile_noqc, profile_raw):
