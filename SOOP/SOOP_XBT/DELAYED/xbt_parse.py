@@ -522,8 +522,8 @@ def adjust_position_qc_flags(profile):
     tempqc = profile.data['TEMP_quality_control']
     if profile.histories['HISTORY_QC_CODE'].str.contains('LA').any():
         # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
-        if np.round(profile.histories.loc[
-                        profile.histories['HISTORY_QC_CODE'].str.contains('LA'), 'HISTORY_PREVIOUS_VALUE'].values,
+        if np.round(float(profile.histories.loc[
+                        profile.histories['HISTORY_QC_CODE'].str.contains('LA'), 'HISTORY_PREVIOUS_VALUE'].values),
                     4) != np.round(profile.data['LATITUDE_RAW'], 4):
             LOGGER.error('LATITUDE_RAW not the same as the PREVIOUS_value!')
             exit(1)
@@ -534,11 +534,10 @@ def adjust_position_qc_flags(profile):
             # change to flag 2 for temperature for all depths where qc is less than 2
             tempqc[tempqc < 2] = 2
 
-
     if profile.histories['HISTORY_QC_CODE'].str.contains('LO').any():
         # check HISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value
-        if np.round(profile.histories.loc[
-                        profile.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'].values,
+        if np.round(float(profile.histories.loc[
+                        profile.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'].values),
                     4) != np.round(profile.data['LONGITUDE_RAW'], 4):
             LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_value!')
             exit(1)
