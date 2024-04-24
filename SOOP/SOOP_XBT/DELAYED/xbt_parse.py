@@ -1130,6 +1130,11 @@ def check_nc_to_be_created(profile):
     nhist = int(profile.netcdf_file_obj['Num_Hists'][0].data)
     histcodes = [''.join(chr(x) for x in bytearray(xx)).strip()
                  for xx in profile.netcdf_file_obj['Act_Code'][0:nhist].data if bytearray(xx).strip()]
+    depth = np.round(profile.netcdf_file_obj.variables['Depthpress'][:], 2)
+
+    if len(depth) == 0:
+        LOGGER.error('No data in the file')
+        return False
 
     if data_type != 'XB':
         LOGGER.error('Profile not processed as it is not an XBT')
