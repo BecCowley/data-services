@@ -141,10 +141,7 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     profile_noqc.global_atts['geospatial_lon_min'] = profile_qc.data['LONGITUDE_RAW']
 
     # let's check if there are histories to parse and then handle
-    if int(profile_qc.netcdf_file_obj['Num_Hists'][0].data) == 0:
-        profile_qc.histories = []
-    else:
-        profile_qc = parse_histories_nc(profile_qc)
+    profile_qc = parse_histories_nc(profile_qc)
     if int(profile_noqc.netcdf_file_obj['Num_Hists'][0].data) == 0:
         profile_noqc.histories = []
     else:
@@ -159,26 +156,28 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
             # reconcile histories where they exist in the noqc profile
             profile_qc = combine_histories(profile_qc, profile_noqc)
 
-    # handle special case of premature launch where raw and edited files have different profile lengths:
-    profile_qc = check_for_PL_flag(profile_qc)
+    # next section, only if there are QC flags present
+    if len(profile_qc.histories) > 0:
+        # handle special case of premature launch where raw and edited files have different profile lengths:
+        profile_qc = check_for_PL_flag(profile_qc)
 
-    # replace missing temperature data with actual values and appropriate QC flags
-    # applies to CS flag in particular
-    profile_qc = restore_temp_val(profile_qc)
+        # replace missing temperature data with actual values and appropriate QC flags
+        # applies to CS flag in particular
+        profile_qc = restore_temp_val(profile_qc)
 
-    # perform a check of the qc vs noqc global attributes and histories. Do any of these need reconciling?
-    if len(profile_qc.global_atts.keys() - profile_noqc.global_atts):
-        LOGGER.error('%s GLOBAL attributes in RAW and ED files are not consistent'
-                     % profile_qc.XBT_input_filename)
-        exit(1)
+        # adjust lat lon qc flags if required
+        profile_qc = adjust_position_qc_flags(profile_qc)
+        # adjust date and time QC flags if required
+        profile_qc = adjust_time_qc_flags(profile_qc)
+
+        # perform a check of the qc vs noqc global attributes and histories. Do any of these need reconciling?
+        if len(profile_qc.global_atts.keys() - profile_noqc.global_atts):
+            LOGGER.error('%s GLOBAL attributes in RAW and ED files are not consistent'
+                         % profile_qc.XBT_input_filename)
+            exit(1)
 
     # now, lets re-map these data code (QC reasons) and create the flag_and_feature type variable:
     profile_qc = create_flag_feature(profile_qc)
-
-    # adjust lat lon qc flags if required
-    profile_qc = adjust_position_qc_flags(profile_qc)
-    # adjust date and time QC flags if required
-    profile_qc = adjust_time_qc_flags(profile_qc)
 
     # Probe type goes into a variable with coefficients as attributes, and assign QC to probe types
     profile_qc = get_fallrate_eq_coef(profile_qc, profile_noqc)
@@ -730,37 +729,41 @@ def parse_histories_nc(profile):
 
     df['HISTORY_QC_CODE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
                              for xx in profile.netcdf_file_obj['Act_Code'][0:nhist].data if bytearray(xx).strip()]
-    df['HISTORY_QC_CODE'] = df['HISTORY_QC_CODE'].str.replace('\x00', '')
 
     df['HISTORY_PARAMETER'] = [''.join(chr(x) for x in bytearray(xx)).strip()
                                for xx in profile.netcdf_file_obj['Act_Parm'][0:nhist].data if bytearray(xx).strip()]
-    df['HISTORY_PARAMETER'] = df['HISTORY_PARAMETER'].str.replace('\x00', '')
 
     df['HISTORY_SOFTWARE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
                               for xx in profile.netcdf_file_obj['PRC_Code'][0:nhist].data if bytearray(xx).strip()]
-    df['HISTORY_SOFTWARE'] = df['HISTORY_SOFTWARE'].str.replace('\x00', '')
 
     df['HISTORY_DATE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
                           for xx in profile.netcdf_file_obj['PRC_Date'][0:nhist].data if bytearray(xx).strip()]
-    df['HISTORY_DATE'] = df['HISTORY_DATE'].str.replace('\x00', '')
-    df['HISTORY_DATE'] = df['HISTORY_DATE'].str.replace(' ', '0')
-    # allow for history dates to be YYYYMMDD or DDMMYYYY
-    date1 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%Y%m%d')
-    date2 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%d%m%Y')
-    df['HISTORY_DATE'] = date1.fillna(date2)
-    # depth value of modified act_parm var modified
     df['HISTORY_START_DEPTH'] = profile.netcdf_file_obj['Aux_ID'][0:nhist].data
     df['HISTORY_TEMP_QC_CODE_VALUE'] = profile.netcdf_file_obj['Flag_severity'][0:nhist].data
     df['HISTORY_SOFTWARE_RELEASE'] = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in
                                       profile.netcdf_file_obj['Version'][0:nhist].data if bytearray(xx).strip()]
 
-    # AW - problem here if the previous value string contains a non-numeric char like :
-    # which occurs when time is changed with TEA flag
-    # get error converting e,g, 22:12 to a float - Python error invalid literal for float() -
-    # simple fix - strip the ':' character
-    df['HISTORY_PREVIOUS_VALUE'] = [float(x.replace(':', '')) for x in
+    dat = [float(x.replace(':', '')) for x in
                                     [''.join(chr(x) for x in bytearray(xx).strip()).rstrip('\x00')
                                      for xx in profile.netcdf_file_obj.variables['Previous_Val'][0:nhist]] if x]
+    if dat:
+        df['HISTORY_PREVIOUS_VALUE'] = dat
+    else:
+        df['HISTORY_PREVIOUS_VALUE'] = np.nan
+
+    df = df.astype({'HISTORY_SOFTWARE_RELEASE': np.str_,'HISTORY_QC_CODE': np.str_})
+
+    if nhist > 0:
+        df['HISTORY_QC_CODE'] = df['HISTORY_QC_CODE'].str.replace('\x00', '')
+        df['HISTORY_DATE'] = df['HISTORY_DATE'].str.replace('\x00', '')
+        df['HISTORY_DATE'] = df['HISTORY_DATE'].str.replace(' ', '0')
+        df['HISTORY_PARAMETER'] = df['HISTORY_PARAMETER'].str.replace('\x00', '')
+        df['HISTORY_SOFTWARE'] = df['HISTORY_SOFTWARE'].str.replace('\x00', '')
+        # allow for history dates to be YYYYMMDD or DDMMYYYY
+        date1 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%Y%m%d')
+        date2 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%d%m%Y')
+        df['HISTORY_DATE'] = date1.fillna(date2)
+        # depth value of modified act_parm var modified
 
     # TODO: check this correctly identifies duplicated CS flags, might be faulty profile information where the
     # previous values are not recorded at all correctly
@@ -869,38 +872,39 @@ def parse_histories_nc(profile):
                 LOGGER.error('QC code of zero for a flag that is not RE, please check.')
                 exit(1)
 
-    # Change the PEA flag to LA or LO and ensure the TEMP_QC_CODE_VALUE is set to 2, not 5
-    df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
-            (df['HISTORY_PARAMETER'].str.contains('LATITUDE'))),
-           ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LA', 2
-    df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
-            (df['HISTORY_PARAMETER'].str.contains('LONGITUDE'))),
-           ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LO', 2
+    if nhist > 0:
+        # Change the PEA flag to LA or LO and ensure the TEMP_QC_CODE_VALUE is set to 2, not 5
+        df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
+                (df['HISTORY_PARAMETER'].str.contains('LATITUDE'))),
+               ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LA', 2
+        df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
+                (df['HISTORY_PARAMETER'].str.contains('LONGITUDE'))),
+               ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LO', 2
 
-    # Combine duplicated TEA flags to a single TEA for TIME variable TEMP_QC_CODE_VALUE is set to 2, not 5
-    # Also change just DATE TEA flags to TIME
-    df_dups = df.loc[df['HISTORY_QC_CODE'].str.contains('TEA')]
-    if len(df_dups) > 0:
-        ti = df.loc[df['HISTORY_PARAMETER'].str.contains('TIME'), 'HISTORY_PREVIOUS_VALUE'].values
-        if len(ti) == 0:
-            # get the time value from the TIME variable as this hasn't been changed
-            ti = str(profile.data['TIME'].hour).ljust(2, '0') + str(profile.data['TIME'].minute).ljust(2, '0')
-        dat = df.loc[df['HISTORY_PARAMETER'].str.contains('DATE'), 'HISTORY_PREVIOUS_VALUE'].values
-        if len(dat) == 0:
-            # get the date value from the TIME variable as this hasn't been changed
-            ti = str(profile.data['TIME'].year).ljust(4, '0') + str(profile.data['TIME'].month).ljust(2, '0') + \
-                 str(profile.data['TIME'].day).ljust(2, '0')
-        try:
-            dt = datetime.strptime(str(int(dat)) + str(int(ti)), '%Y%m%d%H%M')
-        except:
-            dt = datetime.strptime(str(int(dat)) + str(int(ti)), '%d%m%Y%H%M')
+        # Combine duplicated TEA flags to a single TEA for TIME variable TEMP_QC_CODE_VALUE is set to 2, not 5
+        # Also change just DATE TEA flags to TIME
+        df_dups = df.loc[df['HISTORY_QC_CODE'].str.contains('TEA')]
+        if len(df_dups) > 0:
+            ti = df.loc[df['HISTORY_PARAMETER'].str.contains('TIME'), 'HISTORY_PREVIOUS_VALUE'].values
+            if len(ti) == 0:
+                # get the time value from the TIME variable as this hasn't been changed
+                ti = str(profile.data['TIME'].hour).ljust(2, '0') + str(profile.data['TIME'].minute).ljust(2, '0')
+            dat = df.loc[df['HISTORY_PARAMETER'].str.contains('DATE'), 'HISTORY_PREVIOUS_VALUE'].values
+            if len(dat) == 0:
+                # get the date value from the TIME variable as this hasn't been changed
+                ti = str(profile.data['TIME'].year).ljust(4, '0') + str(profile.data['TIME'].month).ljust(2, '0') + \
+                     str(profile.data['TIME'].day).ljust(2, '0')
+            try:
+                dt = datetime.strptime(str(int(dat)) + str(int(ti)), '%Y%m%d%H%M')
+            except:
+                dt = datetime.strptime(str(int(dat)) + str(int(ti)), '%d%m%Y%H%M')
 
-        # change the 'DATE' label to TIME  and update the TEA PREVIOUS_VALUE to the new datetime value
-        df.loc[((df['HISTORY_PARAMETER'].str.contains('DATE')) &
-                (df['HISTORY_QC_CODE'].str.contains('TEA'))), ['HISTORY_PARAMETER', 'HISTORY_PREVIOUS_VALUE']] = 'TIME', dt
+            # change the 'DATE' label to TIME  and update the TEA PREVIOUS_VALUE to the new datetime value
+            df.loc[((df['HISTORY_PARAMETER'].str.contains('DATE')) &
+                    (df['HISTORY_QC_CODE'].str.contains('TEA'))), ['HISTORY_PARAMETER', 'HISTORY_PREVIOUS_VALUE']] = 'TIME', dt
 
-        # remove any duplicated lines
-        df = df[~(df.duplicated(['HISTORY_PARAMETER','HISTORY_QC_CODE']) & df.HISTORY_PARAMETER.eq('TIME'))]
+            # remove any duplicated lines
+            df = df[~(df.duplicated(['HISTORY_PARAMETER','HISTORY_QC_CODE']) & df.HISTORY_PARAMETER.eq('TIME'))]
     profile.histories = df
 
     return profile
