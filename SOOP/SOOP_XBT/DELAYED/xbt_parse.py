@@ -805,7 +805,7 @@ def parse_histories_nc(profile):
 
     # update institute names to be more descriptive
     names = {'CS': 'CSIRO', 'BO': 'Australian Bureau of Meteorology', 'AO': 'Australian Ocean Data Network',
-             'AD': 'Defence'}
+             'AD': 'Defence', 'SC': 'Scripps Institute of Oceanography'}
     df['HISTORY_INSTITUTION'] = df['HISTORY_INSTITUTION'].map(names, na_action='ignore')
     if any(df['HISTORY_INSTITUTION'].isna()):
         LOGGER.error("HISTORY_INSTITUTION values - some are not defined. Please review output for this file")
