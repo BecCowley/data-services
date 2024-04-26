@@ -105,8 +105,8 @@ class XbtKeys(object):
             station_number, istn = np.unique(station_number, return_index=True)
 
             # read in the position information
-            latitude = np.round(netcdf_file_obj['obslat'][:].data,4)
-            longitude = np.round(netcdf_file_obj['obslng'][:].data,4)
+            latitude = np.round(netcdf_file_obj['obslat'][:].data, 4)
+            longitude = np.round(netcdf_file_obj['obslng'][:].data, 4)
             # sort them as per the station number
             latitude = latitude[istn]
             longitude = longitude[istn]
@@ -198,13 +198,15 @@ def get_recorder_type(profile):
     att_name = 'XBT_recorder_type'
     if att_name in list(profile.global_atts.keys()):
         item_val = str(int(profile.global_atts[att_name]))
-#        if item_val in list(syst_list.keys()):
-#            item_val = syst_list[item_val].split(',')[0]
+        #        if item_val in list(syst_list.keys()):
+        #            item_val = syst_list[item_val].split(',')[0]
 
         if item_val in list(rct_list.keys()):
             return item_val, rct_list[item_val].split(',')[0]
         else:
-            LOGGER.warning('{item_val} missing from recorder type part in xbt_config file, using unknown for recorder'.format(item_val=item_val))
+            LOGGER.warning(
+                '{item_val} missing from recorder type part in xbt_config file, using unknown for recorder'.format(
+                    item_val=item_val))
             item_val = '99'
             return item_val, rct_list[item_val].split(',')[0]
     else:
@@ -232,7 +234,8 @@ def parse_globalatts_nc(profile):
             profile.global_atts['digitisation_method_code'][count] = \
                 decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count]).replace('\x00', '').strip()
             profile.global_atts['gtspp_precision_code'][count] \
-                = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Standard'][count].data)).replace('\x00', '').strip()
+                = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Standard'][count].data)).replace('\x00',
+                                                                                                              '').strip()
         except:
             profile.global_atts['digitisation_method_code'][count] = np.nan
             profile.global_atts['gtspp_precision_code'][count] = np.nan
@@ -309,7 +312,8 @@ def parse_globalatts_nc(profile):
     # note that the callsign and ship name are filled from the original file values, but will be replaced here if they exist in the AODN vocabulary
     # for these older historical files, the Callsign and Platform_code are the same. In newer files, the platform_code
     # will be the GTSID or SOTID.
-    profile.global_atts['Callsign'] = profile.global_atts['Platform_code'] # set here as can't have duplicate assignments in the config file
+    profile.global_atts['Callsign'] = profile.global_atts[
+        'Platform_code']  # set here as can't have duplicate assignments in the config file
     ships = SHIP_CALL_SIGN_LIST
     if profile.global_atts['Platform_code'] in ships:
         profile.global_atts['ship_name'] = ships[profile.global_atts['Platform_code']]
@@ -441,7 +445,6 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
         xbt_date_raw = ''.join(str1)
         xbt_date_raw = datetime.strptime(xbt_date_raw, '%Y%m%dT%H%M%S')
 
-
     # AW - TIME_RAW is original date-time - set it too
     profile_qc.data['TIME'] = xbt_date
     profile_qc.data['TIME_quality_control'] = q_date_time
@@ -501,10 +504,10 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     # rename and tidy
     # TODO: Check the salinity and conductivity variables when we get a profile with them in
     dd = {"TEMPdepth": "DEPTH",
-           "TEMP_RAWdepth": "DEPTH_RAW",
-           "SVEL": "SSPD",
-           "SALT": "PSAL"
-           }
+          "TEMP_RAWdepth": "DEPTH_RAW",
+          "SVEL": "SSPD",
+          "SALT": "PSAL"
+          }
     for key, val in dd.items():
         df.columns = df.columns.str.replace(key, val)
 
@@ -542,7 +545,8 @@ def adjust_position_qc_flags(profile):
     if profile.histories['HISTORY_QC_CODE'].str.contains('LA').any():
         # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
         if np.round(float(profile.histories.loc[
-                        profile.histories['HISTORY_QC_CODE'].str.contains('LA'), 'HISTORY_PREVIOUS_VALUE'].values),
+                              profile.histories['HISTORY_QC_CODE'].str.contains(
+                                  'LA'), 'HISTORY_PREVIOUS_VALUE'].values),
                     4) != np.round(profile.data['LATITUDE_RAW'], 4):
             LOGGER.error('LATITUDE_RAW not the same as the PREVIOUS_value!')
             exit(1)
@@ -556,7 +560,8 @@ def adjust_position_qc_flags(profile):
     if profile.histories['HISTORY_QC_CODE'].str.contains('LO').any():
         # check HISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value
         if np.round(float(profile.histories.loc[
-                        profile.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'].values),
+                              profile.histories['HISTORY_QC_CODE'].str.contains(
+                                  'LO'), 'HISTORY_PREVIOUS_VALUE'].values),
                     4) != np.round(profile.data['LONGITUDE_RAW'], 4):
             LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_value!')
             exit(1)
@@ -566,7 +571,6 @@ def adjust_position_qc_flags(profile):
             LOGGER.info('LONGITUDE correction (PEA) in original file, changing LONGITUDE flag to level 5.')
             # change to flag 2 for temperature for all depths where qc is less than 2
             tempqc[tempqc < 2] = 2
-
 
     if profile.histories['HISTORY_QC_CODE'].str.contains('PER').any():
         # PER on longitude and latitude
@@ -600,8 +604,8 @@ def adjust_time_qc_flags(profile):
         tempqc[tempqc < 2] = 2
         # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
         if profile.histories.loc[
-            profile.histories['HISTORY_QC_CODE'].str.contains('TEA'), 'HISTORY_PREVIOUS_VALUE'].values != profile.data[
-            'TIME_RAW']:
+            profile.histories['HISTORY_QC_CODE'].str.contains('TEA'), 'HISTORY_PREVIOUS_VALUE'].values != \
+                profile.data['TIME_RAW']:
             LOGGER.error('TIME_RAW not the same as the PREVIOUS_value!')
             exit(1)
 
@@ -746,14 +750,14 @@ def parse_histories_nc(profile):
                                       profile.netcdf_file_obj['Version'][0:nhist].data if bytearray(xx).strip()]
 
     dat = [float(x.replace(':', '')) for x in
-                                    [''.join(chr(x) for x in bytearray(xx).strip()).rstrip('\x00')
-                                     for xx in profile.netcdf_file_obj.variables['Previous_Val'][0:nhist]] if x]
+           [''.join(chr(x) for x in bytearray(xx).strip()).rstrip('\x00')
+            for xx in profile.netcdf_file_obj.variables['Previous_Val'][0:nhist]] if x]
     if dat:
         df['HISTORY_PREVIOUS_VALUE'] = dat
     else:
         df['HISTORY_PREVIOUS_VALUE'] = np.nan
 
-    df = df.astype({'HISTORY_SOFTWARE_RELEASE': np.str_,'HISTORY_QC_CODE': np.str_})
+    df = df.astype({'HISTORY_SOFTWARE_RELEASE': np.str_, 'HISTORY_QC_CODE': np.str_})
 
     if nhist > 0:
         df['HISTORY_QC_CODE'] = df['HISTORY_QC_CODE'].str.replace('\x00', '')
@@ -919,15 +923,17 @@ def combine_histories(profile_qc, profile_noqc):
     if len(profile_noqc.histories) > 0:
         # copy this information to the LONGITUDE_RAW value if it isn't the same
         if np.round(profile_noqc.histories.loc[profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'),
-                                               'HISTORY_PREVIOUS_VALUE'], 4).values != np.round(profile_qc.data['LONGITUDE_RAW'], 4):
-                LOGGER.warning('Updating raw longitude to match the previous value in *raw.nc file')
-                profile_qc.data['LONGITUDE_RAW'] = profile_noqc.histories.loc[
-                        profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'][0]
+                                               'HISTORY_PREVIOUS_VALUE'], 4).values != np.round(
+            profile_qc.data['LONGITUDE_RAW'], 4):
+            LOGGER.warning('Updating raw longitude to match the previous value in *raw.nc file')
+            profile_qc.data['LONGITUDE_RAW'] = profile_noqc.histories.loc[
+                profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'][0]
     # TODO: handle other extra histories in noqc file here:
     if len(profile_noqc.histories) > 1:
         print('QC flags and codes in the raw file')
 
     return profile_qc
+
 
 def check_for_PL_flag(profile):
     # Special case, where the PLA code has been used, the temperature values are shifted up and the edited file
@@ -952,7 +958,7 @@ def check_for_PL_flag(profile):
                 t2[len(tt):] = ma.masked
                 profile.data[var + '_quality_control'] = t2
 
-    return(profile)
+    return (profile)
 
 
 def restore_temp_val(profile):
