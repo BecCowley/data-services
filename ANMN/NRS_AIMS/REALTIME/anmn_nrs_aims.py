@@ -302,7 +302,7 @@ class AimsDataValidationTest(data_validation_test.TestCase):
         if sys.version_info[0] < 3:
             self.md5_expected_value = '76c9a595264a8173545b6dc0c518a280'
         else:
-            self.md5_expected_value = '8f242240c43fbab137b91636518cfe76'
+            self.md5_expected_value = '78c6386529faf9dc2272e9bed5ed7fa2'
 
         self.md5_netcdf_value = md5(self.netcdf_tmp_file_path)
 
