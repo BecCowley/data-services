@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import argparse
 import os
 import sys
@@ -493,7 +495,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     df = df.drop(irem, axis=1)
 
     # drop rows where all NaN values which does happen in these old files sometimes
-    df = df.dropna(how='all')
+    df = df.dropna(subset=['TEMP','DEPTH','TEMP_RAW','DEPTH_RAW'],how='all')
 
     # how many parameters do we have, not including DEPTH?
     profile_qc.nprof = len([col for col in df.columns if ('_quality_control' not in col and 'RAW'
@@ -804,7 +806,7 @@ def parse_histories_nc(profile):
     for idx, row in df.iterrows():
         # Ensure start depth is the same as the value in the depth array
         # Find the closest value to the start depth in the histories
-        ii = (np.abs(vals - row['HISTORY_START_DEPTH'])).argmin()
+        ii = (np.nanargmin(np.abs(vals - row['HISTORY_START_DEPTH'])))
         df.at[idx, 'HISTORY_START_DEPTH'] = vals[ii]
 
         # QC,RE, TE, PE and EF flag applies to entire profile, stop_depth is deepest depth
@@ -914,8 +916,7 @@ def check_for_PL_flag(profile):
                 t2[0:len(tt)] = tt
                 t2[len(tt):] = ma.masked
                 profile.data[var + '_quality_control'] = t2
-
-    return(profile)
+    return profile
 
 
 def restore_temp_val(profile):
@@ -1034,7 +1035,7 @@ def create_flag_feature(profile):
     if len(dup_df) > 0:
         codes = codes.drop_duplicates(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH', 'HISTORY_PREVIOUS_VALUE'],
                                       keep='first')
-        LOGGER.warning('Duplicate QC code encountered, and removed. Please review')
+        LOGGER.warning('Duplicate QC code encountered, and removed for flag_feature_type array. Please review')
 
     # print("dfoldc",dfoldc)
     # print("codes",codes)
