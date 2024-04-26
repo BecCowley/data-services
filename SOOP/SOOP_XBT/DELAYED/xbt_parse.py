@@ -453,6 +453,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     # Pressure/depth information from both noqc and qc files
     # read into a dataframe
     df = pd.DataFrame()
+    # get the number of depths
+    ndeps = profile_qc.netcdf_file_obj.variables['No_Depths'][:]
     for s in [profile_qc, profile_noqc]:
         # cycle through the variables identified in the file:
         data_vars = temp_prof_info(s.netcdf_file_obj)
@@ -464,18 +466,29 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 depcode = 'depth'
             else:
                 depcode = 'press'
-            df[var + depcode] = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 2)
+            dep = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 2)
             depth_press_flag = s.netcdf_file_obj.variables['DepresQ'][ivar, :, 0].flatten()
-            df[var + depcode + '_quality_control'] = np.ma.masked_array(invalid_to_ma_array(depth_press_flag, fillvalue=0))
+            qc = np.ma.masked_array(
+                invalid_to_ma_array(depth_press_flag, fillvalue=0))
 
             prof = np.ma.masked_values(
-                np.round(s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0],2), 99.99) #mask the 99.99 from CSA flagging of TEMP
-            prof = np.ma.masked_invalid(prof) # mask nan and inf values
-            prof.set_fill_value(-99.99)
+                np.round(s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0], 2),
+                99.99)  # mask the 99.99 from CSA flagging of TEMP
+            prof = np.ma.masked_invalid(prof)  # mask nan and inf values
+            prof.set_fill_value(999999)
 
             prof_flag = s.netcdf_file_obj.variables['ProfQP'][ivar, 0, :, 0, 0].flatten()
             prof_flag = np.ma.masked_array(
                 invalid_to_ma_array(prof_flag, fillvalue=99))  # replace masked values for IMOS IODE flags
+            # if the size of the array isn't equal to the number of depths, adjust here
+            if len(prof) != ndeps:
+                LOGGER.warning('Resizing arrays to the number of depths recorded in original MQNC file')
+                prof = np.ma.resize(prof, ndeps)
+                prof_flag = np.ma.resize(prof_flag, ndeps)
+                dep = np.ma.resize(dep, ndeps)
+                qc = np.ma.resize(qc,ndeps)
+            df[var + depcode] = dep
+            df[var + depcode + '_quality_control'] = qc
             df[var] = prof
             df[var + '_quality_control'] = prof_flag
 
