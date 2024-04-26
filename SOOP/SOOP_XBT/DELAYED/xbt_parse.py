@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import argparse
 import os
 import sys
@@ -128,10 +130,14 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     profile_qc = parse_globalatts_nc(profile_qc)
     profile_noqc = parse_globalatts_nc(profile_noqc)
 
-    # assign the geospatial_vertical* to the no_qc file for checking consistency. Doesn't get assigned in previous call
+    # assign the geospatial_* to the no_qc file for checking consistency. Doesn't get assigned in previous call
     # because the data doesn't get written to the noqc profile
     profile_noqc.global_atts['geospatial_vertical_max'] = max(profile_qc.data['DEPTH_RAW'])
     profile_noqc.global_atts['geospatial_vertical_min'] = min(profile_qc.data['DEPTH_RAW'])
+    profile_noqc.global_atts['geospatial_latitude_max'] = profile_qc.data['LATITUDE']
+    profile_noqc.global_atts['geospatial_latitude_min'] = profile_qc.data['LATITUDE']
+    profile_noqc.global_atts['geospatial_longitude_max'] = profile_qc.data['LONGITUDE']
+    profile_noqc.global_atts['geospatial_longitude_min'] = profile_qc.data['LONGITUDE']
 
     # let's check if there are histories to parse and then handle
     if int(profile_qc.netcdf_file_obj['Num_Hists'][0].data) == 0:
@@ -151,9 +157,6 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
             # TODO: figure out a handling here if there are extra histories in the RAW file or ones that aren't in ED file
             # reconcile histories where they exist in the noqc profile
             profile_qc = combine_histories(profile_qc, profile_noqc)
-
-    # handle special case of premature launch where raw and edited files have different profile lengths:
-    profile_qc = check_for_PL_flag(profile_qc)
 
     # replace missing temperature data with actual values and appropriate QC flags
     # applies to CS flag in particular
@@ -245,6 +248,19 @@ def parse_globalatts_nc(profile):
     except:
         profile.global_atts['geospatial_vertical_max'] = []
         profile.global_atts['geospatial_vertical_min'] = []
+
+    try:
+        # latitude/longitude geospatial min/max
+        profile.global_atts['geospatial_latitude_max'] = profile.data['LATITUDE']
+        profile.global_atts['geospatial_latitude_min'] = profile.data['LATITUDE']
+        profile.global_atts['geospatial_longitude_max'] = profile.data['LONGITUDE']
+        profile.global_atts['geospatial_longitude_min'] = profile.data['LONGITUDE']
+    except:
+        profile.global_atts['geospatial_latitude_max'] = []
+        profile.global_atts['geospatial_latitude_min'] = []
+        profile.global_atts['geospatial_longitude_max'] = []
+        profile.global_atts['geospatial_longitude_min'] = []
+
 
     profile.global_atts['date_created'] = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -493,7 +509,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     df = df.drop(irem, axis=1)
 
     # drop rows where all NaN values which does happen in these old files sometimes
-    df = df.dropna(how='all')
+    df = df.dropna(subset=['TEMP','DEPTH','TEMP_RAW','DEPTH_RAW'],how='all')
 
     # how many parameters do we have, not including DEPTH?
     profile_qc.nprof = len([col for col in df.columns if ('_quality_control' not in col and 'RAW'
@@ -788,6 +804,9 @@ def parse_histories_nc(profile):
         LOGGER.error("HISTORY_INSTITUTION values - some are not defined. Please review output for this file")
         exit(1)
 
+    # handle special case of premature launch where raw and edited files have different profile lengths:
+    profile = check_for_PL_flag(profile, df)
+
     # set the software value to 2.1 for CS flag as we are keeping them in place and giving a flag of 3
     df.loc[df.HISTORY_QC_CODE == 'CS', ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
 
@@ -804,7 +823,7 @@ def parse_histories_nc(profile):
     for idx, row in df.iterrows():
         # Ensure start depth is the same as the value in the depth array
         # Find the closest value to the start depth in the histories
-        ii = (np.abs(vals - row['HISTORY_START_DEPTH'])).argmin()
+        ii = (np.nanargmin(np.abs(vals - row['HISTORY_START_DEPTH'])))
         df.at[idx, 'HISTORY_START_DEPTH'] = vals[ii]
 
         # QC,RE, TE, PE and EF flag applies to entire profile, stop_depth is deepest depth
@@ -892,11 +911,12 @@ def combine_histories(profile_qc, profile_noqc):
 
     return profile_qc
 
-def check_for_PL_flag(profile):
+
+def check_for_PL_flag(profile, df):
     # Special case, where the PLA code has been used, the temperature values are shifted up and the edited file
     # therefore has a different number of records to the raw file. Need to pad the edited to the same size as raw
     # since we are using the same DEPTH dimension for both:
-    if profile.histories['HISTORY_QC_CODE'].str.contains('PL').any():
+    if df['HISTORY_QC_CODE'].str.contains('PL').any():
         # double check the length of the records is different, log it
         if len(profile.data['TEMP']) < len(profile.data['TEMP_RAW']):
             LOGGER.warning('Raw and edited profiles are different length due to PLA flag. Amending.')
@@ -914,8 +934,7 @@ def check_for_PL_flag(profile):
                 t2[0:len(tt)] = tt
                 t2[len(tt):] = ma.masked
                 profile.data[var + '_quality_control'] = t2
-
-    return(profile)
+    return profile
 
 
 def restore_temp_val(profile):
@@ -1034,7 +1053,7 @@ def create_flag_feature(profile):
     if len(dup_df) > 0:
         codes = codes.drop_duplicates(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH', 'HISTORY_PREVIOUS_VALUE'],
                                       keep='first')
-        LOGGER.warning('Duplicate QC code encountered, and removed. Please review')
+        LOGGER.warning('Duplicate QC code encountered, and removed for flag_feature_type array. Please review')
 
     # print("dfoldc",dfoldc)
     # print("codes",codes)
