@@ -334,6 +334,8 @@ def parse_globalatts_nc(profile):
     if att_name in list(profile.global_atts):
         recorder_val, recorder_type = get_recorder_type(profile)
         profile.global_atts['XBT_recorder_type'] = recorder_val + ', ' + recorder_type
+    else:
+        profile.global_atts['XBT_recorder_type'] = '99, Unknown'
 
     att_name = 'XBT_height_launch_above_water_in_meters'
     if att_name in list(profile.global_atts.keys()):
