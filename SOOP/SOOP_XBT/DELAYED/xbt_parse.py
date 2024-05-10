@@ -391,8 +391,17 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
         else:
             LOGGER.error('Negative longitude value with no scale factor %s' % lon)
             exit(1)
+
+    # Change the 360 degree longitude to degrees_east (0-180, -180 to 0)
+    if lon > 180:
+        lon = lon - 360
     profile_qc.data['LONGITUDE'] = np.round(lon, 4)
-    profile_qc.data['LONGITUDE_RAW'] = np.round(profile_noqc.netcdf_file_obj['longitude'][0].__float__(), 4)
+
+    lon_raw = np.round(profile_noqc.netcdf_file_obj['longitude'][0].__float__(), 4)
+    # Change the 360 degree longitude to degrees_east (0-180, -180 to 0)
+    if lon_raw > 180:
+        lon_raw = lon_raw - 360
+    profile_qc.data['LONGITUDE_RAW'] = np.round(lon_raw, 4)
 
     # position and time QC - check this is not empty. Assume 1 if it is
     q_pos = int(profile_qc.netcdf_file_obj['Q_Pos'][0].data)
