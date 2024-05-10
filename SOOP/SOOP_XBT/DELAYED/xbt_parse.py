@@ -325,6 +325,7 @@ def parse_globalatts_nc(profile):
         LOGGER.warning('Vessel call sign %s seems to be wrong. Using the closest match to the AODN vocabulary: %s' % (
             profile.global_atts['Platform_code'], profile.global_atts['Callsign']))
     else:
+        profile.global_atts['ship_name'] = 'Unknown'
         LOGGER.warning('Vessel call sign %s is unknown in AODN vocabulary, Please contact info@aodn.org.au' %
                        profile.global_atts['Platform_code'])
 
