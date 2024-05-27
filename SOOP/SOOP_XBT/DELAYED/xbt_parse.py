@@ -1258,7 +1258,7 @@ def write_output_nc(output_folder, profile, profile_raw=None):
     with Dataset(netcdf_filepath, "w", format="NETCDF4") as output_netcdf_obj:
         # Create the dimensions
         output_netcdf_obj.createDimension('DEPTH', len(profile.data['DEPTH']))
-        output_netcdf_obj.createDimension('N_HISTORY', len(profile.histories.index))
+        output_netcdf_obj.createDimension('N_HISTORY', 0) #make this unlimited
 
         # Create the variables, no dimensions:
         varslist = ["TIME", "LATITUDE", "LONGITUDE"]
