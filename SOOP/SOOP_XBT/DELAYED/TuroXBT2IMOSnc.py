@@ -1,6 +1,7 @@
 # Converts XBT profile recorded by Turo XBT to standardised netCDF format ready for QC with PYQUEST
 # A. Walsh V2 4/10/22
-
+import argparse
+import difflib
 # V3 - adjustments to format for compatibility with MQUEST netCDF and changes to PyQUEST-XBT.py.
 # For compatibility with MQUEST to IMOS netCDF converter change all LAT,LONG,DEPTH,DEPTH_RAW,TEMP,TEMP_RAW from type 'd' (double) to type 'f' (float)
 
@@ -31,376 +32,450 @@
 # YYYYMMDDThhmmssZ = XBT drop UTC Date-time
 # e.g. 20001SY-20210303T212721Z-000.nc
 
-import string
-import re
 import os
+import re
+import sys
+import tempfile
 
+import xarray as xr
 from netCDF4 import Dataset
 import datetime
 from time import localtime, gmtime, strftime
 from netCDF4 import date2num
-
 import numpy as np
-
 from optparse import OptionParser
 import glob
+import pandas as pd
+
+from xbt_line_vocab import xbt_line_info
+from xbt_parse import read_section_from_xbt_config
+from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
+from ship_callsign import ship_callsign_list
+from imos_logging import IMOSLogging
+from xbt_utils import _error
 
 
-##########FUNCTIONS#######################
+def args():
+    """ define input argument"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--input-xbt-path', type=str,
+                        help="path to Turo netcdf files")
+    parser.add_argument('-o', '--output-folder', nargs='?', default=1,
+                        help="output directory of generated files")
+    parser.add_argument('-l', '--log-file', nargs='?', default=1,
+                        help="log directory")
+    vargs = parser.parse_args()
 
-def netCDFout(nco, n, cid, sNam, raw_netCDF_file):
-    calendar = 'standard'
-    units = 'days since 1950-01-01 00:00'
-    consec = str(f'{n:03}')
+    if vargs.output_folder == 1:
+        vargs.output_folder = tempfile.mkdtemp(prefix='xbt_dm_')
+    elif not os.path.isabs(os.path.expanduser(vargs.output_folder)):
+        vargs.output_folder = os.path.join(os.getcwd(), vargs.output_folder)
 
-    # Gather the varaibles
-    lat = nco.variables['latitude']  # lat[0] is actual value
-    lon = nco.variables['longitude']
-    # date-time
-    '''
-	  int woce_date(time);
-      string woce_date:long_name = "WOCE date";
-      string woce_date:units = "yyyymmdd UTC";
-    int woce_time(time);
-      string woce_time:long_name = "WOCE time";
-      string woce_time:units = "hhmmss UTC";
-	'''
-    yyyymmdd = str(nco.variables['woce_date'][0])
-    yyyy = yyyymmdd[0:4]
-    yyyyI = int(yyyy)
-    mm = yyyymmdd[4:6]
-    mmI = int(mm)
-    dd = yyyymmdd[6:8]
-    ddI = int(dd)
-    # >>> n = 4
-    # >>> print(f'{n:03}') # Preferred method for formatted string literals for python >= 3.6
-    # 004
-    # dtstr=f'{yyyymmdd:s}T{timeInt:06}'
-    timeInt = nco.variables['woce_time'][0]
-    timeStr = str(f'{timeInt:06}')
-    hh = timeStr[0:2]
-    hhI = int(hh)
-    mins = timeStr[2:4]
-    minsI = int(mins)
-    ss = timeStr[4:6]
-    ssI = int(ss)
+    if vargs.log_file == 1:
+        vargs.log_file = os.path.join(vargs.output_folder, 'xbt.log')
+    else:
+        if not os.path.exists(os.path.dirname(vargs.log_file)):
+            os.makedirs(os.path.dirname(vargs.log_file))
 
-    dt = "%s%s%sT%s%s%sZ" % (yyyy, mm, dd, hh, mins, ss)
-    dtISO8601 = "%s-%s-%sT%s:%s:%sZ" % (yyyy, mm, dd, hh, mins, ss)
+    if not os.path.exists(vargs.input_xbt_path):
+        msg = '%s not a valid path' % vargs.input_xbt_campaign_path
+        print(msg, file=sys.stderr)
+        sys.exit(1)
 
-    # Time in days since 1950 for netCDF file
+    if not os.path.exists(vargs.output_folder):
+        os.makedirs(vargs.output_folder)
 
-    d = datetime.datetime(yyyyI, mmI, ddI, hhI, minsI, ssI)
-    depoch = date2num(d, units=units, calendar=calendar)
+    return vargs
 
-    depths = nco.variables['depth'][:]  # 1D array
-    # Should use 'temperature' array not 'procTemperature' as that may be a filtered version if the Turo XBT despike option was used.
-    # temps = nco.variables['procTemperature'][0,:,0,0] #4D array access
-    temps = nco.variables['temperature'][0, :, 0, 0]  # 4D array access
 
-    # Global attributes
-    '''
-	if n==0:
-		for name in nco.ncattrs():
-			print("Global attr {} = {}".format(name, getattr(nco, name)))
-	'''
-    # Needed globals
-    # string :ReleaseVersion = "Version: 5.03.00";
-    # string :Code = "052"; - Probe type + fall rate code
-    # string :HardwareSerialNo = "69";
-    # string :SerialNo = "1302539"; - Probe serial #
-    # string :PreDropComments = "depth 632.1m";
-    # string :PostDropComments = " ";
-    # Access individual global from Turo XBT source file
-    relVer = nco.getncattr('ReleaseVersion')
-    ptype = nco.getncattr('Code')
-    hardwareSerNo = nco.getncattr('HardwareSerialNo')
-    pSerNo = nco.getncattr('SerialNo')
-    preDropCmnt = nco.getncattr('PreDropComments')
-    postDropCmnt = nco.getncattr('PreDropComments')
+def global_vars(vargs):
+    global LOGGER
+    logging = IMOSLogging()
+    LOGGER = logging.logging_start(vargs.log_file)
 
-    # Construct output (standardised) netCDF filename
+    # ship details from AODN vocabs
+    global SHIPS
+    SHIPS = ship_callsign_list()
 
-    ncfilen = os.path.join(outDir, cid + '_' + dt + '_' + consec + '.nc')
+    # get the probe type and fre list from the config file
+    global fre_list, peq_list
+    fre_list = read_section_from_xbt_config('FRE')
+    peq_list = read_section_from_xbt_config('PEQ$')
 
-    print(ncfilen, n, dt, lat[0], lon[0], depths[0], temps[0], relVer, ptype, pSerNo, hardwareSerNo, preDropCmnt,
-          postDropCmnt)
+def create_out_filename(profile, line, crid, n, test):
+    # create the unique ID from the crid, time and drop number formatted to three digits
+    uniqueid = crid + '_' + profile.time.dt.strftime('%Y%m%d%H%M%S').values[0] + '_' + str(n).zfill(3)
 
-    # Open the netCDF file
+    if test:
+        filename = 'XBTTEST_T_%s_FV01_ID-%s.nc' % (line, uniqueid)
+    else:
+        filename = 'XBT_T_%s_FV01_ID-%s.nc' % (line, uniqueid)
 
-    ncoutf = Dataset(ncfilen, 'w', format='NETCDF4')
+    return filename, uniqueid
 
-    # Create Dimensions
 
-    ncoutf.createDimension('DEPTH', 0)  # 0 means unlimited size for depth dimension
-    depthdim = ('DEPTH',)
+def create_flag_feature():
+    """ Take the existing QC code values and turn them into a integer representation. One bit for every code."""
 
-    '''
-	ncoutf.createDimension('TIME',1)
-	timedim=('TIME',) #a tuple
-	'''
+    # set up a dataframe of the codes and their values
+    # codes from the new cookbook, read from csv file
+    # Specify the file path
+    file_path = '/Users/cow074/Library/CloudStorage/OneDrive-SharedLibraries-CSIRO/QC tool development - General/QCToolFiles/flag_quality_table.csv'
 
-    # Create variables
-    # The createVariable method has two mandatory arguments,
-    # the variable name (a Python string),
-    # and the variable datatype. and an optional dimension(s)
-    # The variable's dimensions are given by a tuple containing the dimension names
-    # (defined previously with createDimension)
+    # Read the CSV file and convert it to a DataFrame
+    df = pd.read_csv(file_path)
+    # keep only the name, full_code and XBT_fault_and_feature_type columns
+    df = df[['name', 'full_code', 'XBT_fault_and_feature_type']]
+    # remove rows with nan in XBT_fault_and_feature_type column
+    df = df.dropna(subset=['XBT_fault_and_feature_type'])
 
-    # Keep raw arrays of any variables (as backup) which may be changed through QC
+    return df
 
-    TIME_RAW = ncoutf.createVariable('TIME_RAW', 'd', fill_value=999999.)
-    TIME = ncoutf.createVariable('TIME', 'd', fill_value=999999.)
-    TIME_quality_control = ncoutf.createVariable('TIME_quality_control', 'b', fill_value=np.byte(99))
 
-    # For compatibility with MQUEST converter change all LAT,LONG,DEPTH,DEPTH_RAW,TEMP,TEMP_RAW from type 'd' (double) to type 'f' (float)
-    LATITUDE_RAW = ncoutf.createVariable('LATITUDE_RAW', 'f', fill_value=999999.)
-    LATITUDE = ncoutf.createVariable('LATITUDE', 'f', fill_value=999999.)
-    LATITUDE_quality_control = ncoutf.createVariable('LATITUDE_quality_control', 'b', fill_value=np.byte(99))
+def add_uncertainties(nco):
+    """ return the profile with added uncertainties"""
 
-    LONGITUDE_RAW = ncoutf.createVariable('LONGITUDE_RAW', 'f', fill_value=999999.)
-    LONGITUDE = ncoutf.createVariable('LONGITUDE', 'f', fill_value=999999.)
-    LONGITUDE_quality_control = ncoutf.createVariable('LONGITUDE_quality_control', 'b', fill_value=np.byte(99))
+    # use standard uncertainties assigned by IQuOD procedure:
+    # XBT manufacturers other than Sippican and TSK and unknown manufacturer / type:  0.2;  <= 230m: 4.6m; > 230 m: 2%
+    # XBT deployed from submarines or Tsurumi - Seiki Co(TSK) manufacturer 0.15;  <= 230 m: 4.6 m; > 230 m: 2%
+    # XBT Sippican manufacturer 0.1;  <= 230 m: 4.6 m; > 230 m: 2%
+    # XBT deployed from aircraft 0.056
+    # XCTD(pre - 1998) 0.06; 4 %
+    # XCTD(post - 1998) 0.02; 2 %
 
-    DEPTH = ncoutf.createVariable('DEPTH', 'f', depthdim, fill_value=999999.)
-    DEPTH_quality_control = ncoutf.createVariable('DEPTH_quality_control', 'b', depthdim, fill_value=np.byte(99))
+    pt = int(nco.Code)
+    # test probe
+    if pt == 104:
+        tunc = [0]
+        dunc = [0]
+    elif 1 <= pt <= 71:
+        # Sippican probe type
+        tunc = [0.1]
+        dunc = [0.02, 4.6]
+    elif 201 <= pt <= 252:
+        # TSK probe type
+        tunc = [0.15]
+        dunc = [0.02, 4.6]
+    elif 401 <= pt <= 501:
+        # Sparton probe type
+        tunc = [0.2]
+        dunc = [0.02, 4.6]
+    elif pt == 81 or pt == 281 or pt == 510:
+        # AIRIAL XBT probe types
+        tunc = [0.056]
+        dunc = [0]  # no depth uncertainty determined
+    elif 700 <= pt <= 751:
+        # XCTDs
+        year_value = nco.time.dt.year.astype(int).values[0]
+        dt = datetime.datetime(year_value, 1, 1, 0, 0, 0)
+        if dt < datetime.datetime.strptime('1998-01-01', '%Y-%m-%d'):
+            tunc = [0.02]
+            dunc = [0.04]
+        else:
+            tunc = [0.02]
+            dunc = [0.02]
+    else:
+        # probe type not defined above, not in the code table 1770
+        tunc = [0]
+        dunc = [0]
+    # temp uncertainties
+    temp_uncertainty = np.ma.empty_like(nco.temperature)
+    temp_uncertainty[:] = tunc
+    # depth uncertainties:
+    unc = np.ma.MaskedArray(nco.depth * dunc[0], mask=False)
+    if len(dunc) > 1:
+        unc[nco.depth <= 230] = dunc[1]
+    depth_uncertainty = np.round(unc, 2)
 
-    # For compatibility with MQUEST converter change 'TEMPERATURE' to 'TEMP'
-    TEMP_RAW = ncoutf.createVariable('TEMP_RAW', 'f', depthdim, fill_value=999999.)
-    TEMP = ncoutf.createVariable('TEMP', 'f', depthdim, fill_value=999999.)
-    TEMP_quality_control = ncoutf.createVariable('TEMP_quality_control', 'b', depthdim, fill_value=np.byte(99))
+    return temp_uncertainty, depth_uncertainty
 
-    XBT_fault_type = ncoutf.createVariable('XBT_fault_type', 'b', depthdim, fill_value=np.byte(99))
 
-    # Set variable attributes
+def get_recorder_type(profile):
+    """
+    return Recorder as defined in WMO4770
+    """
+    rct_list = read_section_from_xbt_config('RCT$')
 
-    TIME_RAW.standard_name = "time"
-    TIME_RAW.long_name = "time uncorrected"
-    TIME_RAW.units = "days since 1950-01-01 00:00:00Z"
-    TIME_RAW.axis = "T"
-    TIME_RAW.valid_min = 0.
-    TIME_RAW.valid_max = 999999.
+    att_name = 'XBT_recorder_type'
 
-    TIME.standard_name = "time"
-    TIME.units = "days since 1950-01-01 00:00:00Z"
-    TIME.axis = "T"
-    TIME.valid_min = 0.
-    TIME.valid_max = 999999.
-    TIME.ancillary_variables = "TIME_quality_control"
-    TIME.calendar = 'gregorian'
+    item_val = str(int(nco.InterfaceCode))
+    if item_val in list(rct_list.keys()):
+        return item_val, rct_list[item_val].split(',')[0]
+    else:
+        LOGGER.warning(
+            '{item_val} missing from recorder type part in xbt_config file, using unknown for recorder'.format(
+                item_val=item_val))
+        item_val = '99'
+        return item_val, rct_list[item_val].split(',')[0]
 
-    TIME_quality_control.long_name = "quality flags for time"
-    TIME_quality_control.standard_name = "time status_flag"
-    TIME_quality_control.quality_control_conventions = "IMOS standard flags"
-    TIME_quality_control.valid_min = np.byte(0)
-    TIME_quality_control.valid_max = np.byte(9)
-    TIME_quality_control.flag_values = np.byte(list(range(0, 10)))
-    TIME_quality_control.flag_meanings = "No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value"
 
-    LATITUDE_RAW.reference_datum = "geographical coordinates, WGS84 projection"
-    LATITUDE_RAW.axis = "Y"
-    LATITUDE_RAW.standard_name = "latitude"
-    LATITUDE_RAW.long_name = "latitude uncorrected"
+def netCDFout(nco, n, crid, callsign, xbtline):
+    # get the config file information:
+    # get xbt line information from config file
+    line_info = read_section_from_xbt_config(xbtline)
 
-    LATITUDE_RAW.units = "degrees_north"
+    # create the output file name
+    test = False
+    if nco.TestCanister == 'yes':
+        test = True
+    outfile, unique_id = create_out_filename(nco, line_info['XBT_line'], crid, n, test)
+    outfile = os.path.join(vargs.output_folder, outfile)
 
-    LATITUDE.reference_datum = "geographical coordinates, WGS84 projection"
-    LATITUDE.ancillary_variables = "LATITUDE_quality_control"
-    LATITUDE.axis = "Y"
-    LATITUDE.standard_name = "latitude"
-    LATITUDE.long_name = "latitude"
-    LATITUDE.units = "degrees_north"
+    # create a ncobject to write out to new format
+    with Dataset(outfile, "w", format="NETCDF4") as output_netcdf_obj:
+        # Create the dimensions
+        output_netcdf_obj.createDimension('DEPTH', len(nco.depth))
+        output_netcdf_obj.createDimension('N_HISTORY', 0)  # make this unlimited
 
-    LATITUDE_quality_control.long_name = "quality flags for latitude"
-    LATITUDE_quality_control.standard_name = "latitude status_flag"
-    LATITUDE_quality_control.quality_control_conventions = "IMOS standard flags"
-    LATITUDE_quality_control.valid_min = np.byte(0)
-    LATITUDE_quality_control.valid_max = np.byte(9)
-    LATITUDE_quality_control.flag_values = np.byte(list(range(0, 10)))
-    LATITUDE_quality_control.flag_meanings = "No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value"
+        # Create the variables, no dimensions:
+        varslist = ["TIME", "LATITUDE", "LONGITUDE"]
+        for vv in varslist:
+            output_netcdf_obj.createVariable(vv, datatype=get_imos_parameter_info(vv, '__data_type'),
+                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
+            # and associated QC variables:
+            output_netcdf_obj.createVariable(vv + "_quality_control", "b", fill_value=99)
+            # and the *_RAW variables:
+            output_netcdf_obj.createVariable(vv + "_RAW", datatype=get_imos_parameter_info(vv, '__data_type'),
+                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
 
-    LONGITUDE_RAW.reference_datum = "geographical coordinates, WGS84 projection"
-    LONGITUDE_RAW.axis = "X"
-    LONGITUDE_RAW.standard_name = "longitude"
-    LONGITUDE_RAW.long_name = "longitude uncorrected"
-    LONGITUDE_RAW.units = "degrees_east"
+        # Create the dimensioned variables:
+        varslist = ["DEPTH", "TEMP"]
+        for vv in varslist:
+            output_netcdf_obj.createVariable(vv, datatype=get_imos_parameter_info(vv, '__data_type'),
+                                             dimensions=('DEPTH',),
+                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
+            # and associated QC variables:
+            output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
+            # and uncertainty values for DEPTH and TEMP
+            output_netcdf_obj.createVariable(vv + "_uncertainty", "f", dimensions=('DEPTH',), fill_value=999999.0)
+            # and the *_RAW variables:
+            output_netcdf_obj.createVariable(vv + "_RAW", datatype=get_imos_parameter_info(vv, '__data_type'),
+                                             dimensions=('DEPTH',),
+                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
 
-    LONGITUDE.reference_datum = "geographical coordinates, WGS84 projection"
-    LONGITUDE.ancillary_variables = "LONGITUDE_quality_control"
-    LONGITUDE.axis = "X"
-    LONGITUDE.standard_name = "longitude"
-    LONGITUDE.long_name = "longitude"
-    LONGITUDE.units = "degrees_east"
+        # add the recording system TEMP:
+        output_netcdf_obj.createVariable("TEMP_RECORDING_SYSTEM", "f", dimensions=('DEPTH',),
+                                         fill_value=999999.0)
+        # and associated QC variable:
+        output_netcdf_obj.createVariable("TEMP_RECORDING_SYSTEM_quality_control", "b", dimensions=('DEPTH',),
+                                         fill_value=-51)
 
-    LONGITUDE_quality_control.long_name = "quality flags for longitude"
-    LONGITUDE_quality_control.standard_name = "longitude status_flag"
-    LONGITUDE_quality_control.quality_control_conventions = "IMOS standard flags"
-    LONGITUDE_quality_control.valid_min = np.byte(0)
-    LONGITUDE_quality_control.valid_max = np.byte(9)
-    LONGITUDE_quality_control.flag_values = np.byte(list(range(0, 10)))
-    LONGITUDE_quality_control.flag_meanings = "No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value"
+        # Create the last variables that are non-standard:
+        output_netcdf_obj.createVariable("PROBE_TYPE", 'S3')
+        output_netcdf_obj.createVariable("PROBE_TYPE_quality_control", "b", fill_value=99)
+        output_netcdf_obj.createVariable("PROBE_TYPE_RAW", 'S3')
 
-    DEPTH.positive = "down"
-    DEPTH.ancillary_variables = "DEPTH_quality_control"
-    DEPTH.valid_min = 0.
-    DEPTH.valid_max = 12000.
-    DEPTH.standard_name = "depth"
-    DEPTH.units = "m"
+        fftype = output_netcdf_obj.createVariable("XBT_fault_and_feature_type", "u8", dimensions=('DEPTH',),
+                                                  fill_value=0)
+        # We have turo files, so lets make the resistance and sample_time variables
+        output_netcdf_obj.createVariable("RESISTANCE", "f", dimensions=('DEPTH',), fill_value=float("nan"))
+        output_netcdf_obj.createVariable("SAMPLE_TIME", "f", dimensions=('DEPTH',), fill_value=float("nan"))
+        # set the sample time units
+        year_value = nco.time.dt.year.astype(int).values[0]
+        dt = datetime.datetime(year_value, 1, 1, 0, 0, 0)
+        setattr(output_netcdf_obj.variables['SAMPLE_TIME'], 'units', 'milliseconds since ' +
+                dt.strftime("%Y-%m-%d %H:%M:%S UTC"))
 
-    DEPTH.axis = "Z"
-    DEPTH.long_name = "depth"
+        # create HISTORY variable set associated
+        output_netcdf_obj.createVariable("HISTORY_INSTITUTION", "str", 'N_HISTORY')
+        # output_netcdf_obj.createVariable("HISTORY_STEP", "str", 'N_HISTORY') # removed for now, RC August 2023
+        output_netcdf_obj.createVariable("HISTORY_SOFTWARE", "str", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_SOFTWARE_RELEASE", "str", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_DATE", "f", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_PARAMETER", "str", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_START_DEPTH", "f", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_STOP_DEPTH", "f", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_QC_CODE", "str", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_QC_CODE_DESCRIPTION", "str", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_TEMP_QC_CODE_VALUE", "f", 'N_HISTORY')
 
-    DEPTH_quality_control.long_name = "quality flags for depth"
-    DEPTH_quality_control.standard_name = "depth status_flag"
-    DEPTH_quality_control.quality_control_conventions = "IMOS standard flags"
-    DEPTH_quality_control.valid_min = np.byte(0)
-    DEPTH_quality_control.valid_max = np.byte(9)
-    DEPTH_quality_control.flag_values = np.byte(list(range(0, 10)))
-    DEPTH_quality_control.flag_meanings = "No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value"
+        # write attributes from the generate_nc_file_att file, now that we have added the variables:
+        conf_file = os.path.join(os.path.dirname(__file__), 'generate_nc_file_att')
+        generate_netcdf_att(output_netcdf_obj, conf_file, conf_file_point_of_truth=True)
+        # add the flag and feature type attributes:
+        flag_feature = create_flag_feature()
+        setattr(fftype, 'valid_max', int(flag_feature['XBT_fault_and_feature_type'].sum()))
+        setattr(fftype, 'flag_masks', flag_feature['XBT_fault_and_feature_type'].astype(np.uint64))
+        setattr(fftype, 'flag_meanings', ' '.join(flag_feature['name']))
+        setattr(fftype, 'flag_codes', ' '.join(flag_feature['full_code']))
 
-    # For compatibility with MQUEST converter change 'TEMPERATURE' to 'TEMP'
-    TEMP_RAW.positive = "down"
-    TEMP_RAW.valid_min = -2.5
-    TEMP_RAW.valid_max = 40.
-    TEMP_RAW.axis = "Z"
-    TEMP_RAW.coordinates = "TIME LATITUDE LONGITUDE DEPTH"
-    TEMP_RAW.long_name = "sea_water_temperature"
-    TEMP_RAW.standard_name = "sea_water_temperature"
-    TEMP_RAW.units = "Celsius"
+        # write coefficients out to the attributes. In the PROBE_TYPE, PROBE_TYPE_RAW, DEPTH, DEPTH_RAW
+        # find the matching probe type in the config file
+        probe_type = nco.Code
+        if probe_type in fre_list:
+            fre = fre_list[probe_type]
+            prt = peq_list[probe_type]
+        varnames = ['PROBE_TYPE', 'DEPTH', 'PROBE_TYPE_RAW', 'DEPTH_RAW']
+        for v in varnames:
+            setattr(output_netcdf_obj.variables[v], 'fallrate_coefficients', fre)
+            setattr(output_netcdf_obj.variables[v], 'probe_type_name', prt.split(',')[0])
 
-    TEMP.positive = "down"
-    TEMP.ancillary_variables = "TEMP_quality_control XBT_fault_type"
-    TEMP.valid_min = -2.5
-    TEMP.valid_max = 40.
-    TEMP.axis = "Z"
-    TEMP.coordinates = "TIME LATITUDE LONGITUDE DEPTH"
-    TEMP.long_name = "sea_water_temperature"
-    TEMP.standard_name = "sea_water_temperature"
-    TEMP.units = "Celsius"
+        # append the data to the file
+        time_to_output = date2num(nco.time.values.astype('M8[s]').tolist(), output_netcdf_obj['TIME'].units)
+        output_netcdf_obj.variables['TIME'][:] = time_to_output
+        output_netcdf_obj.variables['TIME_RAW'][:] = time_to_output
+        output_netcdf_obj.variables['TIME_quality_control'][:] = 0
+        output_netcdf_obj.variables['LATITUDE'][:] = nco.latitude
+        output_netcdf_obj.variables['LATITUDE_quality_control'][:] = 0
+        output_netcdf_obj.variables['LONGITUDE'][:] = nco.longitude
+        output_netcdf_obj.variables['LONGITUDE_quality_control'][:] = 0
+        output_netcdf_obj.variables['LATITUDE_RAW'][:] = nco.latitude
+        output_netcdf_obj.variables['LONGITUDE_RAW'][:] = nco.longitude
+        output_netcdf_obj.variables['DEPTH'][:] = nco.depth
+        output_netcdf_obj.variables['DEPTH_quality_control'][:] = np.zeros(len(nco.depth))
+        output_netcdf_obj.variables['DEPTH_RAW'][:] = nco.depth
+        output_netcdf_obj.variables['TEMP'][:] = nco.temperature
+        output_netcdf_obj.variables['TEMP_quality_control'][:] = np.zeros(len(nco.depth))
+        output_netcdf_obj.variables['TEMP_RAW'][:] = nco.temperature
+        # add probe type
+        output_netcdf_obj.variables['PROBE_TYPE'][len(probe_type)] = probe_type
+        output_netcdf_obj.variables['PROBE_TYPE_RAW'][len(probe_type)] = probe_type
+        output_netcdf_obj.variables['PROBE_TYPE_quality_control'][:] = 0
+        # add the resistance and sample time
+        output_netcdf_obj.variables['RESISTANCE'][:] = nco.resistance
+        output_netcdf_obj.variables['SAMPLE_TIME'][:] = nco.sampleTime
+        # add the recorder_temp and auto QC from Turo
+        output_netcdf_obj.variables['TEMP_RECORDING_SYSTEM'][:] = nco.procTemperature
+        output_netcdf_obj.variables['TEMP_RECORDING_SYSTEM_quality_control'][:] = nco.sampleQC
 
-    TEMP_quality_control.long_name = "quality flag for sea_water_temperature"
-    TEMP_quality_control.standard_name = "sea_water_temperature status_flag"
-    TEMP_quality_control.quality_control_conventions = "IMOS standard flags"
-    TEMP_quality_control.valid_min = np.byte(0)
-    TEMP_quality_control.valid_max = np.byte(9)
-    TEMP_quality_control.flag_values = np.byte(list(range(0, 10)))
-    TEMP_quality_control.flag_meanings = "No_fault_check Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value"
+        # add the uncertainties
+        temp_uncertainty, depth_uncertainty = add_uncertainties(nco)
+        output_netcdf_obj.variables['TEMP_uncertainty'][:] = temp_uncertainty
+        output_netcdf_obj.variables['DEPTH_uncertainty'][:] = depth_uncertainty
 
-    # XBT Fault type			Code	GTSPP/IMOS QC Flag -(TEMPERATURE_quality_control)
-    # No_fault_check 		0		0
-    # Good_data				1		1
-    # Hit_bottom				2		3
-    # Wire_break				3		4
-    # Wire_stretch			4		3
-    # Insulation_penetration	5		3
-    # Spike_accept			6		2
-    # Electrical_noise		7		4
-    # Temperature_offset		8		3
-    # Unknown_fault			9		4
-    # Probably_good			10		2 (set on depths deeper than interp/spike_accept segment) - REMOVED - NOT a fault but is QC class
+        # add the global attributes
+        output_netcdf_obj.source_filename = raw_netCDF_file
+        output_netcdf_obj.XBT_cruise_ID = cid
+        # get the time as a string
+        dt = nco.time.values[0]
+        # Convert numpy.datetime64 to datetime.datetime
+        dt = pd.to_datetime(str(dt)).to_pydatetime()
+        # Profile Id
+        pid = "%s_%s_%03d" % (cid, dt.strftime("%Y%m%d%H%M%S"), n)
+        output_netcdf_obj.XBT_uniqueid = pid
+        output_netcdf_obj.TestCanister = nco.TestCanister
 
-    XBT_fault_type.long_name = "XBT fault type code"
-    XBT_fault_type.valid_min = np.byte(0)
-    XBT_fault_type.valid_max = np.byte(9)
-    XBT_fault_type.flag_values = np.byte(list(range(0, 10)))
-    XBT_fault_type.flag_meanings = "No_QC_performed Good_data Hit_bottom Wire_break Wire_stretch Insulation_penetration Spike_accept Electrical_noise Temperature_offset Unknown_fault"
+        if callsign in SHIPS:
+            output_netcdf_obj.ship_name = SHIPS[callsign][0]
+            output_netcdf_obj.Callsign = callsign
+            output_netcdf_obj.SOTID = nco.SOTID
+            output_netcdf_obj.ship_IMO = SHIPS[callsign][1]
+        elif difflib.get_close_matches(callsign, SHIPS, n=1, cutoff=0.8) != []:
+            output_netcdf_obj.Callsign = \
+                difflib.get_close_matches(callsign, SHIPS, n=1, cutoff=0.8)[0]
+            output_netcdf_obj.ship_name = SHIPS[output_netcdf_obj.Callsign]
+            output_netcdf_obj.SOTID = nco.SOTID
+            output_netcdf_obj.ship_IMO = SHIPS[output_netcdf_obj.Callsign][1]
+            LOGGER.warning(
+                'Vessel call sign %s seems to be wrong. Using the closest match to the AODN vocabulary: %s' % (
+                    SHIPS[output_netcdf_obj.Callsign], output_netcdf_obj.Callsign))
+        else:
+            output_netcdf_obj.ship_name = nco.Ship
+            output_netcdf_obj.Callsign = callsign
+            output_netcdf_obj.SOTID = nco.SOTID
+            output_netcdf_obj.ship_IMO = nco.IMO
+            LOGGER.warning('Vessel call sign %s, name %s, is unknown in AODN vocabulary. Please contact '
+                           'info@aodn.org.au' % callsign, nco.Ship)
 
-    # Set Global variables
-    ncoutf.source_filename = raw_netCDF_file
-    ncoutf.cruiseID = cid
-    # Profile Id
-    pid = "%s_%s_%03d" % (cid, dt, n)
-    ncoutf.XBT_uniqueid = pid
-    ncoutf.shipname = sNam
+        output_netcdf_obj.hardware_serial_no = nco.HardwareSerialNo
+        output_netcdf_obj.HardwareCalibration = nco.HardwareCalibration
+        output_netcdf_obj.Graphical_User_Interface_version = nco.UIVersion
+        output_netcdf_obj.Recorder_software_version = nco.ReleaseVersion
+        output_netcdf_obj.TemperatureCoefficients = nco.TemperatureCoefficients
 
-    ncoutf.release_version = relVer
-    ncoutf.probe_type = ptype
-    ncoutf.hardware_serial_no = hardwareSerNo
-    ncoutf.probe_serial_no = pSerNo
-    ncoutf.preDropCmnt = preDropCmnt
-    ncoutf.postDropCmnt = postDropCmnt
-    ncoutf.qcstatus = 0  # 0=not qced, 1=qc in progress
-    ncoutf.hit_bottom_flag = 'N'  # default to N,ill be set to "Y" in PyQUEST XBT QC if probe hit bottom
-    ncoutf.featureType = "profile"
-    ncoutf.Conventions = "CF-1.9"  # run output through the CF-Checker
+        # crc might not exist, skip if not
+        if 'CRC' in nco:
+            output_netcdf_obj.cyclic_redundancy_code = nco.CRC
+        # get the recorder type information
+        rct = get_recorder_type(nco)
+        output_netcdf_obj.XBT_recorder_type = "WMO Code table 4770 code %s, %s" % rct
+        output_netcdf_obj.XBT_probe_serial_number = nco.SerialNo
+        output_netcdf_obj.XBT_calibration_SCALE = nco.Scale
+        output_netcdf_obj.XBT_calibration_OFFSET = nco.Offset
+        # reformat batch date from mm/dd/yyyy to yyyymmdd
+        if not test:
+            date_object = datetime.datetime.strptime(nco.BatchDate, "%m/%d/%y")
+            output_netcdf_obj.XBT_manufacturer_date_yyyymmdd = date_object.strftime("%Y%m%d")
+            output_netcdf_obj.XBT_box_number = nco.CaseNo
+            output_netcdf_obj.XBT_height_launch_above_water_in_meters = float(nco.DropHeight)
 
-    ncoutf.geospatial_lat_min = lat[0]
-    ncoutf.geospatial_lat_max = lat[0]
-    ncoutf.geospatial_lon_min = lon[0]
-    ncoutf.geospatial_lon_max = lon[0]
+        output_netcdf_obj.predrop_comments = nco.PreDropComments
+        output_netcdf_obj.postdrop_comments = nco.PostDropComments
+        output_netcdf_obj.qc_completed = 0  # 0=not qced, 1=qc in progress
 
-    ncoutf.geospatial_vertical_min = depths[0]
-    ncoutf.geospatial_vertical_max = depths[-1]
-    ncoutf.time_coverage_start = dtISO8601
-    ncoutf.time_coverage_end = dtISO8601
+        output_netcdf_obj.geospatial_lat_min = nco.latitude
+        output_netcdf_obj.geospatial_lat_max = nco.latitude
+        output_netcdf_obj.geospatial_lon_min = nco.longitude
+        output_netcdf_obj.geospatial_lon_max = nco.longitude
 
-    # title = "RAN XBT data, Ship: %s, ID: %s" % (sNam,pid)
-    title = "RAN XBT data, Ship: {0}, ID: {1}".format(sNam, pid)
-    # print("title:"+title+":")
+        output_netcdf_obj.geospatial_vertical_min = nco.depth[0]
+        output_netcdf_obj.geospatial_vertical_max = nco.depth[-1]
 
-    ncoutf.title = title
+        # Convert time to a string
+        formatted_date = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        output_netcdf_obj.time_coverage_start = formatted_date
+        output_netcdf_obj.time_coverage_end = formatted_date
 
-    localnow = strftime("%Y-%m-%dT%H:%M:%SL", localtime())
-    ncoutf.date_created = localnow
+        utctime = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
+        output_netcdf_obj.date_created = utctime
 
-    # Set variable arrays
-
-    TIME_RAW[0] = depoch
-    TIME[0] = depoch
-    TIME_quality_control[0] = np.byte(1)  # By default good=1 (maybe set to bad(3)/changed(5) on L1 metadata QC)
-
-    LATITUDE_RAW[0] = lat[0]
-    LATITUDE[0] = lat[0]
-    LATITUDE_quality_control[0] = np.byte(1)  # By default good=1 (maybe set to bad(3)/changed(5) on L1 metadata QC)
-
-    # Longitude in Turo netCDF is degrees east 0 -360 deg convention
-    LONGITUDE_RAW[0] = lon[0]
-    LONGITUDE[0] = lon[0]
-    LONGITUDE_quality_control[0] = np.byte(1)  # By default good=1 (maybe set to bad(3)/changed(5) on L1 metadata QC)
-
-    DEPTH[:] = depths[:]
-    DEPTH_quality_control[:] = np.ones(len(DEPTH), dtype=np.byte)  # for XBT assume depths all good - rarely changed
-
-    TEMP_RAW[:] = temps[:]
-    TEMP[:] = temps[:]
-    TEMP_quality_control[:] = np.zeros(len(DEPTH), dtype=np.byte)  # set QC flag initially to 0=no qc
-    XBT_fault_type[:] = np.zeros(len(DEPTH), dtype=np.byte)  # set fault type initially to 0=no qc
+        # add the line information
+        for key, item in line_info.items():
+             setattr(output_netcdf_obj, key, item)
 
 
 if __name__ == '__main__':
-
-    parser = OptionParser()
-    parser.add_option("-i", dest="inputDir",
-                      help="the input raw netCDF file directory", metavar="INDIR")
-
-    parser.add_option("-o", dest="outputDir",
-                      help="the output file directory path (relative)", metavar="OUTDIR")
-
-    parser.add_option("-c", dest="cruiseID",
-                      help="the cruise ID", metavar="CID")
-
-    parser.add_option("-s", dest="sName",
-                      help="the ship name", metavar="sNam")
-
-    (options, args) = parser.parse_args()
-
-    inDir = options.inputDir
-    outDir = options.outputDir
-    cid = options.cruiseID
-    sNam = options.sName
-
-    # Read the cruise and translate
-
-    files_pattern = os.path.join(inDir, "*.nc")
-    # print files_pattern
-
+    # parse the input arguments
+    vargs = args()
+    global_vars(vargs)
+    # set up the input and output directories
+    files_pattern = os.path.join(vargs.input_xbt_path, "*.nc")
     files = sorted(glob.glob(files_pattern))
+    # Filter out files that match the '*.n.nc' format using regular expression
+    pattern = re.compile(r'.*\.\d+\.nc$')
+    files = [file for file in files if not pattern.search(file)]
 
-    n = 0
     for file in files:  # read/write loop
-        nco = Dataset(file, 'r')
-        nco.set_auto_maskandscale(False)
+        nco = xr.open_dataset(file)
         raw_netCDF_file = os.path.basename(file)
+        print(raw_netCDF_file)
+
+        # read the drop number from filename of raw file
+        # e.g. drop001.nc
+        name, _ = os.path.splitext(os.path.basename(file))
+        # make sure the name isn't a *.*.nc file
+        name = name.split(".")
+        n = int(name[0][4:])
+        # check the cruise id and ship name
+        crid = nco.Voyage
+        callsign = nco.CallSign
+        xbtline = nco.LineNo
+        # for the first file only and 'drop' in the name, ask the user to confirm the cruise id and ship name
+        if n == 1 and 'drop' in name[0]:
+            # ask the user to confirm the cruise id and ship name
+            user_input = input("Is %s the correct cruise id [Y/N]: " % crid)
+            if user_input == 'N':
+                cid = input("Enter the correct cruise id: ")
+            else:
+                cid = crid
+            user_input = input("Is %s the correct call sign [Y/N]: " % callsign).upper()
+            if user_input == 'N':
+                calls = input("Enter the correct call sign: ")
+            else:
+                calls = callsign
+            user_input = input("Is %s the correct line number [Y/N]: " % xbtline).upper()
+            if user_input == 'N':
+                line = input("Enter the correct line number: ")
+            else:
+                line = xbtline
+
+        # if crid is not the same as cid, use cid
+        if crid != cid:
+            crid = cid
+        if callsign != calls:
+            callsign = calls
+        if line != xbtline:
+            xbtline = line
+
         # Write function
-        netCDFout(nco, n, cid, sNam, raw_netCDF_file)
-        n += 1
+        netCDFout(nco, n, crid, callsign, xbtline)
