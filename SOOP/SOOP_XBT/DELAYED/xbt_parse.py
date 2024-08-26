@@ -650,34 +650,40 @@ def add_uncertainties(profile):
     # XCTD(post - 1998) 0.02; 2 %
 
     pt = int(profile.data['PROBE_TYPE'])
-    if 1 <= pt <= 71:
+    # test probe
+    if pt == 104:
+        tunc = [0]
+        dunc = [0]
+    elif 1 <= pt <= 71:
         # Sippican probe type
-        tunc = 0.1
+        tunc = [0.1]
         dunc = [0.02, 4.6]
     elif 201 <= pt <= 252:
         # TSK probe type
-        tunc = 0.15
+        tunc = [0.15]
         dunc = [0.02, 4.6]
     elif 401 <= pt <= 501:
         # Sparton probe type
-        tunc = 0.2
+        tunc = [0.2]
         dunc = [0.02, 4.6]
     elif pt == 81 or pt == 281 or pt == 510:
         # AIRIAL XBT probe types
-        tunc = 0.056
-        dunc = 0  # no depth uncertainty determined
+        tunc = [0.056]
+        dunc = [0]  # no depth uncertainty determined
     elif 700 <= pt <= 751:
         # XCTDs
-        if profile.data['TIME'] < datetime.strptime('1998-01-01', '%Y-%m-%d'):
-            tunc = 0.02
-            dunc = 0.04
+        year_value = nco.time.dt.year.astype(int).values[0]
+        dt = datetime.datetime(year_value, 1, 1, 0, 0, 0)
+        if dt < datetime.datetime.strptime('1998-01-01', '%Y-%m-%d'):
+            tunc = [0.02]
+            dunc = [0.04]
         else:
-            tunc = 0.02
-            dunc = 0.02
+            tunc = [0.02]
+            dunc = [0.02]
     else:
         # probe type not defined above, not in the code table 1770
-        tunc = 0
-        dunc = 0
+        tunc = [0]
+        dunc = [0]
     # temp uncertainties
     profile.data['TEMP_uncertainty'] = ma.empty_like(profile.data['TEMP'])
     profile.data['TEMP_uncertainty'][:] = tunc
@@ -1418,6 +1424,9 @@ def read_section_from_xbt_config(section_name):
     xbt_config = _call_parser('xbt_config')
     if section_name in xbt_config.sections():
         return dict(xbt_config.items(section_name))
+    elif [index for index, item in enumerate(xbt_config.sections()) if section_name in item]:
+        index = [index for index, item in enumerate(xbt_config.sections()) if section_name in item][0]
+        return dict(xbt_config.items(xbt_config.sections()[index]))
     else:
         _error('xbt_config file not valid. missing section: {section}'.format(section=section_name))
 
