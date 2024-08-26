@@ -92,6 +92,7 @@ def platform_altlabels_per_preflabel(category_name=None):
             # common platform label
             platform_code    = []
             platform_name    = None
+            platform_imo     = None
             platform_url_cat = None
 
             for val in item:
@@ -105,6 +106,9 @@ def platform_altlabels_per_preflabel(category_name=None):
                     elif 'prefLabel' in platform_element_sublabels:
                         platform_name = val.text
 
+                    elif 'hiddenLabel' in platform_element_sublabels:
+                        platform_imo = val.text
+
                     elif 'broader' in platform_element_sublabels:
                         val_cat_url = [item for item in val.attrib.values()][0]
                         platform_url_cat = val_cat_url
@@ -114,12 +118,12 @@ def platform_altlabels_per_preflabel(category_name=None):
                 if platform_url_cat in filter_cat_url_list:
                     if platform_name is not None and platform_code:
                         for platform_code_item in platform_code:
-                            platform[platform_code_item] = platform_name
+                            platform[platform_code_item] = platform_name, platform_imo
 
             else:
                 if platform_name is not None and platform_code:
                     for platform_code_item in platform_code:
-                        platform[platform_code_item] = platform_name
+                        platform[platform_code_item] = platform_name, platform_imo
 
     response.close()
     return platform

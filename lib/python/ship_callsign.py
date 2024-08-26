@@ -27,7 +27,13 @@ def ship_callsign_list():
     Vessel names have a '-' instead of blank space for the folder structure
     """
     platform_codes = platform_altlabels_per_preflabel('Vessel')
-    platform_codes = {key: item.replace(' ', '-') for key, item in platform_codes.items()}
+    for key, value in platform_codes.items():
+        # Convert the tuple to a list
+        value_list = list(value)
+        # Replace the string in the first element
+        value_list[0] = value_list[0].replace(' ', '-')
+        # Convert the list back to a tuple and update the dictionary
+        platform_codes[key] = tuple(value_list)
 
     # Astrolabe case to remove the "L'" from its name
     if 'FHZI' in platform_codes.keys():
@@ -40,11 +46,18 @@ def ship_callsign_list():
     vessels replacing their older 'version'. In the vocabulary, in order to deal with this special case, the vessel name
     is written as 'Vessel-Name-{callsign}'
     Example: "Highland-Chief-{VROJ8}"
+    Also remove the "IMO:" string in the IMO field
     """
+    str_imo = 'IMO:'
     for callsign in platform_codes:
         str_to_rm = '-{{{callsign}}}'.format(callsign=callsign)
-        if str_to_rm in platform_codes[callsign]:
-            platform_codes[callsign] = platform_codes[callsign].replace(str_to_rm, '')
+        if str_to_rm in platform_codes[callsign][0]:
+            value_list = list(platform_codes[callsign])
+            value_list[0] = value_list[0].replace(str_to_rm, '')
+            platform_codes[callsign] = tuple(value_list)
+        if platform_codes[callsign][1] is not None and str_imo in platform_codes[callsign][1]:
+            value_list[1] = value_list[1].replace(str_imo, '')
+            platform_codes[callsign] = tuple(value_list)
 
     return platform_codes
 
