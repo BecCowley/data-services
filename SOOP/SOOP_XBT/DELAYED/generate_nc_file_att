@@ -13,7 +13,7 @@ file_version                 = Level 1 - Quality Controlled Data
 file_version_quality_control = Data in this file has been through a quality control procedure. Every data point in this file has an associated quality flag
 geospatial_vertical_positive = down
 geospatial_vertical_units    = metres
-institution                  = CSIRO
+institution                  = CSIRO IMOS SOOP_XBT
 institution_references       = http://www.imos.org.au/soop.html
 keywords                     = Oceans>Ocean Temperature>Sea Water Temperature; Oceans>Bathymetry/Seafloor Topography>Water Depth; Bathythermographs>Expendable Bathythermographs (XBT)
 license                      = http://creativecommons.org/licenses/by/4.0/
@@ -193,10 +193,8 @@ units 			= ohms
 
 [SAMPLE_TIME]
 coordinates 		= TIME LATITUDE LONGITUDE DEPTH
-#valid_range 		=
 long_name 		= recorder sample time
 axis 			= Z
-units 			= milliseconds since
 
 [XBT_fault_and_feature_type]
 long_name 		= XBT fault and feature type codes
