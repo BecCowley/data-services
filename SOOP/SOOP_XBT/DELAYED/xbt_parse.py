@@ -1031,26 +1031,35 @@ def restore_temp_val(profile):
 
 
 def create_flag_feature(profile):
-    """ Take the existing QC code values and turn them into a integer representation. One bit for every code."""
+    """ Take the existing QC code values and turn them into a integer representation. One bit for every code.
+    And there are now two variables, one for accept codes, one for reject codes."""
 
     # set up a dataframe of the codes and their values
     # codes from the new cookbook, read from csv file
     # Specify the file path
-    file_path = 'xbt_fault_and_feature_type.csv'
+    a_file_path = 'xbt_accept_code.csv'
+    r_file_path = 'xbt_reject_code.csv'
 
     # Read the CSV file and convert it to a DataFrame
-    df = pd.read_csv(file_path)
+    dfa = pd.read_csv(a_file_path)
+    dfr = pd.read_csv(r_file_path)
+    # merge the two dataframes
+    df = pd.concat([dfa, dfr])
 
     # set the fields to zeros to start
-    profile.data['XBT_fault_and_feature_type'] = np.float64(profile.data['DEPTH'] * 0)
+    profile.data['XBT_accept_code'] = np.float64(profile.data['DEPTH'] * 0)
+    profile.data['XBT_reject_code'] = np.float64(profile.data['DEPTH'] * 0)
 
-    # Keep this here for now in case we change our minds and want to do a translation to new cookbook codes
-    # profile.data['XBT_fault_and_feature_type_original'] = profile.data['DEPTH'] * 0
     # make sure that we record the fault masks, meanings and the valid max
-    profile.fft = {}
-    profile.fft['flag_masks'] = df['byte_value'].values
-    profile.fft['flag_meanings'] = df['label'].values
-    profile.fft['flag_codes'] = df['code'].values
+    profile.accept_code = {}
+    profile.accept_code['flag_masks'] = dfa['byte_value'].values
+    profile.accept_code['flag_meanings'] = dfa['label'].values
+    profile.accept_code['flag_codes'] = dfa['code'].values
+
+    profile.reject_code = {}
+    profile.reject_code['flag_masks'] = dfr['byte_value'].values
+    profile.reject_code['flag_meanings'] = dfr['label'].values
+    profile.reject_code['flag_codes'] = dfr['code'].values
 
     # perform the flag mapping on the original flags and create the two new variables
     codes = profile.histories
@@ -1070,6 +1079,7 @@ def create_flag_feature(profile):
 
     # merge the codes with the flag codes
     mapold = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
+
     if mapold.empty:
         # no flags,
         profile.global_atts['qc_completed'] = 'no'
@@ -1097,18 +1107,18 @@ def create_flag_feature(profile):
     # for each code, need an array of values same size as DEPTH, then add them all together
     # also check the TEMP_QC_CODE_VALUE is the same as the actual flag in the flag array
     deps = profile.data['DEPTH']
-
     # Iterate over the history table.
-    # Using 'old' QC code mappings as this code is for re-formatting of the old files with old codes
     for idx, row in mapold.iterrows():
-        nullarray = np.float64(deps * 0)
         # Get depth index
         ii = (np.abs(deps - row['HISTORY_START_DEPTH'])).argmin()
-        # set that depth to byte value for that QC code from hist table
-        nullarray[ii] = np.float64(row['byte_value'])
-        # adding them together - is there a more correct way to do this?
-        # Add byte values (masks)
-        profile.data['XBT_fault_and_feature_type'] = profile.data['XBT_fault_and_feature_type'] + nullarray
+        # if this is an accept code (QC_Flag = 1, 2, 3, 5) then add it to the accept code array
+        if row['HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
+            # adding them together - is there a more correct way to do this?
+            # Add byte values (masks) for accept codes
+            profile.data['XBT_accept_code'][ii] = profile.data['XBT_accept_code'][ii] + np.float64(row['byte_value'])
+        else:
+            # Add byte values (masks) for reject codes
+            profile.data['XBT_reject_code'][ii] = profile.data['XBT_reject_code'][ii] + np.float64(row['byte_value'])
 
     return profile
 
@@ -1238,10 +1248,10 @@ def write_output_nc(output_folder, profile, profile_raw=None):
         output_netcdf_obj.createVariable("PROBE_TYPE_quality_control", "b", fill_value=99)
         output_netcdf_obj.createVariable("PROBE_TYPE_RAW", 'S3')
 
-        fftype = output_netcdf_obj.createVariable("XBT_fault_and_feature_type", "u8", dimensions=('DEPTH',),
+        accept_codes = output_netcdf_obj.createVariable("XBT_accept_code", "u8", dimensions=('DEPTH',),
                                                   fill_value=0)
-        # ffotype = output_netcdf_obj.createVariable("XBT_fault_and_feature_type_original", "u8", dimensions=('DEPTH',),
-        #                                          fill_value=0)
+        reject_codes = output_netcdf_obj.createVariable("XBT_reject_code", "u8", dimensions=('DEPTH',),
+                                                    fill_value=0)
 
         # If the turo profile is handed in:
         if profile_raw is not None:
@@ -1264,17 +1274,15 @@ def write_output_nc(output_folder, profile, profile_raw=None):
         # write attributes from the generate_nc_file_att file, now that we have added the variables:
         conf_file = os.path.join(os.path.dirname(__file__), 'generate_nc_file_att')
         generate_netcdf_att(output_netcdf_obj, conf_file, conf_file_point_of_truth=True)
-        # add the flag and feature type attributes:
-        setattr(fftype, 'valid_max', int(profile.fft['flag_masks'].sum()))
-        # AW use type  - 64 bit unsigned int, basic int type only up to 32 bit, this is same type as variable XBT_fault_and_feature_type
-        # setattr(fftype, 'flag_masks', profile.fft['flag_masks'].astype(int))
-        setattr(fftype, 'flag_masks', profile.fft['flag_masks'].astype(np.uint64))
-        setattr(fftype, 'flag_meanings', ' '.join(profile.fft['flag_meanings']))
-        setattr(fftype, 'flag_codes', ' '.join(profile.fft['flag_codes']))
-        # setattr(ffotype, 'valid_max', int(profile.ffot['flag_masks'].sum()))
-        # setattr(ffotype, 'flag_masks', profile.ffot['flag_masks'].astype(int))
-        # setattr(ffotype, 'flag_meanings', ' '.join(profile.ffot['flag_meanings']))
-        # setattr(ffotype, 'flag_codes', ' '.join(profile.ffot['flag_codes']))
+        # add the accept and reject code attributes:
+        setattr(accept_codes, 'valid_max', int(profile.accept_code['flag_masks'].sum()))
+        setattr(accept_codes, 'flag_masks', profile.accept_code['flag_masks'].astype(np.uint64))
+        setattr(accept_codes, 'flag_meanings', ' '.join(profile.accept_code['flag_meanings']))
+        setattr(accept_codes, 'flag_codes', ' '.join(profile.accept_code['flag_codes']))
+        setattr(reject_codes, 'valid_max', int(profile.reject_code['flag_masks'].sum()))
+        setattr(reject_codes, 'flag_masks', profile.reject_code['flag_masks'].astype(np.uint64))
+        setattr(reject_codes, 'flag_meanings', ' '.join(profile.reject_code['flag_meanings']))
+        setattr(reject_codes, 'flag_codes', ' '.join(profile.reject_code['flag_codes']))
 
         # write coefficients out to the attributes. In the PROBE_TYPE, PROBE_TYPE_RAW, DEPTH, DEPTH_RAW
         varnames = ['PROBE_TYPE', 'DEPTH']
