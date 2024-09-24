@@ -1034,80 +1034,23 @@ def create_flag_feature(profile):
     """ Take the existing QC code values and turn them into a integer representation. One bit for every code."""
 
     # set up a dataframe of the codes and their values
-    # will need to do a mapping for some of the flags. Should retain the originals except the CS flag as per
-    # the version 2.1 release.
-    # could also consider using hex encoding to represent these numbers if that looks more user-friendly
+    # codes from the new cookbook, read from csv file
+    # Specify the file path
+    file_path = 'xbt_fault_and_feature_type.csv'
 
-    # 23 codes - New Cookbook
-    df = pd.DataFrame(
-        {'Code': ['QC', 'CS', 'WB', 'WS', 'HB', 'LE', 'EIA', 'EIR', 'HFA', 'HFR', 'NG', 'RE', 'IV', 'TO', 'EF',
-                  'ST', 'DO', 'CT', 'TEA', 'TER', 'LA', 'LO', 'PER', 'DU', 'TP', 'PR'],
-         'Meaning': ['scientific_quality_control_applied', 'surface_transient', 'wire_break',
-                     'wire_stretch', 'hit_bottom',
-                     'electrical_leakage', 'electrical_interference_interpolated',
-                     'electrical_interference_failed', 'high_frequency_noise_filtered',
-                     'high_frequency_noise_failed', 'no_good', 'repeat_profile', 'temperature_inversion',
-                     'temperature_offset', 'temperature_eddy_or_front', 'temperature_steps_or_structure',
-                     'depth_offset', 'constant_temperature', 'time_error_corrected', 'time_error_rejected',
-                     'latitude_error_corrected', 'longitude_error_corrected', 'position_error_rejected',
-                     'duplicate_profile', 'test_probe', 'probe_type_error']})
-
-    # now do the same for the old flag values to add to a separate variable
-    dfold = pd.DataFrame(
-        {'Code': ['FS', 'IPA', 'IPR', 'NT', 'NU', 'PL', 'PI', 'PS', 'SA', 'SO', 'TA', 'TD', 'OP', 'BO', 'CU', 'DR',
-                  'MOA', 'MOR', 'PF', 'SBA', 'SBR', 'ML', 'NA', 'UR', 'BB', 'CL', 'DC', 'DE', 'DP'],
-         'Meaning': ['fine_structure', 'insulation_penetration_interpolated', 'insulation_penetration_failed',
-                     'no_trace', 'nub_inversion', 'premature_launch', 'probable_inversion',
-                     'probable_steplike_structure', 'surface_temperature_anomaly', 'surface_offset',
-                     'temperature_anomaly', 'temperature_difference_at_depth', 'other_probe_type_error',
-                     'bowing_bathy_systems_fault', 'cusping_bathy_systems_leakage',
-                     'delay_driver_error_sippican_mk9_fault',
-                     'modulo10_spikes_bathy_systems_interpolated', 'modulo10_spikes_bathy_systems_failed',
-                     'leakage_protecno_systems_fault', 'sticking_bit_sippican_mk9_interpolated',
-                     'sticking_bit_sippican_mk9_failed', 'mixed_layer', 'not_assessed', 'under_resolved_profile',
-                     'bad_bottle', 'contact_lost_to_probe', 'depth_fallrate_eq_corrected', 'depth_multiplied_by_10m',
-                     'depth_fallrate_eq_corrected']})
-    dfmap = pd.concat([df, pd.DataFrame({'Code': ['ST', 'EIA', 'EIR', 'NG', 'IV', 'DO', 'IV', 'ST', 'TO',
-                                                  'TO', 'TO', 'TO', 'NG', 'LE', 'LE', 'DO', 'EIA', 'EIR',
-                                                  'LE', 'EIA', 'EIR', '', '', 'TO', 'TO', 'NG', 'DO', 'DO',
-                                                  'DO']})])
-    # append the new codes with the old ones and change a couple:
-    dfoldc = pd.concat([df, dfold])
-    dfoldc = dfoldc.replace(
-        ['EIA', 'EIR', 'PR', 'electrical_interference_interpolated', 'electrical_interference_failed',
-         'probe_type_error'],
-        ['SPA', 'SPR', 'DT', 'spike_interpolated', 'spike_failed', 'data_type_corrected'])
-
-    # add the mappings to the new code
-    dfoldc['New Code'] = dfmap['Code'].values
-
-    # create a list of integers to represent binary numbers:
-    n = [1]
-    for i in range(1, len(dfoldc['Code'])):
-        n.append(n[i - 1] * 2)
-
-    # print("masks",n)
-
-    # add the byte values for each code:
-    df['byte_value'] = np.array(n[0:len(df['Code'])])  # 52 elements
-
-    dfoldc['byte_value'] = np.array(n)
-    # print('len(dfoldc[byte_value]),dfoldc[byte_value]',len(dfoldc['byte_value']),dfoldc['byte_value'])
+    # Read the CSV file and convert it to a DataFrame
+    df = pd.read_csv(file_path)
 
     # set the fields to zeros to start
-    profile.data['XBT_fault_and_feature_type'] = profile.data['DEPTH'] * 0
+    profile.data['XBT_fault_and_feature_type'] = np.float64(profile.data['DEPTH'] * 0)
 
     # Keep this here for now in case we change our minds and want to do a translation to new cookbook codes
     # profile.data['XBT_fault_and_feature_type_original'] = profile.data['DEPTH'] * 0
     # make sure that we record the fault masks, meanings and the valid max
     profile.fft = {}
-    profile.fft['flag_masks'] = dfoldc['byte_value'].values
-    profile.fft['flag_meanings'] = dfoldc['Meaning'].values
-    profile.fft['flag_codes'] = dfoldc['Code'].values
-    # profile.ffot = {}
-    # profile.ffot['flag_masks'] = dfoldc['byte_value'].values
-    # profile.ffot['flag_meanings'] = dfoldc['Meaning'].values
-    # profile.ffot['flag_codes'] = dfoldc['Code'].values
+    profile.fft['flag_masks'] = df['byte_value'].values
+    profile.fft['flag_meanings'] = df['label'].values
+    profile.fft['flag_codes'] = df['code'].values
 
     # perform the flag mapping on the original flags and create the two new variables
     codes = profile.histories
@@ -1118,10 +1061,15 @@ def create_flag_feature(profile):
                                       keep='first')
         LOGGER.warning('Duplicate QC code encountered, and removed for flag_feature_type array. Please review')
 
-    # print("dfoldc",dfoldc)
-    # print("codes",codes)
+    # append the 'A' or 'R' to each code
+    for idx, row in codes.iterrows():
+        if row['HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
+            codes.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'A'
+        else:
+            codes.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
 
-    mapold = pd.merge(dfoldc, codes, how='right', left_on='Code', right_on='HISTORY_QC_CODE')
+    # merge the codes with the flag codes
+    mapold = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
     if mapold.empty:
         # no flags,
         profile.global_atts['qc_completed'] = 'no'
@@ -1130,31 +1078,16 @@ def create_flag_feature(profile):
         # adjust global attribute to say we have done scientific QC
         profile.global_atts['qc_completed'] = 'yes'
 
-    # create equivalent map df with the new codes:
-    mapnew = mapold.drop(['Code', 'byte_value'], axis=1)
-    mapnew = pd.merge(df, mapnew[['New Code', 'HISTORY_INSTITUTION',
-                                  'HISTORY_PARAMETER', 'HISTORY_SOFTWARE', 'HISTORY_DATE',
-                                  'HISTORY_START_DEPTH', 'HISTORY_SOFTWARE_RELEASE',
-                                  'HISTORY_PREVIOUS_VALUE',
-                                  'HISTORY_STOP_DEPTH']], how='right', left_on='Code', right_on='New Code')
-    mapnew = mapnew.drop(['Code'], axis=1)
-
-    # tidy up the duplicated code/new code and assign new values to the HISTORIES codes and descriptions
-    mapnew = mapnew.rename({'New Code': 'HISTORY_QC_CODE', 'Meaning': 'HISTORY_QC_CODE_DESCRIPTION'}, axis=1)
-    # reset the software information:
-    mapnew['HISTORY_SOFTWARE_RELEASE'] = '2.1'
-    mapnew['HISTORY_SOFTWARE'] = 'Australian XBT Quality Control Cookbook Version 2.1'
-    mapold = mapold.drop(['Code', 'New Code', 'HISTORY_QC_CODE_DESCRIPTION'], axis=1)
-    mapold = mapold.rename({'Meaning': 'HISTORY_QC_CODE_DESCRIPTION'}, axis=1)
+    # update the HISTORY_QC_CODE_DESCRIPTION to the df label
+    mapold['HISTORY_QC_CODE_DESCRIPTION'] = mapold['label']
 
     # now, we can use either the old history codes, new ones or combine if we decide that is the way to go.
     # For now, keep the existing history codes to represent in the histories section and in the feature flag variable
     profile.histories = mapold[profile.histories.columns]
 
-    # any flags not included?
-    cc = list(dfoldc.Code)
-    missingf = list(set(codes['HISTORY_QC_CODE'].values.tolist()) - set(cc))
-    if missingf:
+    # any flags not included? check for nan in the label column
+    nan_values = mapold['label'].isna()
+    if nan_values.any():
         # we have an extra flag that we haven't coded
         LOGGER.error('New QC code encountered, please code in the new value')
         exit(1)
@@ -1168,22 +1101,14 @@ def create_flag_feature(profile):
     # Iterate over the history table.
     # Using 'old' QC code mappings as this code is for re-formatting of the old files with old codes
     for idx, row in mapold.iterrows():
-        nullarray = deps * 0
+        nullarray = np.float64(deps * 0)
         # Get depth index
         ii = (np.abs(deps - row['HISTORY_START_DEPTH'])).argmin()
         # set that depth to byte value for that QC code from hist table
-        nullarray[ii] = row['byte_value']
+        nullarray[ii] = np.float64(row['byte_value'])
         # adding them together - is there a more correct way to do this?
         # Add byte values (masks)
         profile.data['XBT_fault_and_feature_type'] = profile.data['XBT_fault_and_feature_type'] + nullarray
-
-    # for idx, row in mapold.iterrows():
-    #    nullarray = deps * 0
-    #    ii = (deps >= row['HISTORY_START_DEPTH']) * (deps <= row['HISTORY_STOP_DEPTH'])
-    #    nullarray[ii] = row['byte_value']
-    # adding them together - is there a more correct way to do this?
-    #    profile.data['XBT_fault_and_feature_type_original'] = profile.data[
-    #                                                              'XBT_fault_and_feature_type_original'] + nullarray
 
     return profile
 

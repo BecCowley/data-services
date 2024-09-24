@@ -13,3 +13,10 @@ def convert(i, labels):
         pos += 1
         i >>= 1
     return output
+
+
+# test it:
+# val = 2**2 + 2**7
+# labels = ['No_QC_performed', 'Good_data', 'Probably_good_data', 'Bad_data_that_are_potentially_correctable', 'Bad_data', 'Value_changed', 'Not_used', 'Not_used', 'Not_used', 'Missing_value']
+# print(convert(val, labels))
+
