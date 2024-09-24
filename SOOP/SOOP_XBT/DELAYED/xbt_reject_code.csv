@@ -20,8 +20,8 @@ insulation_penetration,IPR,131072
 surface_offset,SOR,262144
 other_probe_type_error,OPR,524288
 bowing_BathySystems,BOR,1048576
-cusping_ BathySystems_ leakage,CUR,2097152
-sippicanMK_ timing_delay_driver_error,DRR,4194304
+cusping_BathySystems_leakage,CUR,2097152
+sippicanMK_timing_delay_driver_error,DRR,4194304
 BathySystem_software_fault_modulo_10_spikes,MOR,8388608
 protecho_systems_leakage_fault,PFR,16777216
 sippicanMK9_sticking_bit,SBR,33554432

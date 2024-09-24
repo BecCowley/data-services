@@ -60,8 +60,8 @@ insulation_penetration,1,,IP,IPR,,,down,131072,,,,,,3,1
 surface_offset,1,,SO,SOR,0,,down,262144,,,,,,3,1
 other_probe_type_error,1,,OP,OPR,0,,down,524288,,,,,,3,1
 bowing_BathySystems,1,,BO,BOR,0,,down,1048576,,,,,,3,1
-cusping_ BathySystems_ leakage,1,,CU,CUR,0,,down,2097152,,,,,,3,1
-sippicanMK_ timing_delay_driver_error,1,,DR,DRR,0,,down,4194304,,,,,,3,1
+cusping_BathySystems_leakage,1,,CU,CUR,0,,down,2097152,,,,,,3,1
+sippicanMK_timing_delay_driver_error,1,,DR,DRR,0,,down,4194304,,,,,,3,1
 BathySystem_software_fault_modulo_10_spikes,1,,MO,MOR,0,,down,8388608,,,,,,3,1
 protecho_systems_leakage_fault,1,,PF,PFR,0,,down,16777216,,,,,,3,1
 sippicanMK9_sticking_bit,1,,SB,SBR,0,,down,33554432,,,,,,3,1
