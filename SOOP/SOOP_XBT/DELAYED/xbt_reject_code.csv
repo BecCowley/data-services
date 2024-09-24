@@ -1,0 +1,29 @@
+label,code,byte_value
+surface_transient,CSR,1
+wire_break,WBR,2
+wire_stretch,WSR,4
+hit_bottom,HBR,8
+leakage,LER,16
+electrical_interference,EIR,32
+high_frequency_noise,HFR,64
+no_good,NGR,128
+temperature_offset,TOR,256
+depth_offset,DOR,512
+constant_temperature,CTR,1024
+time_error,TER,2048
+position_error,PER,4096
+duplicate_profile,DUR,8192
+test_probe,TPR,16384
+probe_type,PTR,32768
+spike,SPR,65536
+insulation_penetration,IPR,131072
+surface_offset,SOR,262144
+other_probe_type_error,OPR,524288
+bowing_BathySystems,BOR,1048576
+cusping_ BathySystems_ leakage,CUR,2097152
+sippicanMK_ timing_delay_driver_error,DRR,4194304
+BathySystem_software_fault_modulo_10_spikes,MOR,8388608
+protecho_systems_leakage_fault,PFR,16777216
+sippicanMK9_sticking_bit,SBR,33554432
+under_resolved_profile,URR,67108864
+contact_lost_with_probe,CLR,134217728
