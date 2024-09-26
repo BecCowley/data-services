@@ -19,12 +19,12 @@ time_error_corrected,0,,TE,TEA,0,,down,,16384,5,,,,2,1
 latitude_error_corrected,0,,LA,LAA,0,,down,,32768,,5,,,2,1
 longitude_error_corrected,0,,LO,LOA,0,,down,,65536,,,5,,2,1
 probe_type_changed,0,,PT,PTA,0,,down,,131072,,,,5,5,5
-spike_interpolated,0,,SP,SPA,0,,down,,262144,,,,,5,1
+spike_interpolated,1,,SP,SPA,0,,down,,262144,,,,,2,1
 fine_structure,1,,FS,FSA,,,down,,524288,,,,,2,1
-insulation_penetration_interpolated,1,,IP,IPA,0,,selected,,1048576,,,,,5,1
+insulation_penetration_interpolated,1,,IP,IPA,0,,selected,,1048576,,,,,2,1
 insulation_penetration_interpolated,1,,IP,IPA,0,,down,,,,,,,2,1
 nub_inversion,1,,NU,NUA,,,down,,2097152,,,,,1,1
-premature_launch,1,,PL,PLA,,,down,,4194304,,,,,5,1
+premature_launch,1,,PL,PLA,,,down,,4194304,,,,,2,1
 surface_temperature_anomaly,1,,SA,SAA,0,,down,,8388608,,,,,2,1
 surface_offset,1,,SO,SOA,,,down,,16777216,,,,,2,1
 temperature_anomaly,1,,TA,TAA,0,,down,,33554432,,,,,2,1

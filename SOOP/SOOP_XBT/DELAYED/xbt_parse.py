@@ -171,6 +171,9 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
         # adjust date and time QC flags if required
         profile_qc = adjust_time_qc_flags(profile_qc)
 
+        # make the QC flags consistent with the version of the cookbook used to process the data
+        profile_qc = make_qc_consistent(profile_qc)
+
         # perform a check of the qc vs noqc global attributes and histories. Do any of these need reconciling?
         if len(profile_qc.global_atts.keys() - profile_noqc.global_atts):
             LOGGER.error('%s GLOBAL attributes in RAW and ED files are not consistent'
@@ -637,6 +640,53 @@ def adjust_time_qc_flags(profile):
 
     return profile
 
+def make_qc_consistent(profile):
+    """ Make the QC flags consistent with the version of the cookbook used to process the data
+    """
+    # return if there are no records in the HISTORIES table
+    if len(profile.histories) == 0:
+        return profile
+
+    # load the qc codes from file
+    file_path = 'flag_quality_table.csv'
+    qc_codes = pd.read_csv(file_path, index_col='full_code')
+    # drop the rows with NaN values in the XBT_accept_code column
+    dfa = qc_codes.dropna(subset=['XBT_accept_code'])
+    # drop the rows with NaN values in the XBT_reject_code column
+    dfr = qc_codes.dropna(subset=['XBT_reject_code'])
+    # recombine the two dataframes
+    qc_codes = pd.concat([dfa, dfr])
+    # keep the historic_extra_code, Temp_quality control
+    qc_codes = qc_codes[['historic_extra_code', 'TEMP_quality_control']]
+    # for each row in the profile.histories, check the qc code against the qc_codes table
+    for index, row in profile.histories.iterrows():
+        if row['HISTORY_QC_CODE'] in qc_codes.index:
+            # get the qc code from the table
+            qc_code = qc_codes.loc[row['HISTORY_QC_CODE']]
+            # if the qc code is different to the current qc flag, update the qc flag
+            if row['HISTORY_TEMP_QC_CODE_VALUE'] != qc_code['TEMP_quality_control']:
+                profile.histories.at[index, 'HISTORY_TEMP_QC_CODE_VALUE'] = qc_code['TEMP_quality_control']
+                LOGGER.info('Changing HISTORY_TEMP_QC_CODE_VALUE for %s to %s' % (qc_code.name, qc_code['TEMP_quality_control']))
+        else:
+            LOGGER.error('QC code %s not found in qc_codes table' % row['HISTORY_QC_CODE'])
+            exit(1)
+
+    # Check that the TEMP_quality_control matches the maximum value for that depth from the HISTORIES table
+    # first get the unique depths from the histories table
+    depths = profile.histories['HISTORY_START_DEPTH'].unique()
+    # for each depth, get the maximum TEMP_quality_control value
+    for depth in depths:
+        # get the maximum TEMP_quality_control value for the depth
+        max_qc = profile.histories[profile.histories['HISTORY_START_DEPTH'] == depth]['HISTORY_TEMP_QC_CODE_VALUE'].max()
+        # get the indices of the rows with that depth
+        idepth = profile.data['DEPTH'] == depth
+        # if the maximum TEMP_quality_control value is different to the current qc flag, update the qc flag
+        if profile.data['TEMP_quality_control'][idepth] != max_qc:
+            profile.data['TEMP_quality_control'][idepth] = max_qc
+            LOGGER.info('Changing TEMP flag at depth %s to %s' % (depth, max_qc))
+
+
+    return profile
 
 def add_uncertainties(profile):
     """ return the profile with added uncertainties"""
