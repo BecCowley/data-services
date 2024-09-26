@@ -383,7 +383,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     profile_qc.data['LATITUDE_RAW'] = np.round(profile_noqc.netcdf_file_obj['latitude'][0].__float__(), 4)
 
     # check if scale factor has been applied, shouldn't have a negative longitude:
-    lon = profile_noqc.netcdf_file_obj['longitude'][0].__float__()
+    lon = profile_qc.netcdf_file_obj['longitude'][0].__float__()
     if lon < 0:
         if profile_qc.netcdf_file_obj['longitude'].scale:
             LOGGER.info('Scale Factor in ed file longitude attributes, changing longitude value from  %s' % lon)
