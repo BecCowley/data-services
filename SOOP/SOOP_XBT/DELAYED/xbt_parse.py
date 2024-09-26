@@ -583,11 +583,11 @@ def adjust_position_qc_flags(profile):
             # change to flag 2 for temperature for all depths where qc is less than 2
             tempqc[tempqc < 2] = 2
 
-    if profile.histories['HISTORY_QC_CODE'].str.contains('LO').any():
+    if profile.histories['HISTORY_QC_CODE'].str.contains('LOA').any():
         # check HISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value
         if np.round(float(profile.histories.loc[
                               profile.histories['HISTORY_QC_CODE'].str.contains(
-                                  'LO'), 'HISTORY_PREVIOUS_VALUE'].values),
+                                  'LOA'), 'HISTORY_PREVIOUS_VALUE'].values),
                     4) != np.round(profile.data['LONGITUDE_RAW'], 4):
             LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_value!')
             exit(1)
@@ -850,6 +850,9 @@ def parse_histories_nc(profile):
     # set the software value to 2.1 for CS flag as we are keeping them in place and giving a flag of 3
     df.loc[df.HISTORY_QC_CODE == 'CS', ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
 
+    # do the same for any PE flags as we are changing PEA to LAA and LOA. PER remains as is
+    df.loc[df.HISTORY_QC_CODE == 'PE', ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
+
     # update software names to be more descriptive
     names = {'CSCB': 'CSIRO Quality control cookbook for XBT data v1.1',
              'CSCBv2': 'Australian XBT Quality Control Cookbook Version 2.1'}
@@ -907,14 +910,20 @@ def parse_histories_nc(profile):
                 LOGGER.error('QC code of zero for a flag that is not RE, please check.')
                 exit(1)
 
+        # append the 'A' or 'R' to each code
+        if df.at[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
+            df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'A'
+        else:
+            df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
+
     if nhist > 0:
         # Change the PEA flag to LA or LO and ensure the TEMP_QC_CODE_VALUE is set to 2, not 5
         df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
                 (df['HISTORY_PARAMETER'].str.contains('LATITUDE'))),
-               ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LA', 2
+               ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LAA', 2
         df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
                 (df['HISTORY_PARAMETER'].str.contains('LONGITUDE'))),
-               ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LO', 2
+               ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LOA', 2
 
         # Combine duplicated TEA flags to a single TEA for TIME variable TEMP_QC_CODE_VALUE is set to 2, not 5
         # Also change just DATE TEA flags to TIME
@@ -947,6 +956,7 @@ def parse_histories_nc(profile):
 
             # remove any duplicated lines
             df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE']) & df.HISTORY_PARAMETER.eq('TIME'))]
+
     profile.histories = df
 
     return profile
@@ -1006,8 +1016,14 @@ def restore_temp_val(profile):
     and TEMP_RAW (from the *raw.nc file).
     """
 
+    # catch here for CSA flag which shouldn't exist, but can if the flag in the histories was 5 and not 0
+    if profile.histories['HISTORY_QC_CODE'].str.contains('CSA').any():
+        # change the CSA to CSR and the flag to 3
+        profile.histories.loc[profile.histories['HISTORY_QC_CODE'] == 'CSA', 'HISTORY_QC_CODE'] = 'CSR'
+        profile.histories.loc[profile.histories['HISTORY_QC_CODE'] == 'CSR', 'HISTORY_TEMP_QC_CODE_VALUE'] = 3
+
     # index of CS flags in histories:
-    idx = profile.histories['HISTORY_QC_CODE'] == 'CS'
+    idx = profile.histories['HISTORY_QC_CODE'] == 'CSR'
     depths = profile.histories['HISTORY_START_DEPTH'][idx].values.astype('float')
     temps = profile.histories['HISTORY_PREVIOUS_VALUE'][idx].values.astype('float')
 
@@ -1023,6 +1039,9 @@ def restore_temp_val(profile):
             profile.data['TEMP' + vv] = tempsp
             # and update the flag to 3 from 5
             profile.data['TEMP' + vv + '_quality_control'][ind] = '3'
+            # and update the histories as might not have been caught in parse_histories_nc where the flag
+            # was changed to 3 where it was 0. If the aux_id is 5, it will be changed here.
+            profile.histories.loc[profile.histories.HISTORY_QC_CODE == 'CS', ['HISTORY_TEMP_QC_CODE_VALUE']] = 3
             LOGGER.info('Updated CS flags for TEMP %s' % vv)
     return profile
 
