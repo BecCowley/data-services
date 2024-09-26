@@ -853,16 +853,6 @@ def parse_histories_nc(profile):
         df['HISTORY_DATE'] = date1.fillna(date2)
         # depth value of modified act_parm var modified
 
-    # TODO: check this correctly identifies duplicated CS flags, might be faulty profile information where the
-    # previous values are not recorded at all correctly
-    # tidy up the aux_id, previous_val, etc. Remove duplicated values of CS (where there are 99.99 in previous_val)
-    df_dups = df[(df['HISTORY_PREVIOUS_VALUE'] == 99.99) &
-                 ((df['HISTORY_QC_CODE'] == 'CS') | (df['HISTORY_QC_CODE'] == 'QC'))].index
-    if len(df_dups) > 0:
-        df = df.drop(df_dups)
-        nhist = len(df['HISTORY_QC_CODE'])
-        LOGGER.warning("Removed duplicate CS and QC codes. Please check!!")
-
     # Arrange histories to suit new format
     act_code_full_profile = read_section_from_xbt_config('ACT_CODES_FULL_PROFILE')
     act_code_single_point = read_section_from_xbt_config('ACT_CODES_SINGLE_POINT')
@@ -1065,6 +1055,13 @@ def restore_temp_val(profile):
     in the HISTORY_PREVIOUS_VALUE field. This process would need to apply to both the TEMP
     and TEMP_RAW (from the *raw.nc file).
     """
+
+    # Remove duplicated values of CS (where there are 99.99 in previous_val)
+    df_dups = profile.histories[(profile.histories['HISTORY_PREVIOUS_VALUE'] == 99.99) &
+                                (profile.histories['HISTORY_QC_CODE'].str.contains('CS'))].index
+    if len(df_dups) > 0:
+        profile.histories = profile.histories.drop(df_dups)
+        LOGGER.warning("Removed duplicate CS codes. Please check!!")
 
     # catch here for CSA flag which shouldn't exist, but can if the flag in the histories was 5 and not 0
     if profile.histories['HISTORY_QC_CODE'].str.contains('CSA').any():
