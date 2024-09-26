@@ -563,16 +563,16 @@ def adjust_position_qc_flags(profile):
     """
 
     # exit this if we don't have a position code
-    if len(profile.histories[profile.histories['HISTORY_QC_CODE'].str.contains("LA|LO|PER")]) == 0:
+    if len(profile.histories[profile.histories['HISTORY_QC_CODE'].str.contains("LA|LO|PE")]) == 0:
         return profile
 
     # get the temperature QC codes
     tempqc = profile.data['TEMP_quality_control']
-    if profile.histories['HISTORY_QC_CODE'].str.contains('LA').any():
+    if profile.histories['HISTORY_QC_CODE'].str.contains('LAA').any():
         # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
         if np.round(float(profile.histories.loc[
                               profile.histories['HISTORY_QC_CODE'].str.contains(
-                                  'LA'), 'HISTORY_PREVIOUS_VALUE'].values),
+                                  'LAA'), 'HISTORY_PREVIOUS_VALUE'].values),
                     4) != np.round(profile.data['LATITUDE_RAW'], 4):
             LOGGER.error('LATITUDE_RAW not the same as the PREVIOUS_value!')
             exit(1)
