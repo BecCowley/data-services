@@ -876,10 +876,9 @@ def parse_histories_nc(profile):
         if res:
             df.at[idx, "HISTORY_STOP_DEPTH"] = df.at[idx, 'HISTORY_START_DEPTH']
 
-        # need to assign IPA/IPR, SPA/SPR, HFA/HFR, TEA/TER, PEA/PER categories based on flag severity
+        # change code 0 if needed for PE, SP, HF,TE, IP
         if row['HISTORY_QC_CODE'] in act_code_changed:
             if row['HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
-                df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'A'
                 # change code 0 if needed
                 if row['HISTORY_TEMP_QC_CODE_VALUE'] in [0] and not row['HISTORY_QC_CODE'] == 'PE':
                     LOGGER.warning('Changed HISTORY_TEMP_QC_CODE for %s to %s.' % (row['HISTORY_QC_CODE'], tempqc[ii]))
@@ -887,8 +886,6 @@ def parse_histories_nc(profile):
                 elif row['HISTORY_TEMP_QC_CODE_VALUE'] in [0] and row['HISTORY_QC_CODE'] == 'PE':
                     LOGGER.warning('Changed HISTORY_TEMP_QC_CODE for %s to 2.' % row['HISTORY_QC_CODE'])
                     df.at[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = 2
-            else:
-                df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
 
         # TODO: surface flags in the act_code_next_flag category need to ignore the CS flags
         # if the flag is in act_code_next_flag, then stop depth is the next depth or bottom
@@ -1069,13 +1066,6 @@ def create_flag_feature(profile):
         codes = codes.drop_duplicates(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH', 'HISTORY_PREVIOUS_VALUE'],
                                       keep='first')
         LOGGER.warning('Duplicate QC code encountered, and removed for flag_feature_type array. Please review')
-
-    # append the 'A' or 'R' to each code
-    for idx, row in codes.iterrows():
-        if row['HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
-            codes.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'A'
-        else:
-            codes.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
 
     # merge the codes with the flag codes
     mapold = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
