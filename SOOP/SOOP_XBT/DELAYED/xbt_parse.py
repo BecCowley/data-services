@@ -1095,6 +1095,24 @@ def create_flag_feature(profile):
 
     # perform the flag mapping on the original flags and create the two new variables
     codes = profile.histories
+    # if the TEMP_quality_control values are 0 and the TEMP_RAW_quality_control values are not, update the TEMP_quality_control
+    # values to be the same as the TEMP_RAW_quality_control values
+    idx = (df_data['TEMP_quality_control'] == 0) & (df_data['TEMP_RAW_quality_control'] != 0)
+    if len(idx) > 0:
+        LOGGER.warning('TEMP_quality_control values are 0 and TEMP_RAW_quality_control values are not. Updating.')
+        df_data.loc[idx, 'TEMP_quality_control'] = df_data.loc[idx, 'TEMP_RAW_quality_control']
+        # add QCA to the history
+        codes = codes._append({'HISTORY_INSTITUTION': profile.global_atts['institution'],
+                                                        'HISTORY_QC_CODE': 'QCA',
+                                                        'HISTORY_PARAMETER': 'TEMP',
+                                                        'HISTORY_SOFTWARE': 'Unknown',
+                                                        'HISTORY_DATE': profile.data['TIME'].strftime('%Y-%m-%d %H:%M:%S'),
+                                                        'HISTORY_START_DEPTH': df_data['DEPTH'].values[0],
+                                                        'HISTORY_STOP_DEPTH': df_data['DEPTH'].values[-1],
+                                                        'HISTORY_QC_CODE_DESCRIPTION': 'scientific_qc_applied',
+                                                        'HISTORY_TEMP_QC_CODE_VALUE': 1,
+                                                        'HISTORY_SOFTWARE_RELEASE': '',
+                                                        'HISTORY_PREVIOUS_VALUE': 0}, ignore_index=True)
 
     # merge the codes with the flag codes
     mapcodes = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
@@ -1300,7 +1318,7 @@ def write_output_nc(output_folder, profile, profile_raw=None):
             # create a QC variable for the _RAW data if there are flags included
             # (some files are converted from QC'd datasets and therefore have flags associated with the 'raw' data
             if profile.data['data'][vv + '_RAW_quality_control'].any() > 0:
-                LOGGER.warning("QC values have been written to file for \"%s\" variable. Review." % vv)
+                LOGGER.warning("QC values have been written to file for \"%s\"_RAW variable. Review." % vv)
                 output_netcdf_obj.createVariable(vv + "_RAW_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
 
             if vv == 'TEMP' and profile_raw is not None:
