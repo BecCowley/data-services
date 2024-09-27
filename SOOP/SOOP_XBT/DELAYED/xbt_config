@@ -256,6 +256,14 @@ T-7 equiv=461
 #14=undefined
 #21=XCTD = C-21
 
+# institute codes
+[INSTITUTE]
+CS = CSIRO Marine Research
+BO = Australian Bureau of Meteorology
+AD = Australian Oceanoagraphic Data Centre
+SC = Scripps Institution of Oceanography
+AO = AOML
+
 # lines description
 [IX1]
 title                = Upper Ocean Thermal Data collected on the line IX1 (Fremantle-Sunda Strait) using XBT (expendable bathythermographs)

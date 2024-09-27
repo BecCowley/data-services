@@ -243,6 +243,16 @@ def parse_globalatts_nc(profile):
     # these two variable are dimensioned by nprof
     profile.global_atts['digitisation_method_code'] = np.empty(profile.nprof)
     profile.global_atts['gtspp_precision_code'] = np.empty(profile.nprof)
+
+    # get the institution code from the first two characters of the Stream_Ident
+    institute = decode_bytearray(profile.netcdf_file_obj['Stream_Ident'][:]).strip()[:2]
+    # create a dictionary of the institution codes
+    institute_list = read_section_from_xbt_config('INSTITUTE')
+    if institute in list(institute_list.keys()):
+        profile.global_atts['institution'] = institute_list[institute]
+    else:
+        LOGGER.warning('Institute code %s is not defined in xbt_config file. Please edit xbt_config' % institute)
+
     for count in range(profile.nprof):
         try:
             profile.global_atts['digitisation_method_code'][count] = \
