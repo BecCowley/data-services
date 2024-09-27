@@ -8,7 +8,7 @@ def create_xbtfft():
     file_path = 'flag_quality_table.csv'
     df = pd.read_csv(file_path)
     # keep only the name, full_code
-    df = df[['name', 'full_code', 'XBT_accept_code', 'XBT_reject_code']]
+    df = df[['name', 'full_code', 'XBT_accept_code', 'XBT_reject_code', 'TEMP_quality_control']]
     # drop the rows with NaN values in the XBT_accept_code column
     dfa = df.dropna(subset=['XBT_accept_code'])
     # drop the rows with NaN values in the XBT_reject_code column
@@ -17,20 +17,22 @@ def create_xbtfft():
     # convert the name and full_code
     labels = dfa['name'].tolist()
     full_code = dfa['full_code'].tolist()
+    tempqc = dfa['TEMP_quality_control'].tolist()
     with open('xbt_accept_code.csv', 'w') as f:
         # write the header
-        f.write('label,code,byte_value\n')
+        f.write('label,code,byte_value,tempqc\n')
         for i in range(len(dfa)):
             # write the labels, code and the binary value with a comma in between each
-            f.write(f'{convert(2**i, labels)},{full_code[i]},{2**i}\n')
+            f.write(f'{convert(2**i, labels)},{full_code[i]},{2**i},{tempqc[i]}\n')
     labels = dfr['name'].tolist()
     full_code = dfr['full_code'].tolist()
+    tempqc = dfr['TEMP_quality_control'].tolist()
     with open('xbt_reject_code.csv', 'w') as f:
         # write the header
-        f.write('label,code,byte_value\n')
+        f.write('label,code,byte_value,tempqc\n')
         for i in range(len(dfr)):
             # write the labels, code and the binary value with a comma in between each
-            f.write(f'{convert(2**i, labels)},{full_code[i]},{2**i}\n')
+            f.write(f'{convert(2**i, labels)},{full_code[i]},{2**i},{tempqc[i]}\n')
     return
 
 
