@@ -134,8 +134,8 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
 
     # assign the geospatial_vertical* to the no_qc file for checking consistency. Doesn't get assigned in previous call
     # because the data doesn't get written to the noqc profile
-    profile_noqc.global_atts['geospatial_vertical_max'] = max(profile_qc.data['DEPTH_RAW'])
-    profile_noqc.global_atts['geospatial_vertical_min'] = min(profile_qc.data['DEPTH_RAW'])
+    profile_noqc.global_atts['geospatial_vertical_max'] = max(profile_qc.data['data']['DEPTH_RAW'])
+    profile_noqc.global_atts['geospatial_vertical_min'] = min(profile_qc.data['data']['DEPTH_RAW'])
     profile_noqc.global_atts['geospatial_lat_max'] = profile_qc.data['LATITUDE_RAW']
     profile_noqc.global_atts['geospatial_lat_min'] = profile_qc.data['LATITUDE_RAW']
     profile_noqc.global_atts['geospatial_lon_max'] = profile_qc.data['LONGITUDE_RAW']
@@ -262,8 +262,8 @@ def parse_globalatts_nc(profile):
         profile.global_atts['geospatial_lat_min'] = profile.data['LATITUDE']
         profile.global_atts['geospatial_lon_max'] = profile.data['LONGITUDE']
         profile.global_atts['geospatial_lon_min'] = profile.data['LONGITUDE']
-        profile.global_atts['geospatial_vertical_max'] = max(profile.data['DEPTH'])
-        profile.global_atts['geospatial_vertical_min'] = min(profile.data['DEPTH'])
+        profile.global_atts['geospatial_vertical_max'] = max(profile.data['data']['DEPTH'])
+        profile.global_atts['geospatial_vertical_min'] = min(profile.data['data']['DEPTH'])
     except:
         profile.global_atts['geospatial_lat_max'] = []
         profile.global_atts['geospatial_lat_min'] = []
@@ -552,9 +552,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                                                           not in col and 'DEPTH' not in col)])
     profile_noqc.nprof = profile_qc.nprof
 
-    # let's write these out to the profile_qc in the appropriate format to suit the rest of the code
-    for var in df.columns:
-        profile_qc.data[var] = df[var].to_numpy()
+    # save the dataframe of DEPTH dimensioned data to the profile object
+    profile_qc.data['data'] = df
 
     return profile_qc, profile_noqc
 
@@ -570,7 +569,7 @@ def adjust_position_qc_flags(profile):
         return profile
 
     # get the temperature QC codes
-    tempqc = profile.data['TEMP_quality_control']
+    df = profile.data['data']
     if profile.histories['HISTORY_QC_CODE'].str.contains('LAA').any():
         # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
         if np.round(float(profile.histories.loc[
@@ -624,7 +623,7 @@ def adjust_time_qc_flags(profile):
         return profile
 
     # get the temperature QC codes
-    tempqc = profile.data['TEMP_quality_control']
+    tempqc = profile.data['data']['TEMP_quality_control']
     if profile.histories['HISTORY_QC_CODE'].str.contains('TEA').any() & profile.data['TIME_quality_control'] != 5:
         # TEA
         profile.data['TIME_quality_control'] = 5
@@ -735,13 +734,13 @@ def add_uncertainties(profile):
         tunc = [0]
         dunc = [0]
     # temp uncertainties
-    profile.data['TEMP_uncertainty'] = ma.empty_like(profile.data['TEMP'])
-    profile.data['TEMP_uncertainty'][:] = tunc
+    profile.data['data']['TEMP_uncertainty'] = ma.empty_like(profile.data['data']['TEMP'])
+    profile.data['data']['TEMP_uncertainty'] = tunc[0]
     # depth uncertainties:
-    unc = np.ma.MaskedArray(profile.data['DEPTH'] * dunc[0], mask=False)
+    unc = np.ma.MaskedArray(profile.data['data']['DEPTH'] * dunc[0], mask=False)
     if len(dunc) > 1:
-        unc[profile.data['DEPTH'] <= 230] = dunc[1]
-    profile.data['DEPTH_uncertainty'] = np.round(unc, 2)
+        unc[profile.data['data']['DEPTH'] <= 230] = dunc[1]
+    profile.data['data']['DEPTH_uncertainty'] = np.round(unc, 2)
 
     return profile
 
@@ -1109,9 +1108,12 @@ def create_flag_feature(profile):
     # merge the two dataframes
     df = pd.concat([dfa, dfr])
 
+    df_data = profile.data['data']
+
     # set the fields to zeros to start
-    profile.data['XBT_accept_code'] = np.float64(profile.data['DEPTH'] * 0)
-    profile.data['XBT_reject_code'] = np.float64(profile.data['DEPTH'] * 0)
+    df_data['XBT_accept_code'] = 0
+    df_data['XBT_reject_code'] = 0
+    df_data['tempqc'] = 0
 
     # make sure that we record the fault masks, meanings and the valid max
     profile.accept_code = {}
@@ -1254,7 +1256,7 @@ def write_output_nc(output_folder, profile, profile_raw=None):
 
     with Dataset(netcdf_filepath, "w", format="NETCDF4") as output_netcdf_obj:
         # Create the dimensions
-        output_netcdf_obj.createDimension('DEPTH', len(profile.data['DEPTH']))
+        output_netcdf_obj.createDimension('DEPTH', len(profile.data['data']['DEPTH']))
         output_netcdf_obj.createDimension('N_HISTORY', 0) #make this unlimited
 
         # Create the variables, no dimensions:
@@ -1269,7 +1271,7 @@ def write_output_nc(output_folder, profile, profile_raw=None):
                                              fill_value=get_imos_parameter_info(vv, '_FillValue'))
 
         # Create the dimensioned variables:
-        varslist = [key for key in profile.data.keys() if ('_quality_control' not in key and 'RAW' not in key
+        varslist = [key for key in profile.data['data'].keys() if ('_quality_control' not in key and 'RAW' not in key
                                                            and 'TUDE' not in key and 'XBT' not in key
                                                            and 'TIME' not in key and 'uncertainty' not in key
                                                            and 'PROBE' not in key)]
@@ -1287,7 +1289,7 @@ def write_output_nc(output_folder, profile, profile_raw=None):
                                              fill_value=get_imos_parameter_info(vv, '_FillValue'))
             # create a QC variable for the _RAW data if there are flags included
             # (some files are converted from QC'd datasets and therefore have flags associated with the 'raw' data
-            if profile.data[vv + '_RAW_quality_control'].any() > 0:
+            if profile.data['data'][vv + '_RAW_quality_control'].any() > 0:
                 LOGGER.warning("QC values have been written to file for \"%s\" variable. Review." % vv)
                 output_netcdf_obj.createVariable(vv + "_RAW_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
 
@@ -1356,7 +1358,7 @@ def write_output_nc(output_folder, profile, profile_raw=None):
         # append the data to the file
         # qc'd
         for v in list(output_netcdf_obj.variables):
-            if v not in list(profile.data) and v not in list(profile.histories):
+            if v not in list(profile.data['data']) and v not in list(profile.histories) and v not in list(profile.data):
                 LOGGER.warning(
                     "Variable not written: \"%s\". Please check!!" % v)
                 continue
@@ -1372,6 +1374,11 @@ def write_output_nc(output_folder, profile, profile_raw=None):
                 time_val_dateobj = date2num(profile.data[v], output_netcdf_obj[v].units,
                                             output_netcdf_obj[v].calendar)
                 output_netcdf_obj[v][:] = time_val_dateobj
+            elif v in list(profile.data['data']):
+                if isinstance(output_netcdf_obj[v][:], str):
+                    output_netcdf_obj[v][len(profile.data['data'][v])] = profile.data['data'][v]
+                else:
+                    output_netcdf_obj[v][:] = profile.data['data'][v]
             elif v in list(profile.data):
                 if isinstance(output_netcdf_obj[v][:], str):
                     output_netcdf_obj[v][len(profile.data[v])] = profile.data[v]
