@@ -1075,7 +1075,7 @@ def create_flag_feature(profile):
     # merge the two dataframes
     df = pd.concat([dfa, dfr])
 
-    df_data = profile.data['data']
+    df_data = profile.data['data'].copy(deep=True)
 
     # set the fields to zeros to start
     df_data['XBT_accept_code'] = 0
@@ -1100,8 +1100,6 @@ def create_flag_feature(profile):
     mapcodes = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
 
     if mapcodes.empty:
-        # no flags, remove redundant columns and return
-        profile.data['data'].drop(columns=['tempqc', 'XBT_accept_code', 'XBT_reject_code'], inplace=True)
         profile.global_atts['qc_completed'] = 'no'
         return profile
     else:
