@@ -148,8 +148,9 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     else:
         # we need to carry the depths information into the history parsing, so copy the data array into profile_noqc
         profile_noqc.data = dict()
-        profile_noqc.data['DEPTH'] = profile_qc.data['DEPTH_RAW']
-        profile_noqc.data['TEMP_quality_control'] = profile_qc.data['TEMP_quality_control']
+        profile_noqc.data['data'] = pd.DataFrame()
+        profile_noqc.data['data']['DEPTH'] = profile_qc.data['data']['DEPTH_RAW']
+        profile_noqc.data['data']['TEMP_quality_control'] = profile_qc.data['data']['TEMP_quality_control']
         profile_noqc = parse_histories_nc(profile_noqc)
         # check for histories in the noqc file and reconcile:
         if len(profile_noqc.histories) > 0:
@@ -162,34 +163,43 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
         # handle special case of premature launch where raw and edited files have different profile lengths:
         profile_qc = check_for_PL_flag(profile_qc)
 
-        # replace missing temperature data with actual values and appropriate QC flags
-        # applies to CS flag in particular
-        profile_qc = restore_temp_val(profile_qc)
-
         # adjust lat lon qc flags if required
         profile_qc = adjust_position_qc_flags(profile_qc)
         # adjust date and time QC flags if required
         profile_qc = adjust_time_qc_flags(profile_qc)
 
-        # make the QC flags consistent with the version of the cookbook used to process the data
-        profile_qc = make_qc_consistent(profile_qc)
-
         # perform a check of the qc vs noqc global attributes and histories. Do any of these need reconciling?
         if len(profile_qc.global_atts.keys() - profile_noqc.global_atts):
-            LOGGER.error('%s GLOBAL attributes in RAW and ED files are not consistent'
-                         % profile_qc.XBT_input_filename)
-            exit(1)
-
-    # now, lets re-map these data code (QC reasons) and create the flag_and_feature type variable:
-    profile_qc = create_flag_feature(profile_qc)
+            # if the difference in the global attributes is just the qc_completed key, continue
+            if len(profile_qc.global_atts.keys() - profile_noqc.global_atts) == 1:
+                if 'qc_completed' in profile_qc.global_atts.keys() - profile_noqc.global_atts:
+                    pass
+                else:
+                    LOGGER.error('%s GLOBAL attributes in RAW and ED files are not consistent'
+                                 % profile_qc.XBT_input_filename)
+                    exit(1)
 
     # Probe type goes into a variable with coefficients as attributes, and assign QC to probe types
     profile_qc = get_fallrate_eq_coef(profile_qc, profile_noqc)
+
+    # check that the sums of TEMP and TEMP_RAW and DEPTH and DEPTH_RAW are the same within a tolerance
+    check_sums_of_temp_depth(profile_qc)
 
     # add uncertainties:
     profile_qc = add_uncertainties(profile_qc)
 
     return profile_qc
+
+def check_sums_of_temp_depth(profile_qc):
+    # check that the sums of TEMP and TEMP_RAW and DEPTH and DEPTH_RAW are the same within a tolerance
+    # check the sum of the TEMP and TEMP_RAW columns
+    if not np.isclose(np.sum(profile_qc.data['data']['TEMP']), np.sum(profile_qc.data['data']['TEMP_RAW']), rtol=1e-3):
+        LOGGER.error('The sum of TEMP and TEMP_RAW are not the same in %s' % profile_qc.XBT_input_filename)
+        exit(1)
+    # check the sum of the DEPTH and DEPTH_RAW columns
+    if not np.isclose(np.sum(profile_qc.data['data']['DEPTH']), np.sum(profile_qc.data['data']['DEPTH_RAW']), rtol=1e-3):
+        LOGGER.error('The sum of DEPTH and DEPTH_RAW are not the same in %s' % profile_qc.XBT_input_filename)
+        exit(1)
 
 
 def get_recorder_type(profile):
@@ -497,12 +507,12 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             prof_flag = np.ma.masked_array(
                 invalid_to_ma_array(prof_flag, fillvalue=99))  # replace masked values for IMOS IODE flags
             # if the size of the array isn't equal to the number of depths, adjust here
-            if len(prof) != ndeps:
+            if len(prof) != ndeps[ivar]:
                 LOGGER.warning('Resizing arrays to the number of depths recorded in original MQNC file')
-                prof = np.ma.resize(prof, ndeps)
-                prof_flag = np.ma.resize(prof_flag, ndeps)
-                dep = np.ma.resize(dep, ndeps)
-                qc = np.ma.resize(qc,ndeps)
+                prof = np.ma.resize(prof, ndeps[ivar])
+                prof_flag = np.ma.resize(prof_flag, ndeps[ivar])
+                dep = np.ma.resize(dep, ndeps[ivar])
+                qc = np.ma.resize(qc,ndeps[ivar])
             df[var + depcode] = dep
             df[var + depcode + '_quality_control'] = qc
             df[var] = prof
@@ -583,7 +593,8 @@ def adjust_position_qc_flags(profile):
             profile.data['LATITUDE_quality_control'] = 5
             LOGGER.info('LATITUDE correction (PEA) in original file, changing LATITUDE flag to level 5.')
             # change to flag 2 for temperature for all depths where qc is less than 2
-            tempqc[tempqc < 2] = 2
+            mask = df['TEMP_quality_control'] < 2
+            df.loc[mask, 'TEMP_quality_control'] = 2
 
     if profile.histories['HISTORY_QC_CODE'].str.contains('LOA').any():
         # check HISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value
@@ -598,7 +609,8 @@ def adjust_position_qc_flags(profile):
             profile.data['LONGITUDE_quality_control'] = 5
             LOGGER.info('LONGITUDE correction (PEA) in original file, changing LONGITUDE flag to level 5.')
             # change to flag 2 for temperature for all depths where qc is less than 2
-            tempqc[tempqc < 2] = 2
+            mask = df['TEMP_quality_control'] < 2
+            df.loc[mask, 'TEMP_quality_control'] = 2
 
     if profile.histories['HISTORY_QC_CODE'].str.contains('PER').any():
         # PER on longitude and latitude
@@ -606,10 +618,11 @@ def adjust_position_qc_flags(profile):
         profile.data['LATITUDE_quality_control'] = 3
         LOGGER.info('Position Reject (PER) in original file, changing LONGITUDE & LATITUDE flags to level 3.')
         # change to flag 3 for temperature for all depths where qc is less than 3
-        tempqc[tempqc < 3] = 3
+        mask = df['TEMP_quality_control'] < 3
+        df.loc[mask, 'TEMP_quality_control'] = 3
 
     # update the temperature QC flags
-    profile.data['TEMP_quality_control'] = tempqc
+    profile.data['data'] = df
 
     return profile
 
@@ -636,56 +649,11 @@ def adjust_time_qc_flags(profile):
                 profile.data['TIME_RAW']:
             LOGGER.error('TIME_RAW not the same as the PREVIOUS_value!')
             exit(1)
+    # update the temperature QC flags
+    profile.data['data']['TEMP_quality_control'] = tempqc
 
     return profile
 
-def make_qc_consistent(profile):
-    """ Make the QC flags consistent with the version of the cookbook used to process the data
-    """
-    # return if there are no records in the HISTORIES table
-    if len(profile.histories) == 0:
-        return profile
-
-    # load the qc codes from file
-    file_path = 'flag_quality_table.csv'
-    qc_codes = pd.read_csv(file_path, index_col='full_code')
-    # drop the rows with NaN values in the XBT_accept_code column
-    dfa = qc_codes.dropna(subset=['XBT_accept_code'])
-    # drop the rows with NaN values in the XBT_reject_code column
-    dfr = qc_codes.dropna(subset=['XBT_reject_code'])
-    # recombine the two dataframes
-    qc_codes = pd.concat([dfa, dfr])
-    # keep the historic_extra_code, Temp_quality control
-    qc_codes = qc_codes[['historic_extra_code', 'TEMP_quality_control']]
-    # for each row in the profile.histories, check the qc code against the qc_codes table
-    for index, row in profile.histories.iterrows():
-        if row['HISTORY_QC_CODE'] in qc_codes.index:
-            # get the qc code from the table
-            qc_code = qc_codes.loc[row['HISTORY_QC_CODE']]
-            # if the qc code is different to the current qc flag, update the qc flag
-            if row['HISTORY_TEMP_QC_CODE_VALUE'] != qc_code['TEMP_quality_control']:
-                profile.histories.at[index, 'HISTORY_TEMP_QC_CODE_VALUE'] = qc_code['TEMP_quality_control']
-                LOGGER.info('Changing HISTORY_TEMP_QC_CODE_VALUE for %s to %s' % (qc_code.name, qc_code['TEMP_quality_control']))
-        else:
-            LOGGER.error('QC code %s not found in qc_codes table' % row['HISTORY_QC_CODE'])
-            exit(1)
-
-    # Check that the TEMP_quality_control matches the maximum value for that depth from the HISTORIES table
-    # first get the unique depths from the histories table
-    depths = profile.histories['HISTORY_START_DEPTH'].unique()
-    # for each depth, get the maximum TEMP_quality_control value
-    for depth in depths:
-        # get the maximum TEMP_quality_control value for the depth
-        max_qc = profile.histories[profile.histories['HISTORY_START_DEPTH'] == depth]['HISTORY_TEMP_QC_CODE_VALUE'].max()
-        # get the indices of the rows with that depth
-        idepth = profile.data['DEPTH'] == depth
-        # if the maximum TEMP_quality_control value is different to the current qc flag, update the qc flag
-        if profile.data['TEMP_quality_control'][idepth] != max_qc:
-            profile.data['TEMP_quality_control'][idepth] = max_qc
-            LOGGER.info('Changing TEMP flag at depth %s to %s' % (depth, max_qc))
-
-
-    return profile
 
 def add_uncertainties(profile):
     """ return the profile with added uncertainties"""
@@ -721,7 +689,7 @@ def add_uncertainties(profile):
         dunc = [0]  # no depth uncertainty determined
     elif 700 <= pt <= 751:
         # XCTDs
-        year_value = nco.time.dt.year.astype(int).values[0]
+        year_value = profile.netcdf_file_obj.time.dt.year.astype(int).values[0]
         dt = datetime.datetime(year_value, 1, 1, 0, 0, 0)
         if dt < datetime.datetime.strptime('1998-01-01', '%Y-%m-%d'):
             tunc = [0.02]
@@ -897,65 +865,51 @@ def parse_histories_nc(profile):
              'CSCBv2': 'Australian XBT Quality Control Cookbook Version 2.1'}
     df['HISTORY_SOFTWARE'] = df['HISTORY_SOFTWARE'].map(names, na_action='ignore')
 
-    # sort the flags by depth order to help with finding STOP_DEPTH
-    # TODO: will keep the stop depth for now. Consider re-writing to loop over each of the lists of act_code types
-    df = df.sort_values('HISTORY_START_DEPTH')
-    vals = profile.data['DEPTH']
-    tempqc = profile.data['TEMP_quality_control']
-    for idx, row in df.iterrows():
-        # Ensure start depth is the same as the value in the depth array
-        # Find the closest value to the start depth in the histories
-        ii = (np.nanargmin(np.abs(vals - row['HISTORY_START_DEPTH'])))
-        df.at[idx, 'HISTORY_START_DEPTH'] = vals[ii]
+    if nhist > 0:
 
-        # QC,RE, TE, PE and EF flag applies to entire profile, stop_depth is deepest depth
-        res = row['HISTORY_QC_CODE'] in act_code_full_profile
-        if res:
-            df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
+        # sort the flags by depth order to help with finding STOP_DEPTH
+        # TODO: will keep the stop depth for now. Consider re-writing to loop over each of the lists of act_code types
+        df = df.sort_values('HISTORY_START_DEPTH')
+        dfdat = profile.data['data']
+        for idx, row in df.iterrows():
+            # Ensure start depth is the same as the value in the depth array
+            # Find the closest value to the start depth in the histories
+            ii = (dfdat['DEPTH'] - row['HISTORY_START_DEPTH']).abs().idxmin()
+            df.at[idx, 'HISTORY_START_DEPTH'] = dfdat.at[ii, 'DEPTH']
 
-        # if the flag is in act_code_single_point list, then stop depth is same as start
-        res = row['HISTORY_QC_CODE'] in act_code_single_point
-        if res:
-            df.at[idx, "HISTORY_STOP_DEPTH"] = df.at[idx, 'HISTORY_START_DEPTH']
+            # QC,RE, TE, PE and EF flag applies to entire profile, stop_depth is deepest depth
+            res = row['HISTORY_QC_CODE'] in act_code_full_profile
+            if res:
+                df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
 
-        # change code 0 if needed for PE, SP, HF,TE, IP
-        if row['HISTORY_QC_CODE'] in act_code_changed:
-            if row['HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
-                # change code 0 if needed
-                if row['HISTORY_TEMP_QC_CODE_VALUE'] in [0] and not row['HISTORY_QC_CODE'] == 'PE':
-                    LOGGER.warning('Changed HISTORY_TEMP_QC_CODE for %s to %s.' % (row['HISTORY_QC_CODE'], tempqc[ii]))
-                    df.at[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = tempqc[ii]
-                elif row['HISTORY_TEMP_QC_CODE_VALUE'] in [0] and row['HISTORY_QC_CODE'] == 'PE':
-                    LOGGER.warning('Changed HISTORY_TEMP_QC_CODE for %s to 2.' % row['HISTORY_QC_CODE'])
-                    df.at[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = 2
+            # if the flag is in act_code_single_point list, then stop depth is same as start
+            res = row['HISTORY_QC_CODE'] in act_code_single_point
+            if res:
+                df.at[idx, "HISTORY_STOP_DEPTH"] = df.at[idx, 'HISTORY_START_DEPTH']
 
-        # TODO: surface flags in the act_code_next_flag category need to ignore the CS flags
-        # if the flag is in act_code_next_flag, then stop depth is the next depth or bottom
-        # find next deepest flag depth
-        res = row['HISTORY_QC_CODE'] in act_code_next_flag
-        stop_idx = df['HISTORY_START_DEPTH'] > row['HISTORY_START_DEPTH']
-        stop_depth = df['HISTORY_START_DEPTH'][stop_idx]
-        if any(stop_idx) & res:
-            ii = (np.abs(vals - stop_depth.values[0])).argmin()
-            df.at[idx, "HISTORY_STOP_DEPTH"] = vals[ii]
-        elif res:  # if there isn't a deeper flag, use deepest depth
-            df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
-
-        # Error check for any QC flag value still zero
-        if df.at[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] == 0:
-            if df.at[idx, 'HISTORY_QC_CODE'] == 'CS':
-                df.at[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = 3
-            elif df.at[idx, 'HISTORY_QC_CODE'] != 'RE':
-                LOGGER.error('QC code of zero for a flag that is not RE, please check.')
-                exit(1)
+            # TODO: surface flags in the act_code_next_flag category need to ignore the CS flags
+            # if the flag is in act_code_next_flag, then stop depth is the next depth or bottom
+            # find next deepest flag depth
+            res = row['HISTORY_QC_CODE'] in act_code_next_flag
+            stop_idx = df['HISTORY_START_DEPTH'] > row['HISTORY_START_DEPTH']
+            stop_depth = df['HISTORY_START_DEPTH'][stop_idx]
+            if any(stop_idx) & res:
+                ii = (np.abs(dfdat['DEPTH'] - stop_depth.values[0])).argmin()
+                df.at[idx, "HISTORY_STOP_DEPTH"] = dfdat['DEPTH'][ii]
+            elif res:  # if there isn't a deeper flag, use deepest depth
+                df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
 
         # append the 'A' or 'R' to each code
-        if df.at[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
-            df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'A'
-        else:
-            df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
+        for idx, row in df.iterrows():
+            if df.at[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
+                df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'A'
+            else:
+                df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
 
-    if nhist > 0:
+        # change CSA to CSR and the flag to 3 to match new format
+        df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
+               ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'CSR', 3
+
         # Change the PEA flag to LA or LO and ensure the TEMP_QC_CODE_VALUE is set to 2, not 5
         df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
                 (df['HISTORY_PARAMETER'].str.contains('LATITUDE'))),
@@ -996,7 +950,13 @@ def parse_histories_nc(profile):
             # remove any duplicated lines
             df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE']) & df.HISTORY_PARAMETER.eq('TIME'))]
 
+    # assign the dataframe back to profile at this stage
     profile.histories = df
+
+    # only do this next step if not a noqc file, won't have TEMP data
+    if 'TEMP' in profile.data['data'].columns:
+        # make our accept and reject code variables
+        profile = create_flag_feature(profile)
 
     return profile
 
@@ -1055,19 +1015,6 @@ def restore_temp_val(profile):
     and TEMP_RAW (from the *raw.nc file).
     """
 
-    # Remove duplicated values of CS (where there are 99.99 in previous_val)
-    df_dups = profile.histories[(profile.histories['HISTORY_PREVIOUS_VALUE'] == 99.99) &
-                                (profile.histories['HISTORY_QC_CODE'].str.contains('CS'))].index
-    if len(df_dups) > 0:
-        profile.histories = profile.histories.drop(df_dups)
-        LOGGER.warning("Removed duplicate CS codes. Please check!!")
-
-    # catch here for CSA flag which shouldn't exist, but can if the flag in the histories was 5 and not 0
-    if profile.histories['HISTORY_QC_CODE'].str.contains('CSA').any():
-        # change the CSA to CSR and the flag to 3
-        profile.histories.loc[profile.histories['HISTORY_QC_CODE'] == 'CSA', 'HISTORY_QC_CODE'] = 'CSR'
-        profile.histories.loc[profile.histories['HISTORY_QC_CODE'] == 'CSR', 'HISTORY_TEMP_QC_CODE_VALUE'] = 3
-
     # index of CS flags in histories:
     idx = profile.histories['HISTORY_QC_CODE'] == 'CSR'
     depths = profile.histories['HISTORY_START_DEPTH'][idx].values.astype('float')
@@ -1075,20 +1022,30 @@ def restore_temp_val(profile):
 
     # check if the temperature values are missing & replace with previous value if they are:
     # do for both TEMP and TEMP_RAW
-    for vv in ['', '_RAW']:
-        deps = profile.data['DEPTH' + vv]
-        tempsp = profile.data['TEMP' + vv]
-        ind = np.in1d(np.round(deps, 2), np.round(depths, 2)).nonzero()[0]
-        if np.isnan(tempsp[ind]).any():
-            # we need to replace these with their original temperatures
-            tempsp[ind] = temps
-            profile.data['TEMP' + vv] = tempsp
-            # and update the flag to 3 from 5
-            profile.data['TEMP' + vv + '_quality_control'][ind] = '3'
-            # and update the histories as might not have been caught in parse_histories_nc where the flag
-            # was changed to 3 where it was 0. If the aux_id is 5, it will be changed here.
-            profile.histories.loc[profile.histories.HISTORY_QC_CODE == 'CS', ['HISTORY_TEMP_QC_CODE_VALUE']] = 3
-            LOGGER.info('Updated CS flags for TEMP %s' % vv)
+    df = profile.data['data']
+    # find the depths in the profile data
+    ind = np.in1d(np.round(df['DEPTH'], 2), np.round(depths, 2)).nonzero()[0]
+    # temps should be equal to df['TEMP_RAW'][ind], let's check they are equal
+    if (temps != df['TEMP_RAW'][ind]).all():
+        # check they are within 0.01 of each other
+        if not np.allclose(temps, df['TEMP_RAW'][ind], atol=0.01):
+            # check the median difference with a bigger tolerance:
+            if np.median(np.abs(temps - df['TEMP_RAW'][ind])) > 0.01:
+                LOGGER.error('TEMP_RAW values do not match the HISTORY_PREVIOUS_VALUE for CS flags')
+                exit(1)
+            else:
+                # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value
+                profile.histories.loc[idx, 'HISTORY_PREVIOUS_VALUE'] = df['TEMP_RAW'][ind]
+                LOGGER.info('Updated HISTORY_PREVIOUS_VALUE for CS flags')
+        else:
+            # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value
+            profile.histories.loc[idx, 'HISTORY_PREVIOUS_VALUE'] = df['TEMP_RAW'][ind]
+            LOGGER.info('Updated HISTORY_PREVIOUS_VALUE for CS flags')
+    # update the TEMP values
+    df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
+    # update profile data
+    profile.data['data'] = df
+
     return profile
 
 
@@ -1128,18 +1085,13 @@ def create_flag_feature(profile):
 
     # perform the flag mapping on the original flags and create the two new variables
     codes = profile.histories
-    # check for duplicated history codes at the same depth so we don't duplicate the QC code in the fft variable
-    dup_df = codes[codes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)]
-    if len(dup_df) > 0:
-        codes = codes.drop_duplicates(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH', 'HISTORY_PREVIOUS_VALUE'],
-                                      keep='first')
-        LOGGER.warning('Duplicate QC code encountered, and removed for flag_feature_type array. Please review')
 
     # merge the codes with the flag codes
-    mapold = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
+    mapcodes = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
 
-    if mapold.empty:
-        # no flags,
+    if mapcodes.empty:
+        # no flags, remove redundant columns and return
+        profile.data['data'].drop(columns=['tempqc', 'XBT_accept_code', 'XBT_reject_code'], inplace=True)
         profile.global_atts['qc_completed'] = 'no'
         return profile
     else:
@@ -1147,36 +1099,86 @@ def create_flag_feature(profile):
         profile.global_atts['qc_completed'] = 'yes'
 
     # update the HISTORY_QC_CODE_DESCRIPTION to the df label
-    mapold['HISTORY_QC_CODE_DESCRIPTION'] = mapold['label']
-
-    # now, we can use either the old history codes, new ones or combine if we decide that is the way to go.
-    # For now, keep the existing history codes to represent in the histories section and in the feature flag variable
-    profile.histories = mapold[profile.histories.columns]
+    mapcodes['HISTORY_QC_CODE_DESCRIPTION'] = mapcodes['label']
 
     # any flags not included? check for nan in the label column
-    nan_values = mapold['label'].isna()
+    nan_values = mapcodes['label'].isna()
     if nan_values.any():
         # we have an extra flag that we haven't coded
         LOGGER.error('New QC code encountered, please code in the new value')
         exit(1)
 
+    # check for duplicated history codes at the same depth so we don't duplicate the QC code in the fft variable
+    # this will keep the first value. If the PREVIOUS_VALUE is 99.99 and it is in the first position, it will be kept
+    # however, we just want to check that the previous_values are the same as the TEMP_RAW values and if not, do something
+    # first sort by start_depth and then previous_value to try and eliminate the 99.99 values
+    mapcodes = mapcodes.sort_values(['HISTORY_START_DEPTH', 'HISTORY_PREVIOUS_VALUE'])
+    dup_df = mapcodes[mapcodes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)]
+    if len(dup_df) > 0:
+        mapcodes = mapcodes.drop_duplicates(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'],
+                                      keep='first')
+        LOGGER.warning('Duplicate QC code encountered, and removed for flag_feature_type array. Please review')
+
     # now need to assign the codes to the correct depths.
     # code only added in one location at the start depth, QC flags indicate the quality applied
     # for each code, need an array of values same size as DEPTH, then add them all together
     # also check the TEMP_QC_CODE_VALUE is the same as the actual flag in the flag array
-    deps = profile.data['DEPTH']
+
+    # create a df with the same number of columns as the number of rows in the mapcodes table and number of rows is number of depths
+    tempdf = pd.DataFrame(np.zeros((len(df_data), len(mapcodes))) * np.zeros(len(mapcodes)), columns=mapcodes['code'])
+
+    # iterate over the mapcodes table and fill a column in tempdf with QC values from the tempqc field
+    for idx, row in mapcodes.iterrows():
+        # get the index of the depth in the data
+        ii = (np.abs(df_data['DEPTH'] - row['HISTORY_START_DEPTH'])).argmin()
+        # if this is a CSR flag, just fill the depth with the tempqc value
+        if row['HISTORY_QC_CODE'] == 'CSR':
+            tempdf.loc[ii, row['code']] = row['tempqc']
+        else:
+            # fill the tempdf from the depth index to the maximum index
+            tempdf.loc[ii:, row['code']] = row['tempqc']
+        # for flags that have been interpolated or filtered, these are 5 and 2 deeper. Change the flag at these depths to 5
+        if row['HISTORY_QC_CODE'] in ['LAA', 'LOA', 'SPA', 'HFA', 'TEA', 'IPA']:
+            # 2 should have been assigned above, now just overwriting with 5
+            tempdf.loc[ii, row['code']] = 5
+
+    # index of the tempdf rows that have a value of 5
+    idx = tempdf.eq(5).any(axis=1)
+    # calculate the maximum tempqc value for each depth
+    tempdf['tempqc'] = tempdf.max(axis=1)
+    # overwrite the tempqc value with 5 where there is a 5 in the tempdf
+    tempdf.loc[idx, 'tempqc'] = 5
+
+    # update the TEMP_quality_control field with the tempdf values
+    df_data['TEMP_quality_control'] = tempdf['tempqc']
+
     # Iterate over the history table.
-    for idx, row in mapold.iterrows():
+    for idx, row in mapcodes.iterrows():
         # Get depth index
-        ii = (np.abs(deps - row['HISTORY_START_DEPTH'])).argmin()
+        ii = (np.abs(df_data['DEPTH'] - row['HISTORY_START_DEPTH'])).argmin()
         # if this is an accept code (QC_Flag = 1, 2, 3, 5) then add it to the accept code array
         if row['HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
             # adding them together - is there a more correct way to do this?
             # Add byte values (masks) for accept codes
-            profile.data['XBT_accept_code'][ii] = profile.data['XBT_accept_code'][ii] + np.float64(row['byte_value'])
+            df_data.loc[ii, 'XBT_accept_code'] = df_data.loc[ii, 'XBT_accept_code'] + np.float64(row['byte_value'])
         else:
             # Add byte values (masks) for reject codes
-            profile.data['XBT_reject_code'][ii] = profile.data['XBT_reject_code'][ii] + np.float64(row['byte_value'])
+            df_data.loc[ii, 'XBT_reject_code'] = df_data.loc[ii, 'XBT_reject_code'] + np.float64(row['byte_value'])
+
+    # update the histories with the correct tempqc values from mapcodes
+    mapcodes['HISTORY_QC_CODE_VALUE'] = mapcodes['tempqc']
+    # drop unwanted columns
+    mapcodes = mapcodes.drop(columns=['tempqc', 'byte_value', 'label', 'code'])
+    df_data = df_data.drop(columns=['tempqc'])
+
+    # update the histories
+    profile.histories = mapcodes
+
+    # update the profile data
+    profile.data['data'] = df_data
+
+    # make sure the previous_values are the same as the data['TEMP_RAW'] values and replace missing TEMP values at CS
+    profile = restore_temp_val(profile)
 
     return profile
 
@@ -1499,6 +1501,8 @@ if __name__ == '__main__':
     keys = XbtKeys(vargs)
 
     for f in keys.data['station_number']:
+        # if f != 89010758:
+        #      continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)
 
