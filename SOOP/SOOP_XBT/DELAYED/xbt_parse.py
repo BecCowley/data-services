@@ -12,6 +12,8 @@ import numpy.ma as ma
 import pandas as pd
 import difflib
 
+from owslib.opensearch import LOGGER
+
 from imos_logging import IMOSLogging
 from ship_callsign import ship_callsign_list
 from xbt_line_vocab import xbt_line_info
@@ -977,12 +979,13 @@ def combine_histories(profile_qc, profile_noqc):
     # have been positive. The *raw.nc previous value and *ed.nc previous value should be the same, update the LONG_RAW.
     if len(profile_noqc.histories) > 0:
         # copy this information to the LONGITUDE_RAW value if it isn't the same
-        if np.round(profile_noqc.histories.loc[profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'),
-                                               'HISTORY_PREVIOUS_VALUE'], 4).values != np.round(
-            profile_qc.data['LONGITUDE_RAW'], 4):
-            LOGGER.warning('Updating raw longitude to match the previous value in *raw.nc file')
-            profile_qc.data['LONGITUDE_RAW'] = profile_noqc.histories.loc[
-                profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'][0]
+        if 'LO' in profile_noqc.histories['HISTORY_QC_CODE'].values:
+            if np.round(profile_noqc.histories.loc[profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'),
+                                                   'HISTORY_PREVIOUS_VALUE'], 4).values != np.round(
+                profile_qc.data['LONGITUDE_RAW'], 4):
+                LOGGER.warning('Updating raw longitude to match the previous value in *raw.nc file')
+                profile_qc.data['LONGITUDE_RAW'] = profile_noqc.histories.loc[
+                    profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'), 'HISTORY_PREVIOUS_VALUE'][0]
     # TODO: handle other extra histories in noqc file here:
     if len(profile_noqc.histories) > 1:
         print('QC flags and codes in the raw file')
@@ -1192,14 +1195,13 @@ def create_flag_feature(profile):
             df_data.loc[ii, 'XBT_reject_code'] = df_data.loc[ii, 'XBT_reject_code'] + np.float64(row['byte_value'])
 
     # update the histories with the correct tempqc values from mapcodes
-    mapcodes['HISTORY_QC_CODE_VALUE'] = mapcodes['tempqc']
+    mapcodes['HISTORY_TEMP_QC_CODE_VALUE'] = mapcodes['tempqc']
     # drop unwanted columns
     mapcodes = mapcodes.drop(columns=['tempqc', 'byte_value', 'label', 'code'])
     df_data = df_data.drop(columns=['tempqc'])
 
     # update the histories
     profile.histories = mapcodes
-
     # update the profile data
     profile.data['data'] = df_data
 
@@ -1527,8 +1529,8 @@ if __name__ == '__main__':
     keys = XbtKeys(vargs)
 
     for f in keys.data['station_number']:
-        # if f != 89010758:
-        #      continue
+        if f != 88946079:
+              continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)
 
