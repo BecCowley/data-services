@@ -797,18 +797,20 @@ def parse_histories_nc(profile):
     df = pd.DataFrame()
     nhist = int(profile.netcdf_file_obj['Num_Hists'][0].data)
 
+    df['HISTORY_QC_CODE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
+                             for xx in profile.netcdf_file_obj['Act_Code'][:].data if bytearray(xx).strip()]
+
+    # nhist can sometimes be incorrect, so we need to check the length of the data
+    if nhist != len(df['HISTORY_QC_CODE']):
+        nhist = len(df['HISTORY_QC_CODE'])
+        LOGGER.warning('Updating nhist to match length of history codes')
+
     df['HISTORY_INSTITUTION'] = [''.join(chr(x) for x in bytearray(xx)).strip()
                                  for xx in profile.netcdf_file_obj['Ident_Code'][0:nhist].data if bytearray(xx).strip()]
-
-    df['HISTORY_QC_CODE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
-                             for xx in profile.netcdf_file_obj['Act_Code'][0:nhist].data if bytearray(xx).strip()]
-
     df['HISTORY_PARAMETER'] = [''.join(chr(x) for x in bytearray(xx)).strip()
                                for xx in profile.netcdf_file_obj['Act_Parm'][0:nhist].data if bytearray(xx).strip()]
-
     df['HISTORY_SOFTWARE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
                               for xx in profile.netcdf_file_obj['PRC_Code'][0:nhist].data if bytearray(xx).strip()]
-
     df['HISTORY_DATE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
                           for xx in profile.netcdf_file_obj['PRC_Date'][0:nhist].data if bytearray(xx).strip()]
     df['HISTORY_START_DEPTH'] = profile.netcdf_file_obj['Aux_ID'][0:nhist].data
