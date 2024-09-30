@@ -120,16 +120,23 @@ def create_flag_feature():
     # set up a dataframe of the codes and their values
     # codes from the new cookbook, read from csv file
     # Specify the file path
-    file_path = '/Users/cow074/Library/CloudStorage/OneDrive-SharedLibraries-CSIRO/QC tool development - General/QCToolFiles/flag_quality_table.csv'
+    a_file_path = 'xbt_accept_code.csv'
+    r_file_path = 'xbt_reject_code.csv'
 
     # Read the CSV file and convert it to a DataFrame
-    df = pd.read_csv(file_path)
-    # keep only the name, full_code and XBT_fault_and_feature_type columns
-    df = df[['name', 'full_code', 'XBT_fault_and_feature_type']]
-    # remove rows with nan in XBT_fault_and_feature_type column
-    df = df.dropna(subset=['XBT_fault_and_feature_type'])
+    dfa = pd.read_csv(a_file_path)
+    dfr = pd.read_csv(r_file_path)
 
-    return df
+    # remove nan values
+    dfa = dfa.dropna(subset=['byte_value'])
+    # remove the tempqc column
+    dfa = dfa.drop(columns=['tempqc'])
+    # remove nan values
+    dfr = dfr.dropna(subset=['byte_value'])
+    # remove the tempqc column
+    dfr = dfr.drop(columns=['tempqc'])
+
+    return dfa, dfr
 
 
 def add_uncertainties(nco):
@@ -265,8 +272,11 @@ def netCDFout(nco, n, crid, callsign, xbtline):
         output_netcdf_obj.createVariable("PROBE_TYPE_quality_control", "b", fill_value=99)
         output_netcdf_obj.createVariable("PROBE_TYPE_RAW", 'S3')
 
-        fftype = output_netcdf_obj.createVariable("XBT_fault_and_feature_type", "u8", dimensions=('DEPTH',),
+        accept_codes = output_netcdf_obj.createVariable("XBT_accept_code", "u8", dimensions=('DEPTH',),
                                                   fill_value=0)
+        reject_codes = output_netcdf_obj.createVariable("XBT_reject_code", "u8", dimensions=('DEPTH',),
+                                                    fill_value=0)
+
         # We have turo files, so lets make the resistance and sample_time variables
         output_netcdf_obj.createVariable("RESISTANCE", "f", dimensions=('DEPTH',), fill_value=float("nan"))
         output_netcdf_obj.createVariable("SAMPLE_TIME", "f", dimensions=('DEPTH',), fill_value=float("nan"))
@@ -293,12 +303,15 @@ def netCDFout(nco, n, crid, callsign, xbtline):
         conf_file = os.path.join(os.path.dirname(__file__), 'generate_nc_file_att')
         generate_netcdf_att(output_netcdf_obj, conf_file, conf_file_point_of_truth=True)
         # add the flag and feature type attributes:
-        flag_feature = create_flag_feature()
-        setattr(fftype, 'valid_max', int(flag_feature['XBT_fault_and_feature_type'].sum()))
-        setattr(fftype, 'flag_masks', flag_feature['XBT_fault_and_feature_type'].astype(np.uint64))
-        setattr(fftype, 'flag_meanings', ' '.join(flag_feature['name']))
-        setattr(fftype, 'flag_codes', ' '.join(flag_feature['full_code']))
-
+        dfa, dfr = create_flag_feature()
+        setattr(accept_codes, 'valid_max', int(dfa['byte_value'].sum()))
+        setattr(accept_codes, 'flag_masks', dfa['byte_value'].astype(np.uint64))
+        setattr(accept_codes, 'flag_meanings', ' '.join(dfa['label']))
+        setattr(accept_codes, 'flag_codes', ' '.join(dfa['code']))
+        setattr(reject_codes, 'valid_max', int(dfr['byte_value'].sum()))
+        setattr(reject_codes, 'flag_masks', dfr['byte_value'].astype(np.uint64))
+        setattr(reject_codes, 'flag_meanings', ' '.join(dfr['label']))
+        setattr(reject_codes, 'flag_codes', ' '.join(dfr['code']))
         # write coefficients out to the attributes. In the PROBE_TYPE, PROBE_TYPE_RAW, DEPTH, DEPTH_RAW
         # find the matching probe type in the config file
         probe_type = nco.Code
