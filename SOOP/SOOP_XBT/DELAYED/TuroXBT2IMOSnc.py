@@ -360,9 +360,11 @@ def netCDFout(nco, n, crid, callsign, xbtline):
             output_netcdf_obj.Callsign = callsign
             output_netcdf_obj.SOTID = nco.SOTID
             output_netcdf_obj.ship_IMO = SHIPS[callsign][1]
+            output_netcdf_obj.Platform_code = callsign
         elif difflib.get_close_matches(callsign, SHIPS, n=1, cutoff=0.8) != []:
             output_netcdf_obj.Callsign = \
                 difflib.get_close_matches(callsign, SHIPS, n=1, cutoff=0.8)[0]
+            output_netcdf_obj.Platform_code = output_netcdf_obj.Callsign
             output_netcdf_obj.ship_name = SHIPS[output_netcdf_obj.Callsign]
             output_netcdf_obj.SOTID = nco.SOTID
             output_netcdf_obj.ship_IMO = SHIPS[output_netcdf_obj.Callsign][1]
@@ -372,15 +374,17 @@ def netCDFout(nco, n, crid, callsign, xbtline):
         else:
             output_netcdf_obj.ship_name = nco.Ship
             output_netcdf_obj.Callsign = callsign
+            output_netcdf_obj.Platform_code = callsign
             output_netcdf_obj.SOTID = nco.SOTID
             output_netcdf_obj.ship_IMO = nco.IMO
             LOGGER.warning('Vessel call sign %s, name %s, is unknown in AODN vocabulary. Please contact '
                            'info@aodn.org.au' % callsign, nco.Ship)
 
-        output_netcdf_obj.hardware_serial_no = nco.HardwareSerialNo
-        output_netcdf_obj.HardwareCalibration = nco.HardwareCalibration
-        output_netcdf_obj.Graphical_User_Interface_version = nco.UIVersion
+        output_netcdf_obj.Recorder_hardware_serial_no = nco.HardwareSerialNo
+        output_netcdf_obj.Recorder_HardwareCalibration = nco.HardwareCalibration
+        output_netcdf_obj.Recorder_Graphical_User_Interface_version = nco.UIVersion
         output_netcdf_obj.Recorder_software_version = nco.ReleaseVersion
+        output_netcdf_obj.Recorder_firmware_version = nco.FirmwareVersion
         output_netcdf_obj.TemperatureCoefficients = nco.TemperatureCoefficients
 
         # crc might not exist, skip if not
@@ -399,9 +403,9 @@ def netCDFout(nco, n, crid, callsign, xbtline):
             output_netcdf_obj.XBT_box_number = nco.CaseNo
             output_netcdf_obj.XBT_height_launch_above_water_in_meters = float(nco.DropHeight)
 
-        output_netcdf_obj.predrop_comments = nco.PreDropComments
-        output_netcdf_obj.postdrop_comments = nco.PostDropComments
-        output_netcdf_obj.qc_completed = 0  # 0=not qced, 1=qc in progress
+        output_netcdf_obj.XBT_predrop_comments = nco.PreDropComments
+        output_netcdf_obj.XBT_postdrop_comments = nco.PostDropComments
+        output_netcdf_obj.qc_completed = 'no'
 
         output_netcdf_obj.geospatial_lat_min = nco.latitude
         output_netcdf_obj.geospatial_lat_max = nco.latitude

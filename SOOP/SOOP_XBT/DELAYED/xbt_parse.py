@@ -11,9 +11,6 @@ import numpy as np
 import numpy.ma as ma
 import pandas as pd
 import difflib
-
-from owslib.opensearch import LOGGER
-
 from imos_logging import IMOSLogging
 from ship_callsign import ship_callsign_list
 from xbt_line_vocab import xbt_line_info
@@ -142,6 +139,8 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     profile_noqc.global_atts['geospatial_lat_min'] = profile_qc.data['LATITUDE_RAW']
     profile_noqc.global_atts['geospatial_lon_max'] = profile_qc.data['LONGITUDE_RAW']
     profile_noqc.global_atts['geospatial_lon_min'] = profile_qc.data['LONGITUDE_RAW']
+    profile_noqc.global_atts['time_coverage_start'] = profile_qc.data['TIME'].strftime("%Y-%m-%dT%H:%M:%SZ")
+    profile_noqc.global_atts['time_coverage_end'] = profile_qc.data['TIME'].strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # let's check if there are histories to parse and then handle
     profile_qc = parse_histories_nc(profile_qc)
@@ -239,12 +238,12 @@ def parse_globalatts_nc(profile):
     profile.global_atts['XBT_cruise_ID'] = decode_bytearray(
         profile.netcdf_file_obj.variables['Cruise_ID'][:]).strip()
     # which node the data entered into the GTS
-    profile.global_atts['gts_insertion_node'] = \
+    profile.global_atts['XBT_gts_insertion_node'] = \
         decode_bytearray(profile.netcdf_file_obj['Source_ID'][:]).replace('\x00', '').strip()
     # source_id = 'AMMC' if source_id == '' else source_id
     # these two variable are dimensioned by nprof
-    profile.global_atts['digitisation_method_code'] = np.empty(profile.nprof)
-    profile.global_atts['gtspp_precision_code'] = np.empty(profile.nprof)
+    profile.global_atts['XBT_gtspp_digitisation_method_code'] = np.empty(profile.nprof)
+    profile.global_atts['XBT_gtspp_precision_code'] = np.empty(profile.nprof)
 
     # get the institution code from the first two characters of the Stream_Ident
     institute = decode_bytearray(profile.netcdf_file_obj['Stream_Ident'][:]).strip()[:2]
@@ -257,27 +256,30 @@ def parse_globalatts_nc(profile):
 
     for count in range(profile.nprof):
         try:
-            profile.global_atts['digitisation_method_code'][count] = \
+            profile.global_atts['XBT_gtspp_digitisation_method_code'][count] = \
                 decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count]).replace('\x00', '').strip()
-            profile.global_atts['gtspp_precision_code'][count] \
+            profile.global_atts['XBT_gtspp_precision_code'][count] \
                 = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Standard'][count].data)).replace('\x00',
                                                                                                               '').strip()
         except:
-            profile.global_atts['digitisation_method_code'][count] = np.nan
-            profile.global_atts['gtspp_precision_code'][count] = np.nan
+            profile.global_atts['XBT_gtspp_digitisation_method_code'][count] = np.nan
+            profile.global_atts['XBT_gtspp_precision_code'][count] = np.nan
     try:
-        profile.global_atts['predrop_comments'] \
+        profile.global_atts['XBT_predrop_comments'] \
             = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['PreDropComments'][:].data)).replace(
             '\x00', '').strip()
-        profile.global_atts['postdrop_comments'] \
+        profile.global_atts['XBT_postdrop_comments'] \
             = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['PostDropComments'][:].data)).replace(
             '\x00', '').strip()
     except:
-        profile.global_atts['predrop_comments'] = ''
-        profile.global_atts['postdrop_comments'] = ''
+        profile.global_atts['XBT_predrop_comments'] = ''
+        profile.global_atts['XBT_postdrop_comments'] = ''
 
     profile.global_atts['geospatial_vertical_units'] = 'meters'
     profile.global_atts['geospatial_vertical_positive'] = 'down'
+
+    # include the input filename
+    profile.global_atts['XBT_input_file'] = profile.XBT_input_filename
 
     try:
         profile.global_atts['geospatial_lat_max'] = profile.data['LATITUDE']
@@ -286,6 +288,9 @@ def parse_globalatts_nc(profile):
         profile.global_atts['geospatial_lon_min'] = profile.data['LONGITUDE']
         profile.global_atts['geospatial_vertical_max'] = max(profile.data['data']['DEPTH'])
         profile.global_atts['geospatial_vertical_min'] = min(profile.data['data']['DEPTH'])
+        # include time_coverage_start and time_coverage_end in the global attributes
+        profile.global_atts['time_coverage_start'] = profile.data['TIME'].strftime("%Y-%m-%dT%H:%M:%SZ")
+        profile.global_atts['time_coverage_end'] = profile.data['TIME'].strftime("%Y-%m-%dT%H:%M:%SZ")
     except:
         profile.global_atts['geospatial_lat_max'] = []
         profile.global_atts['geospatial_lat_min'] = []
@@ -293,7 +298,8 @@ def parse_globalatts_nc(profile):
         profile.global_atts['geospatial_lon_min'] = []
         profile.global_atts['geospatial_vertical_max'] = []
         profile.global_atts['geospatial_vertical_min'] = []
-
+        profile.global_atts['time_coverage_start'] = []
+        profile.global_atts['time_coverage_end'] = []
 
     profile.global_atts['date_created'] = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
