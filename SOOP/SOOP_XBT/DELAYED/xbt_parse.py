@@ -43,12 +43,13 @@ class XbtProfile(object):
             fid.close()
     """
 
-    def __init__(self, file_path_name):
+    def __init__(self, file_path_name, input_filename):
         """ Read XBT files written in an un-friendly NetCDF format
         global attributes, data and annex information are added to the object
         """
         # record the file name
-        self.XBT_input_filename = file_path_name
+        self.XBT_filename = file_path_name
+        self.XBT_input_filename = input_filename
 
         # now read the data and metadata from the file
         LOGGER.info('Parsing %s' % self.XBT_input_filename)
@@ -1541,15 +1542,17 @@ if __name__ == '__main__':
               continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)
+        # make input_filename here
+        input_filename = os.path.join(os.path.basename(keys.dbase_name), fpath)
 
         # if the file exists, let's make a profile object with all the
         # data and metadata attached.
 
         if os.path.isfile(fname):
             # read the edited profile
-            profile_ed = XbtProfile(fname)
+            profile_ed = XbtProfile(fname, input_filename)
             # read the raw profile
-            profile_raw = XbtProfile(fname.replace('ed.nc', 'raw.nc'))
+            profile_raw = XbtProfile(fname.replace('ed.nc', 'raw.nc'), input_filename.replace('ed.nc', 'raw.nc'))
             # TODO: check the keys data (date/time/lat/long etc) against what is in the data file
             # TODO: find the matching TURO profile if it is available:
             # profile_turo = turoProfile(profile_ed)

@@ -344,7 +344,7 @@ def netCDFout(nco, n, crid, callsign, xbtline):
         output_netcdf_obj.variables['DEPTH_uncertainty'][:] = depth_uncertainty
 
         # add the global attributes
-        output_netcdf_obj.source_filename = raw_netCDF_file
+        output_netcdf_obj.XBT_input_filename = raw_netCDF_file
         output_netcdf_obj.XBT_cruise_ID = cid
         # get the time as a string
         dt = nco.time.values[0]
@@ -441,7 +441,7 @@ if __name__ == '__main__':
 
     for file in files:  # read/write loop
         nco = xr.open_dataset(file)
-        raw_netCDF_file = os.path.basename(file)
+        raw_netCDF_file = os.path.join(os.path.basename(vargs.input_xbt_path),os.path.basename(file))
         print(raw_netCDF_file)
 
         # read the drop number from filename of raw file
