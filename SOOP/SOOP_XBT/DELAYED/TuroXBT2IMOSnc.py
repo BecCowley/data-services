@@ -107,9 +107,9 @@ def create_out_filename(profile, line, crid, n, test):
     uniqueid = crid + '_' + profile.time.dt.strftime('%Y%m%d%H%M%S').values[0] + '_' + str(n).zfill(3)
 
     if test:
-        filename = 'XBTTEST_T_%s_FV01_ID-%s.nc' % (line, uniqueid)
+        filename = 'XBTTEST_T_%s_%s_FV01_ID-%s.nc' % (line, profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], uniqueid)
     else:
-        filename = 'XBT_T_%s_FV01_ID-%s.nc' % (line, uniqueid)
+        filename = 'IMOS_SOOP-XBT_T_%s_%s_FV01_ID-%s.nc' % (line, profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], uniqueid)
 
     return filename, uniqueid
 
