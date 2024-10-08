@@ -14,16 +14,14 @@ time_error,TER,2048,3.0
 position_error,PER,4096,3.0
 duplicate_profile,DUR,8192,4.0
 test_probe,TPR,16384,4.0
-probe_type,PTR,32768,3.0
+probe_type,PRR,32768,3.0
 spike,SPR,65536,3.0
 insulation_penetration,IPR,131072,3.0
-surface_offset,SOR,262144,3.0
-other_probe_type_error,OPR,524288,3.0
-bowing_BathySystems,BOR,1048576,3.0
-cusping_BathySystems_leakage,CUR,2097152,3.0
-sippicanMK_timing_delay_driver_error,DRR,4194304,3.0
-BathySystem_software_fault_modulo_10_spikes,MOR,8388608,3.0
-protecho_systems_leakage_fault,PFR,16777216,3.0
-sippicanMK9_sticking_bit,SBR,33554432,3.0
-under_resolved_profile,URR,67108864,3.0
-contact_lost_with_probe,CLR,134217728,3.0
+surface_temperature_anomaly,SAR,262144,3.0
+surface_offset,SOR,524288,3.0
+no_trace,NTR,1048576,4.0
+bowing_BathySystems,BOR,2097152,3.0
+sippicanMK_ timing_delay_driver_error,DRR,4194304,3.0
+protecho_systems_leakage_fault,PFR,8388608,3.0
+contact_lost_with_probe,CLR,16777216,3.0
+bathy_data_low_resolution,BDR,33554432,3.0

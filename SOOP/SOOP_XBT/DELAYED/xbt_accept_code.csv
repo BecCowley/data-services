@@ -16,10 +16,10 @@ constant_temperature,CTA,8192,2.0
 time_error_corrected,TEA,16384,2.0
 latitude_error_corrected,LAA,32768,2.0
 longitude_error_corrected,LOA,65536,2.0
-probe_type_changed,PTA,131072,5.0
+probe_type_changed,PRA,131072,5.0
 spike_interpolated,SPA,262144,5.0
 fine_structure,FSA,524288,2.0
-insulation_penetration_interpolated,IPA,1048576,2.0
+insulation_penetration_interpolated,IPA,1048576,5.0
 nub_inversion,NUA,2097152,1.0
 hit_bottom,HBA,4194304,2.0
 premature_launch,PLA,8388608,2.0
@@ -27,13 +27,13 @@ surface_temperature_anomaly,SAA,16777216,2.0
 surface_offset,SOA,33554432,2.0
 temperature_anomaly,TAA,67108864,2.0
 temperature_difference_at_depth,TDA,134217728,2.0
-bowing_BathySystems,BOA,268435456,2.0
-cusping_BathySystems_leakage,CUA,536870912,2.0
-BathySystem_software_fault_modulo_10_spikes_filtered,MOA,1073741824,2.0
-protecho_systems_leakage_fault,PFA,2147483648,2.0
-sippicanMK9_sticking_bit_19_point_filtered,SBA,4294967296,2.0
-mixed_layer,MLA,8589934592,2.0
-profile_not_assessed,NAA,17179869184,2.0
-depth_corrected_update_fall_rate_equation,DCA,34359738368,1.0
-depth_corrected_multiplied_by_10,DEA,68719476736,1.0
-depth_corrected_update_fall_rate_equation,DPA,137438953472,1.0
+unique_id_changed,IDA,268435456,1.0
+bowing_BathySystems,BOA,536870912,2.0
+cusping_BathySystems_leakage,CUA,1073741824,2.0
+sippicanMK_ timing_delay_driver_error,DRA,2147483648,2.0
+BathySystem_software_fault_modulo_10_spikes_filtered,MOA,4294967296,2.0
+protecho_systems_leakage_fault,PFA,8589934592,2.0
+sippicanMK9_sticking_bit_19_point_filtered,SBA,17179869184,2.0
+depth_corrected_multiplied_by_10,DEA,34359738368,1.0
+depth_corrected_update_fall_rate_equation,DPA,68719476736,0.0
+bathy_data_low_resolution,BDA,137438953472,1.0
