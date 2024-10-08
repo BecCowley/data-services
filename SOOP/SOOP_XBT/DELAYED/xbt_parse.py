@@ -582,6 +582,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                                                           not in col and 'DEPTH' not in col)])
     profile_noqc.nprof = profile_qc.nprof
 
+    profile_qc.prof_type = decode_bytearray(profile_qc.netcdf_file_obj.variables['Prof_Type'][:]).strip()
+    profile_noqc.prof_type = profile_qc.prof_type
+
     # save the dataframe of DEPTH dimensioned data to the profile object
     profile_qc.data['data'] = df
 
@@ -808,17 +811,18 @@ def parse_histories_nc(profile):
         LOGGER.warning('Updating nhist to match length of history codes')
 
     df['HISTORY_INSTITUTION'] = [''.join(chr(x) for x in bytearray(xx)).strip()
-                                 for xx in profile.netcdf_file_obj['Ident_Code'][0:nhist].data if bytearray(xx).strip()]
+                                 for xx in profile.netcdf_file_obj['Ident_Code'][0:nhist].data]
+
     df['HISTORY_PARAMETER'] = [''.join(chr(x) for x in bytearray(xx)).strip()
-                               for xx in profile.netcdf_file_obj['Act_Parm'][0:nhist].data if bytearray(xx).strip()]
+                               for xx in profile.netcdf_file_obj['Act_Parm'][0:nhist].data]
     df['HISTORY_SOFTWARE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
-                              for xx in profile.netcdf_file_obj['PRC_Code'][0:nhist].data if bytearray(xx).strip()]
+                              for xx in profile.netcdf_file_obj['PRC_Code'][0:nhist].data]
     df['HISTORY_DATE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
-                          for xx in profile.netcdf_file_obj['PRC_Date'][0:nhist].data if bytearray(xx).strip()]
+                          for xx in profile.netcdf_file_obj['PRC_Date'][0:nhist].data]
     df['HISTORY_START_DEPTH'] = profile.netcdf_file_obj['Aux_ID'][0:nhist].data
     df['HISTORY_TEMP_QC_CODE_VALUE'] = profile.netcdf_file_obj['Flag_severity'][0:nhist].data
     df['HISTORY_SOFTWARE_RELEASE'] = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in
-                                      profile.netcdf_file_obj['Version'][0:nhist].data if bytearray(xx).strip()]
+                                      profile.netcdf_file_obj['Version'][0:nhist].data]
 
     dat = [float(x.replace(':', '')) for x in
            [''.join(chr(x) for x in bytearray(xx).strip()).rstrip('\x00')
@@ -829,6 +833,14 @@ def parse_histories_nc(profile):
         df['HISTORY_PREVIOUS_VALUE'] = np.nan
 
     df = df.astype({'HISTORY_SOFTWARE_RELEASE': np.str_, 'HISTORY_QC_CODE': np.str_})
+
+    # convert only the CSIRO codes, find any institution codes that are not 'CS'
+    if not df['HISTORY_INSTITUTION'].str.contains('CS').all():
+        LOGGER.warning('Institution code for some flags is not CSIRO, contains %s' %
+                       df.loc[~df['HISTORY_INSTITUTION'].str.contains('CS'), 'HISTORY_INSTITUTION'].unique())
+        # remove any codes that are not CSIRO
+        df = df[df['HISTORY_INSTITUTION'].str.contains('CS')]
+        nhist = len(df)
 
     if nhist > 0:
         df['HISTORY_QC_CODE'] = df['HISTORY_QC_CODE'].str.replace('\x00', '')
@@ -927,6 +939,46 @@ def parse_histories_nc(profile):
         # change CSA to CSR and the flag to 3 to match new format
         df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
                ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'CSR', 3
+
+        # this group of changes is here because I have reviewed all our QC codes in the historic databases and I know
+        # there are some that are not correct. This is a one off change to correct them. Could be done more elegantly probably.
+
+        # change ERA to PLA with flag 3 to reduce duplication of flags
+        df.loc[(df['HISTORY_QC_CODE'].str.contains('ERA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'PLA', 3
+
+        # change any REA or RER flags to REA and flag 0 to match new format
+        df.loc[(df['HISTORY_QC_CODE'].str.contains('RE')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'REA', 0
+
+        # change any NGA flags to NGR and flag 4
+        df.loc[(df['HISTORY_QC_CODE'].str.contains('NGA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NGR', 4
+
+        # change any NTA flags to NTR and flag 4
+        df.loc[(df['HISTORY_QC_CODE'].str.contains('NTA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NTR', 4
+
+        # change any TPA flags to TPR and flag 4
+        df.loc[(df['HISTORY_QC_CODE'].str.contains('TPA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'TPR', 4
+
+        # change any WBA flags to WBR and flag 4
+        df.loc[(df['HISTORY_QC_CODE'].str.contains('WBA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'WBR', 4
+
+        # change URA for BDA and flag 2
+        df.loc[(df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'BDA', 2
+        # all BDA flags should be set to 2, historically have been 1, but as low res, make them 2
+        df.loc[(df['HISTORY_QC_CODE'].str.contains('BDA')), 'HISTORY_TEMP_QC_CODE_VALUE'] = 2
+
+        # change any FSR flags to FSA and flag 2, but first confirm that the TEMP_QC_CODE_VALUE is 2 at the same depth as FS
+        if df['HISTORY_QC_CODE'].str.contains('FSR').any():
+            # checking the QC values below the deepest CS flag
+            idepth = df.loc[df['HISTORY_QC_CODE'].str.contains('CS'), 'HISTORY_START_DEPTH'].values.max() + 1
+            # check the TEMP_QC_CODE_VALUE is 2 at the same depth as FS
+            if len(idepth) > 0:
+                if profile.data['data'].loc[profile.data['data']['DEPTH'] == idepth[0], 'TEMP_quality_control'].values != 2:
+                    df.loc[(df['HISTORY_QC_CODE'].str.contains('FSR')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'FSA', 2
+                else:
+                    LOGGER.error('TEMP_QC_CODE_VALUE is not 2 at the same depth as FSR flag, not changing it to FSA')
+                    print(profile.XBT_input_filename)
+                    exit(1)
+
 
         # Change the PEA flag to LA or LO and ensure the TEMP_QC_CODE_VALUE is set to 2, not 5
         df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
@@ -1091,23 +1143,12 @@ def create_flag_feature(profile):
     df_data['XBT_reject_code'] = 0
     df_data['tempqc'] = 0
 
-    # make sure that we record the fault masks, meanings and the valid max
-    profile.accept_code = {}
-    profile.accept_code['flag_masks'] = dfa['byte_value'].values
-    profile.accept_code['flag_meanings'] = dfa['label'].values
-    profile.accept_code['flag_codes'] = dfa['code'].values
-
-    profile.reject_code = {}
-    profile.reject_code['flag_masks'] = dfr['byte_value'].values
-    profile.reject_code['flag_meanings'] = dfr['label'].values
-    profile.reject_code['flag_codes'] = dfr['code'].values
-
     # perform the flag mapping on the original flags and create the two new variables
     codes = profile.histories
     # if the TEMP_quality_control values are 0 and the TEMP_RAW_quality_control values are not, update the TEMP_quality_control
     # values to be the same as the TEMP_RAW_quality_control values
     idx = (df_data['TEMP_quality_control'] == 0) & (df_data['TEMP_RAW_quality_control'] != 0)
-    if len(idx) > 0:
+    if idx.any():
         LOGGER.warning('TEMP_quality_control values are 0 and TEMP_RAW_quality_control values are not. Updating.')
         df_data.loc[idx, 'TEMP_quality_control'] = df_data.loc[idx, 'TEMP_RAW_quality_control']
         # add QCA to the history
@@ -1140,8 +1181,12 @@ def create_flag_feature(profile):
     nan_values = mapcodes['label'].isna()
     if nan_values.any():
         # we have an extra flag that we haven't coded
-        LOGGER.error('New QC code encountered, please code in the new value')
-        exit(1)
+        # if any of the flags are in this list which I know about, remove them
+        if mapcodes.loc[nan_values, 'HISTORY_QC_CODE'].str.contains("BB|DC|GS|MS"):
+            mapcodes = mapcodes[~nan_values]
+        else:
+            LOGGER.error('New QC code encountered, please code in the new value')
+            exit(1)
 
     # check for duplicated history codes at the same depth so we don't duplicate the QC code in the fft variable
     # this will keep the first value. If the PREVIOUS_VALUE is 99.99 and it is in the first position, it will be kept
@@ -1227,28 +1272,24 @@ def check_nc_to_be_created(profile):
     duplicate_flag = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Dup_Flag'][0].data)).strip()
     nhist = int(profile.netcdf_file_obj['Num_Hists'][0].data)
     histcodes = [''.join(chr(x) for x in bytearray(xx)).strip()
-                 for xx in profile.netcdf_file_obj['Act_Code'][0:nhist].data if bytearray(xx).strip()]
+                 for xx in profile.netcdf_file_obj['Act_Code'][0:nhist].data]
     depth = np.round(profile.netcdf_file_obj.variables['Depthpress'][:], 2)
 
     if len(depth) == 0:
         LOGGER.error('No data in the file')
         return False
 
-    if data_type != 'XB':
-        LOGGER.error('Profile not processed as it is not an XBT')
+    if data_type != 'XB' and data_type != 'BA' and data_type != 'TE':
+        LOGGER.error('Profile not processed as it is type %s' % data_type)
         return False
 
     if duplicate_flag == 'D':
         LOGGER.error('Profile not processed. Tagged as duplicate in original netcdf file')
         return False
 
-    if 'TP' in histcodes or 'DU' in histcodes:
+    if 'DU' in histcodes:
         LOGGER.error('Profile not processed. Tagged as test probe in original netcdf file')
         return False
-
-    #    if annex['no_prof'] > 1:
-    #        LOGGER.error('Profile not processed. No_Prof variable is greater than 0')
-    #        return False
 
     data_vars = temp_prof_info(profile.netcdf_file_obj)
     if 'TEMP' not in data_vars.values():
@@ -1258,188 +1299,24 @@ def check_nc_to_be_created(profile):
     return True
 
 
-def create_filename_output(profile):
-    filename = 'XBT_T_%s_%s_FV01_ID-%s' % (
-        profile.data['TIME'].strftime('%Y%m%dT%H%M%SZ'), profile.global_atts['XBT_line'],
-        profile.global_atts['XBT_uniqueid'])
+def make_dataframe(profile_ed, profile_raw, profile_turo):
+    # convert the data in profile to a parquet file
+    # create a dataframe from the profile data
+    df = pd.DataFrame(profile_ed.data['data'])
+    # add the other data to the dataframe
+    for key, value in profile_ed.data.items():
+        # skip the data dataframe, already included
+        if key == 'data':
+            continue
+        df[key] = value
+    # make a global attributes dataframe
+    gdf = pd.DataFrame(profile_ed.global_atts, index=[0])
 
-    # decide what prefix is required
-    names = read_section_from_xbt_config('VARIOUS')
-    str = names['FILENAME']
-    if str == 'Cruise_ID':
-        str = profile.global_atts['XBT_cruise_ID']
-        filename = '{}-{}'.format(str, filename)
-    else:
-        if profile.data['TIME'] > datetime(2008, 0o1, 0o1):
-            filename = 'IMOS_SOOP-{}'.format(filename)
+    # add the raw global attributes to the dataframe
+    for key, value in profile_raw.global_atts.items():
+        gdf[key + '_RAW'] = value
 
-    if '/' in filename:
-        LOGGER.error('The sign \'/\' is contained inside the NetCDF filename "%s". Likely '
-                     'due to a slash in the XTB_line attribute. Please ammend '
-                     'the XBT_line attribute in the config file for the XBT line "%s"'
-                     % (filename, profile.global_atts['XBT_line']))
-        exit(1)
-
-    return filename
-
-
-def write_output_nc(output_folder, profile, profile_raw=None):
-    """output the data to the IMOS format netcdf version"""
-
-    # now begin write out to new format
-    netcdf_filepath = os.path.join(output_folder, "%s.nc" % create_filename_output(profile))
-    LOGGER.info('Creating output %s' % netcdf_filepath)
-
-    with Dataset(netcdf_filepath, "w", format="NETCDF4") as output_netcdf_obj:
-        # Create the dimensions
-        output_netcdf_obj.createDimension('DEPTH', len(profile.data['data']['DEPTH']))
-        output_netcdf_obj.createDimension('N_HISTORY', 0) #make this unlimited
-
-        # Create the variables, no dimensions:
-        varslist = ["TIME", "LATITUDE", "LONGITUDE"]
-        for vv in varslist:
-            output_netcdf_obj.createVariable(vv, datatype=get_imos_parameter_info(vv, '__data_type'),
-                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
-            # and associated QC variables:
-            output_netcdf_obj.createVariable(vv + "_quality_control", "b", fill_value=99)
-            # and the *_RAW variables:
-            output_netcdf_obj.createVariable(vv + "_RAW", datatype=get_imos_parameter_info(vv, '__data_type'),
-                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
-
-        # Create the dimensioned variables:
-        varslist = [key for key in profile.data['data'].keys() if ('_quality_control' not in key and 'RAW' not in key
-                                                           and 'TUDE' not in key and 'XBT' not in key
-                                                           and 'TIME' not in key and 'uncertainty' not in key
-                                                           and 'PROBE' not in key)]
-        for vv in varslist:
-            output_netcdf_obj.createVariable(vv, datatype=get_imos_parameter_info(vv, '__data_type'),
-                                             dimensions=('DEPTH',),
-                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
-            # and associated QC variables:
-            output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
-            # and uncertainty values for DEPTH and TEMP
-            output_netcdf_obj.createVariable(vv + "_uncertainty", "f", dimensions=('DEPTH',), fill_value=999999.0)
-            # and the *_RAW variables:
-            output_netcdf_obj.createVariable(vv + "_RAW", datatype=get_imos_parameter_info(vv, '__data_type'),
-                                             dimensions=('DEPTH',),
-                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
-            # create a QC variable for the _RAW data if there are flags included
-            # (some files are converted from QC'd datasets and therefore have flags associated with the 'raw' data
-            if profile.data['data'][vv + '_RAW_quality_control'].any() > 0:
-                LOGGER.warning("QC values have been written to file for \"%s\"_RAW variable. Review." % vv)
-                output_netcdf_obj.createVariable(vv + "_RAW_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
-
-            if vv == 'TEMP' and profile_raw is not None:
-                # add the recording system variable:
-                output_netcdf_obj.createVariable(vv + "_RECORDING_SYSTEM", "f", dimensions=('DEPTH',),
-                                                 fill_value=999999.0)
-                # and associated QC variables:
-                output_netcdf_obj.createVariable(vv + "_RECORDING_SYSTEM_quality_control", "b", dimensions=('DEPTH',),
-                                                 fill_value=-51)
-
-        # Create the last variables that are non-standard:
-        output_netcdf_obj.createVariable("PROBE_TYPE", 'S3')
-        output_netcdf_obj.createVariable("PROBE_TYPE_quality_control", "b", fill_value=99)
-        output_netcdf_obj.createVariable("PROBE_TYPE_RAW", 'S3')
-
-        accept_codes = output_netcdf_obj.createVariable("XBT_accept_code", "u8", dimensions=('DEPTH',),
-                                                  fill_value=0)
-        reject_codes = output_netcdf_obj.createVariable("XBT_reject_code", "u8", dimensions=('DEPTH',),
-                                                    fill_value=0)
-
-        # If the turo profile is handed in:
-        if profile_raw is not None:
-            output_netcdf_obj.createVariable("RESISTANCE", "f", dimensions=('DEPTH',), fill_value=float("nan"))
-            output_netcdf_obj.createVariable("SAMPLE_TIME", "f", dimensions=('DEPTH',), fill_value=float("nan"))
-
-        # create HISTORY variable set associated
-        output_netcdf_obj.createVariable("HISTORY_INSTITUTION", "str", 'N_HISTORY')
-        # output_netcdf_obj.createVariable("HISTORY_STEP", "str", 'N_HISTORY') # removed for now, RC August 2023
-        output_netcdf_obj.createVariable("HISTORY_SOFTWARE", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_SOFTWARE_RELEASE", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_DATE", "f", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_PARAMETER", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_START_DEPTH", "f", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_STOP_DEPTH", "f", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_QC_CODE", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_QC_CODE_DESCRIPTION", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_TEMP_QC_CODE_VALUE", "f", 'N_HISTORY')
-
-        # write attributes from the generate_nc_file_att file, now that we have added the variables:
-        conf_file = os.path.join(os.path.dirname(__file__), 'generate_nc_file_att')
-        generate_netcdf_att(output_netcdf_obj, conf_file, conf_file_point_of_truth=True)
-        # add the accept and reject code attributes:
-        setattr(accept_codes, 'valid_max', int(profile.accept_code['flag_masks'].sum()))
-        setattr(accept_codes, 'flag_masks', profile.accept_code['flag_masks'].astype(np.uint64))
-        setattr(accept_codes, 'flag_meanings', ' '.join(profile.accept_code['flag_meanings']))
-        setattr(accept_codes, 'flag_codes', ' '.join(profile.accept_code['flag_codes']))
-        setattr(reject_codes, 'valid_max', int(profile.reject_code['flag_masks'].sum()))
-        setattr(reject_codes, 'flag_masks', profile.reject_code['flag_masks'].astype(np.uint64))
-        setattr(reject_codes, 'flag_meanings', ' '.join(profile.reject_code['flag_meanings']))
-        setattr(reject_codes, 'flag_codes', ' '.join(profile.reject_code['flag_codes']))
-
-        # write coefficients out to the attributes. In the PROBE_TYPE, PROBE_TYPE_RAW, DEPTH, DEPTH_RAW
-        varnames = ['PROBE_TYPE', 'DEPTH']
-        for v in varnames:
-            setattr(output_netcdf_obj.variables[v], 'fallrate_coefficients',
-                    profile.ptyp['fallrate_equation_coefficients'])
-            setattr(output_netcdf_obj.variables[v], 'probe_type_name', profile.ptyp['PROBE_TYPE_name'])
-
-        varnames = ['PROBE_TYPE_RAW', 'DEPTH_RAW']
-        for v in varnames:
-            setattr(output_netcdf_obj.variables[v], 'fallrate_coefficients',
-                    profile.ptyp['fallrate_equation_coefficients_raw'])
-            setattr(output_netcdf_obj.variables[v], 'probe_type_name', profile.ptyp['PROBE_TYPE_RAW_name'])
-
-        # append the data to the file
-        # qc'd
-        for v in list(output_netcdf_obj.variables):
-            if v not in list(profile.data['data']) and v not in list(profile.histories) and v not in list(profile.data):
-                LOGGER.warning(
-                    "Variable not written: \"%s\". Please check!!" % v)
-                continue
-            if v == 'TIME' or v == 'TIME_RAW':
-                # AW DEBUG
-                '''
-                for attr in output_netcdf_obj[v].ncattrs():
-                    print("attr",attr)
-                print("var name, var",v,profile.data[v])
-                print("units",output_netcdf_obj[v].units)
-                print("calendar",output_netcdf_obj[v].calendar)
-                '''
-                time_val_dateobj = date2num(profile.data[v], output_netcdf_obj[v].units,
-                                            output_netcdf_obj[v].calendar)
-                output_netcdf_obj[v][:] = time_val_dateobj
-            elif v in list(profile.data['data']):
-                if isinstance(output_netcdf_obj[v][:], str):
-                    output_netcdf_obj[v][len(profile.data['data'][v])] = profile.data['data'][v]
-                else:
-                    output_netcdf_obj[v][:] = profile.data['data'][v]
-            elif v in list(profile.data):
-                if isinstance(output_netcdf_obj[v][:], str):
-                    output_netcdf_obj[v][len(profile.data[v])] = profile.data[v]
-                else:
-                    output_netcdf_obj[v][:] = profile.data[v]
-            else:
-                # histories
-                if v == 'HISTORY_DATE':
-                    # fix history date time field
-                    count = 0
-                    for ii in profile.histories[v]:
-                        history_date_obj = date2num(datetime.strptime(str(ii), '%Y-%m-%d %H:%M:%S'),
-                                                    output_netcdf_obj['HISTORY_DATE'].units,
-                                                    output_netcdf_obj['HISTORY_DATE'].calendar)
-                        output_netcdf_obj[v][count] = history_date_obj
-                        count += 1
-                else:
-                    output_netcdf_obj[v][:] = profile.histories[v].values
-
-        # write out the extra global attributes we have collected
-        # default value for abstract
-        # if not hasattr(output_netcdf_obj, 'abstract'):
-        #    setattr(output_netcdf_obj, 'abstract', output_netcdf_obj.title)
-        for key, item in profile.global_atts.items():
-            setattr(output_netcdf_obj, key, item)
+    return df, gdf
 
 
 def _call_parser(conf_file):
@@ -1534,9 +1411,16 @@ if __name__ == '__main__':
 
     keys = XbtKeys(vargs)
 
+    # make an empty dataframe to collect all the data
+    dfall = pd.DataFrame()
+    # make a second dataframe to hold the histories
+    dfhist = pd.DataFrame()
+    # and another dataframe to hold the global attributes
+    globsall = pd.DataFrame()
+
     for f in keys.data['station_number']:
-        if f != 88946079:
-              continue
+        # if f != 88946079:
+        #       continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)
         # make input_filename here
@@ -1559,6 +1443,23 @@ if __name__ == '__main__':
             if check_nc_to_be_created(profile_ed):
                 # for example where depths are different, metadata is different etc between the ed and raw files.
                 profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo)
-                write_output_nc(vargs.output_folder, profile_ed)
+                profile_df, globals_df = make_dataframe(profile_ed, profile_raw, profile_turo)
+                # add the station number to the dataframe
+                profile_df['station_number'] = f
+                globals_df['station_number'] = f
+                # add to the big dataframes
+                dfall = pd.concat([dfall, profile_df], ignore_index=True)
+                globsall = pd.concat([globsall, globals_df], ignore_index=True)
+                # add station number to the histories
+                profile_ed.histories['station_number'] = f
+                # add the histories to the big dataframe
+                dfhist = pd.concat([dfhist, profile_ed.histories], ignore_index=True)
         else:
             LOGGER.warning('file %s is in keys file, but does not exist' % f)
+    # write the dataframe to a parquet file
+    pq_filename = os.path.join(os.path.dirname(keys.dbase_name), os.path.basename(keys.dbase_name) + '.parquet')
+    dfall.to_parquet(pq_filename, index=False)
+    pq_filename = os.path.join(os.path.dirname(keys.dbase_name), os.path.basename(keys.dbase_name) + '_histories.parquet')
+    dfhist.to_parquet(pq_filename, index=False)
+    pq_filename = os.path.join(os.path.dirname(keys.dbase_name), os.path.basename(keys.dbase_name) + '_globals.parquet')
+    globsall.to_parquet(pq_filename, index=False)
