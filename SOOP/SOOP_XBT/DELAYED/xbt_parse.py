@@ -242,29 +242,27 @@ def parse_globalatts_nc(profile):
     profile.global_atts['XBT_gts_insertion_node'] = \
         decode_bytearray(profile.netcdf_file_obj['Source_ID'][:]).replace('\x00', '').strip()
     # source_id = 'AMMC' if source_id == '' else source_id
-    # these two variable are dimensioned by nprof
-    profile.global_atts['XBT_gtspp_digitisation_method_code'] = np.empty(profile.nprof)
-    profile.global_atts['XBT_gtspp_precision_code'] = np.empty(profile.nprof)
 
     # get the institution code from the first two characters of the Stream_Ident
     institute = decode_bytearray(profile.netcdf_file_obj['Stream_Ident'][:]).strip()[:2]
     # create a dictionary of the institution codes
     institute_list = read_section_from_xbt_config('INSTITUTE')
     if institute in list(institute_list.keys()):
-        profile.global_atts['institution'] = institute_list[institute]
+        profile.global_atts['institution'] = institute_list[institute].split(',')[0]
+        profile.global_atts['Agency_code'] = institute_list[institute].split(',')[1]
     else:
         LOGGER.warning('Institute code %s is not defined in xbt_config file. Please edit xbt_config' % institute)
 
     for count in range(profile.nprof):
         try:
-            profile.global_atts['XBT_gtspp_digitisation_method_code'][count] = \
+            profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = \
                 decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count]).replace('\x00', '').strip()
-            profile.global_atts['XBT_gtspp_precision_code'][count] \
+            profile.global_atts['gtspp_precision_code_'  + profile.prof_type[count:]]\
                 = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Standard'][count].data)).replace('\x00',
                                                                                                               '').strip()
         except:
-            profile.global_atts['XBT_gtspp_digitisation_method_code'][count] = np.nan
-            profile.global_atts['XBT_gtspp_precision_code'][count] = np.nan
+            profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = np.nan
+            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = np.nan
     try:
         profile.global_atts['XBT_predrop_comments'] \
             = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['PreDropComments'][:].data)).replace(
@@ -349,15 +347,18 @@ def parse_globalatts_nc(profile):
         'Platform_code']  # set here as can't have duplicate assignments in the config file
     ships = SHIP_CALL_SIGN_LIST
     if profile.global_atts['Platform_code'] in ships:
-        profile.global_atts['ship_name'] = ships[profile.global_atts['Platform_code']]
+        profile.global_atts['ship_name'] = ships[profile.global_atts['Platform_code']][0]
+        profile.global_atts['ship_IMO'] = ships[profile.global_atts['Platform_code']][1]
     elif difflib.get_close_matches(profile.global_atts['Platform_code'], ships, n=1, cutoff=0.8) != []:
         profile.global_atts['Callsign'] = \
             difflib.get_close_matches(profile.global_atts['Platform_code'], ships, n=1, cutoff=0.8)[0]
-        profile.global_atts['ship_name'] = ships[profile.global_atts['Callsign']]
+        profile.global_atts['ship_name'] = ships[profile.global_atts['Callsign']][0]
+        profile.global_atts['ship_IMO'] = ships[profile.global_atts['Callsign']][1]
         LOGGER.warning('Vessel call sign %s seems to be wrong. Using the closest match to the AODN vocabulary: %s' % (
             profile.global_atts['Platform_code'], profile.global_atts['Callsign']))
     else:
         profile.global_atts['ship_name'] = 'Unknown'
+        profile.global_atts['ship_IMO'] = 'Unknown'
         LOGGER.warning('Vessel call sign %s is unknown in AODN vocabulary, Please contact info@aodn.org.au' %
                        profile.global_atts['Platform_code'])
 
@@ -741,9 +742,9 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
     att_name = 'XBT_probetype_fallrate_equation'
     nms = [profile_qc, profile_noqc]
     vv = ['PROBE_TYPE', 'PROBE_TYPE_RAW']
-    xx = ['fallrate_equation_coefficients', 'fallrate_equation_coefficients_raw']
+    xx = ['XBT_fallrate_equation_coefficients', 'XBT_fallrate_equation_coefficients_RAW']
     ind = 0
-    profile_qc.ptyp = {}
+
     for s in nms:
         if att_name in list(profile_qc.global_atts.keys()):
             item_val = s.global_atts[att_name]
@@ -758,12 +759,12 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
                 coef_b = fre_list[item_val].split(',')[1]
 
                 profile_qc.data[vv[ind]] = item_val
-                profile_qc.ptyp[vv[ind] + '_name'] = probetype
-                profile_qc.ptyp[xx[ind]] = 'a: ' + coef_a + ', b: ' + coef_b
+                profile_qc.global_atts[vv[ind] + '_name'] = probetype
+                profile_qc.global_atts[xx[ind]] = 'a: ' + coef_a + ', b: ' + coef_b
             else:
-                profile_qc.ptyp[xx[ind]] = []
+                profile_qc.global_atts[xx[ind]] = []
                 profile_qc.data[vv[ind]] = []
-                profile_qc.ptyp[vv[ind] + '_name'] = []
+                profile_qc.global_atts[vv[ind] + '_name'] = []
                 LOGGER.warning('{item_val} missing from FRE part in xbt_config file'.format(item_val=item_val))
         else:
             _error('XBT_probetype_fallrate_equation missing from {input_nc_path}'.format(
@@ -868,18 +869,14 @@ def parse_histories_nc(profile):
         exit(1)
 
     # update institute names to be more descriptive
-    names = {'CS': 'CSIRO', 'BO': 'Australian Bureau of Meteorology', 'AO': 'Australian Ocean Data Network',
-             'AD': 'Defence', 'SC': 'Scripps Institute of Oceanography'}
-    df['HISTORY_INSTITUTION'] = df['HISTORY_INSTITUTION'].map(names, na_action='ignore')
+    names = read_section_from_xbt_config('INSTITUTE')
+    df['HISTORY_INSTITUTION'] = df['HISTORY_INSTITUTION'].map(lambda x: names[x].split(',')[0] if x in names else x)
     if any(df['HISTORY_INSTITUTION'].isna()):
         LOGGER.error("HISTORY_INSTITUTION values - some are not defined. Please review output for this file")
         exit(1)
 
-    # set the software value to 2.1 for CS flag as we are keeping them in place and giving a flag of 3
-    df.loc[df.HISTORY_QC_CODE == 'CS', ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
-
-    # do the same for any PE flags as we are changing PEA to LAA and LOA. PER remains as is
-    df.loc[df.HISTORY_QC_CODE == 'PE', ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
+    # set the software value to 2.1 for CS and PE, RE flags
+    df.loc[df.HISTORY_QC_CODE.isin(['CS', 'PE', 'RE']), ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
 
     # update software names to be more descriptive
     names = {'CSCB': 'CSIRO Quality control cookbook for XBT data v1.1',

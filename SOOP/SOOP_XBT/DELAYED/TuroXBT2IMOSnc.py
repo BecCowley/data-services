@@ -366,8 +366,35 @@ def netCDFout(nco, n, crid, callsign, xbtline):
         # Profile Id
         pid = "%s_%s_%03d" % (cid, dt.strftime("%Y%m%d%H%M%S"), n)
         output_netcdf_obj.XBT_uniqueid = pid
-        output_netcdf_obj.TestCanister = nco.TestCanister
 
+        # read from the controlled list of global attributes in the config file
+        globals_list = read_section_from_xbt_config('Turo_codes')
+
+        # read a list of code defined in the Turo_codes conf file. Create a
+        # dictionary of matching values
+        for att_name, att_name_out in globals_list.items():
+            try:
+                # Get the attribute value from the output_netcdf_obj
+                att_val = getattr(nco, att_name, None)
+                setattr(output_netcdf_obj, att_name_out, att_val.strip())
+            except:
+                LOGGER.warning('Attribute %s not found in the input file' % att_name)
+
+        # add institute information, should be in here from the previous section
+        institute_code = output_netcdf_obj.Institute_code
+        # get the list from the config file
+        institute_list = read_section_from_xbt_config('INSTITUTE')
+        # match the institute code to the second value in the list and derive the agency code
+        for institute in institute_list:
+            if institute_list[institute].split(',')[1] == institute_code:
+                setattr(output_netcdf_obj, 'institution', institute_list[institute].split(',')[0])
+            else:
+                continue
+        if not hasattr(output_netcdf_obj, 'institution'):
+            LOGGER.warning('Institute code %s is not defined in xbt_config file. Please edit xbt_config' % institute)
+            setattr(output_netcdf_obj, 'institution', 'unknown')
+
+        # handle ship name, IMO and callsign
         if callsign in SHIPS:
             output_netcdf_obj.ship_name = SHIPS[callsign][0]
             output_netcdf_obj.Callsign = callsign
@@ -393,22 +420,10 @@ def netCDFout(nco, n, crid, callsign, xbtline):
             LOGGER.warning('Vessel call sign %s, name %s, is unknown in AODN vocabulary. Please contact '
                            'info@aodn.org.au' % callsign, nco.Ship)
 
-        output_netcdf_obj.Recorder_hardware_serial_no = nco.HardwareSerialNo
-        output_netcdf_obj.Recorder_HardwareCalibration = nco.HardwareCalibration
-        output_netcdf_obj.Recorder_Graphical_User_Interface_version = nco.UIVersion
-        output_netcdf_obj.Recorder_software_version = nco.ReleaseVersion
-        output_netcdf_obj.Recorder_firmware_version = nco.FirmwareVersion
-        output_netcdf_obj.TemperatureCoefficients = nco.TemperatureCoefficients
-
-        # crc might not exist, skip if not
-        if 'CRC' in nco:
-            output_netcdf_obj.cyclic_redundancy_code = nco.CRC
         # get the recorder type information
         rct = get_recorder_type(nco)
         output_netcdf_obj.XBT_recorder_type = "WMO Code table 4770 code %s, %s" % rct
-        output_netcdf_obj.XBT_probe_serial_number = nco.SerialNo
-        output_netcdf_obj.XBT_calibration_SCALE = nco.Scale
-        output_netcdf_obj.XBT_calibration_OFFSET = nco.Offset
+
         # reformat batch date from mm/dd/yyyy to yyyymmdd
         if not test:
             date_object = datetime.datetime.strptime(nco.BatchDate, "%m/%d/%y")
@@ -416,8 +431,6 @@ def netCDFout(nco, n, crid, callsign, xbtline):
             output_netcdf_obj.XBT_box_number = nco.CaseNo
             output_netcdf_obj.XBT_height_launch_above_water_in_meters = float(nco.DropHeight)
 
-        output_netcdf_obj.XBT_predrop_comments = nco.PreDropComments
-        output_netcdf_obj.XBT_postdrop_comments = nco.PostDropComments
         output_netcdf_obj.qc_completed = 'no'
 
         output_netcdf_obj.geospatial_lat_min = nco.latitude
