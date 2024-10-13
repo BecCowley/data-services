@@ -179,7 +179,6 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
                 else:
                     LOGGER.error('%s GLOBAL attributes in RAW and ED files are not consistent'
                                  % profile_qc.XBT_input_filename)
-                    exit(1)
 
     # Probe type goes into a variable with coefficients as attributes, and assign QC to probe types
     profile_qc = get_fallrate_eq_coef(profile_qc, profile_noqc)
@@ -192,16 +191,17 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
 
     return profile_qc
 
+
 def check_sums_of_temp_depth(profile_qc):
     # check that the sums of TEMP and TEMP_RAW and DEPTH and DEPTH_RAW are the same within a tolerance
     # check the sum of the TEMP and TEMP_RAW columns
     if not np.isclose(np.sum(profile_qc.data['data']['TEMP']), np.sum(profile_qc.data['data']['TEMP_RAW']), rtol=1e-3):
         LOGGER.error('The sum of TEMP and TEMP_RAW are not the same in %s' % profile_qc.XBT_input_filename)
-        exit(1)
+
     # check the sum of the DEPTH and DEPTH_RAW columns
-    if not np.isclose(np.sum(profile_qc.data['data']['DEPTH']), np.sum(profile_qc.data['data']['DEPTH_RAW']), rtol=1e-3):
+    if not np.isclose(np.sum(profile_qc.data['data']['DEPTH']), np.sum(profile_qc.data['data']['DEPTH_RAW']),
+                      rtol=1e-3):
         LOGGER.error('The sum of DEPTH and DEPTH_RAW are not the same in %s' % profile_qc.XBT_input_filename)
-        exit(1)
 
 
 def get_recorder_type(profile):
@@ -257,7 +257,7 @@ def parse_globalatts_nc(profile):
         try:
             profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = \
                 decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count]).replace('\x00', '').strip()
-            profile.global_atts['gtspp_precision_code_'  + profile.prof_type[count:]]\
+            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] \
                 = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Standard'][count].data)).replace('\x00',
                                                                                                               '').strip()
         except:
@@ -401,7 +401,6 @@ def parse_globalatts_nc(profile):
             'XBT line : "%s" is not defined in conf file(Please edit), or an alternative code has to be set up ' %
             'by AODN in vocabs.ands.org.au(contact AODN)' %
             profile.global_atts['XBT_line'])
-        exit(1)
 
     return profile
 
@@ -423,7 +422,6 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             lon = lon * -1
         else:
             LOGGER.error('Negative longitude value with no scale factor %s' % lon)
-            exit(1)
 
     # Change the 360 degree longitude to degrees_east (0-180, -180 to 0)
     if lon > 180:
@@ -532,7 +530,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 prof = np.ma.resize(prof, ndeps[ivar])
                 prof_flag = np.ma.resize(prof_flag, ndeps[ivar])
                 dep = np.ma.resize(dep, ndeps[ivar])
-                qc = np.ma.resize(qc,ndeps[ivar])
+                qc = np.ma.resize(qc, ndeps[ivar])
             df[var + depcode] = dep
             df[var + depcode + '_quality_control'] = qc
             df[var] = prof
@@ -593,7 +591,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
 
 def adjust_position_qc_flags(profile):
     """ When a 'PE' flag is present in the Act_Code, the latitude and longitude qc flags need to be adjusted if not
-    already set (applies to data processed with older versions of MQUEST
+    already set (applies to data processed with older versions of MQUEST)
     Also, if the temperature QC flags are not set correctly (3 for PER, 2 for PEA), these should be updated.
     """
 
@@ -610,7 +608,6 @@ def adjust_position_qc_flags(profile):
                                   'LAA'), 'HISTORY_PREVIOUS_VALUE'].values),
                     4) != np.round(profile.data['LATITUDE_RAW'], 4):
             LOGGER.error('LATITUDE_RAW not the same as the PREVIOUS_value!')
-            exit(1)
         if profile.data['LATITUDE_quality_control'] != 5:
             # PEA on latitude
             profile.data['LATITUDE_quality_control'] = 5
@@ -870,7 +867,6 @@ def parse_histories_nc(profile):
         missing = df.loc[df['HISTORY_QC_CODE_DESCRIPTION'] == '', 'HISTORY_QC_CODE']
         for val in missing:
             LOGGER.error("QC_FLAG CODE \"%s\" is not defined. Please edit config file" % val)
-            exit(1)
 
     # update variable names to match what is in the file
     names = {'DEPH': 'DEPTH', 'DATI': 'DATE, TIME', 'DATE': 'DATE', 'TIME': 'TIME', 'LATI': 'LATITUDE',
@@ -878,17 +874,16 @@ def parse_histories_nc(profile):
     df['HISTORY_PARAMETER'] = df['HISTORY_PARAMETER'].map(names, na_action='ignore')
     if any(df['HISTORY_PARAMETER'].isna()):
         LOGGER.error("HISTORY_PARAMETER values - some are not defined. Please review output for this file")
-        exit(1)
 
     # update institute names to be more descriptive
     names = read_section_from_xbt_config('INSTITUTE')
     df['HISTORY_INSTITUTION'] = df['HISTORY_INSTITUTION'].map(lambda x: names[x].split(',')[0] if x in names else x)
     if any(df['HISTORY_INSTITUTION'].isna()):
         LOGGER.error("HISTORY_INSTITUTION values - some are not defined. Please review output for this file")
-        exit(1)
 
     # set the software value to 2.1 for CS and PE, RE flags
-    df.loc[df.HISTORY_QC_CODE.isin(['CS', 'PE', 'RE']), ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
+    df.loc[
+        df.HISTORY_QC_CODE.isin(['CS', 'PE', 'RE']), ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
 
     # update software names to be more descriptive
     names = {'CSCB': 'CSIRO Quality control cookbook for XBT data v1.1',
@@ -938,31 +933,37 @@ def parse_histories_nc(profile):
 
         # change CSA to CSR and the flag to 3 to match new format
         df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
-               ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'CSR', 3
+        ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'CSR', 3
 
         # this group of changes is here because I have reviewed all our QC codes in the historic databases and I know
         # there are some that are not correct. This is a one off change to correct them. Could be done more elegantly probably.
 
         # change ERA to PLA with flag 3 to reduce duplication of flags
-        df.loc[(df['HISTORY_QC_CODE'].str.contains('ERA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'PLA', 3
+        df.loc[
+            (df['HISTORY_QC_CODE'].str.contains('ERA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'PLA', 3
 
         # change any REA or RER flags to REA and flag 0 to match new format
         df.loc[(df['HISTORY_QC_CODE'].str.contains('RE')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'REA', 0
 
         # change any NGA flags to NGR and flag 4
-        df.loc[(df['HISTORY_QC_CODE'].str.contains('NGA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NGR', 4
+        df.loc[
+            (df['HISTORY_QC_CODE'].str.contains('NGA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NGR', 4
 
         # change any NTA flags to NTR and flag 4
-        df.loc[(df['HISTORY_QC_CODE'].str.contains('NTA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NTR', 4
+        df.loc[
+            (df['HISTORY_QC_CODE'].str.contains('NTA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NTR', 4
 
         # change any TPA flags to TPR and flag 4
-        df.loc[(df['HISTORY_QC_CODE'].str.contains('TPA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'TPR', 4
+        df.loc[
+            (df['HISTORY_QC_CODE'].str.contains('TPA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'TPR', 4
 
         # change any WBA flags to WBR and flag 4
-        df.loc[(df['HISTORY_QC_CODE'].str.contains('WBA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'WBR', 4
+        df.loc[
+            (df['HISTORY_QC_CODE'].str.contains('WBA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'WBR', 4
 
         # change URA for BDA and flag 2
-        df.loc[(df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'BDA', 2
+        df.loc[
+            (df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'BDA', 2
         # all BDA flags should be set to 2, historically have been 1, but as low res, make them 2
         df.loc[(df['HISTORY_QC_CODE'].str.contains('BDA')), 'HISTORY_TEMP_QC_CODE_VALUE'] = 2
 
@@ -972,21 +973,21 @@ def parse_histories_nc(profile):
             idepth = df.loc[df['HISTORY_QC_CODE'].str.contains('CS'), 'HISTORY_START_DEPTH'].values.max() + 1
             # check the TEMP_QC_CODE_VALUE is 2 at the same depth as FS
             if len(idepth) > 0:
-                if profile.data['data'].loc[profile.data['data']['DEPTH'] == idepth[0], 'TEMP_quality_control'].values != 2:
-                    df.loc[(df['HISTORY_QC_CODE'].str.contains('FSR')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'FSA', 2
+                if profile.data['data'].loc[
+                    profile.data['data']['DEPTH'] == idepth[0], 'TEMP_quality_control'].values != 2:
+                    df.loc[(df['HISTORY_QC_CODE'].str.contains('FSR')), ['HISTORY_QC_CODE',
+                                                                         'HISTORY_TEMP_QC_CODE_VALUE']] = 'FSA', 2
                 else:
                     LOGGER.error('TEMP_QC_CODE_VALUE is not 2 at the same depth as FSR flag, not changing it to FSA')
                     print(profile.XBT_input_filename)
-                    exit(1)
-
 
         # Change the PEA flag to LA or LO and ensure the TEMP_QC_CODE_VALUE is set to 2, not 5
         df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
                 (df['HISTORY_PARAMETER'].str.contains('LATITUDE'))),
-               ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LAA', 2
+        ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LAA', 2
         df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
                 (df['HISTORY_PARAMETER'].str.contains('LONGITUDE'))),
-               ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LOA', 2
+        ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LOA', 2
 
         # Combine duplicated TEA flags to a single TEA for TIME variable TEMP_QC_CODE_VALUE is set to 2, not 5
         # Also change just DATE TEA flags to TIME
@@ -1039,7 +1040,7 @@ def combine_histories(profile_qc, profile_noqc):
         # copy this information to the LONGITUDE_RAW value if it isn't the same
         if 'LO' in profile_noqc.histories['HISTORY_QC_CODE'].values:
             if np.round(profile_noqc.histories.loc[profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LO'),
-                                                   'HISTORY_PREVIOUS_VALUE'], 4).values != np.round(
+            'HISTORY_PREVIOUS_VALUE'], 4).values != np.round(
                 profile_qc.data['LONGITUDE_RAW'], 4):
                 LOGGER.warning('Updating raw longitude to match the previous value in *raw.nc file')
                 profile_qc.data['LONGITUDE_RAW'] = profile_noqc.histories.loc[
@@ -1127,8 +1128,8 @@ def create_flag_feature(profile):
     # set up a dataframe of the codes and their values
     # codes from the new cookbook, read from csv file
     # Specify the file path
-    a_file_path = 'xbt_accept_code.csv'
-    r_file_path = 'xbt_reject_code.csv'
+    a_file_path = os.path.join(os.path.dirname(__file__), 'xbt_accept_code.csv')
+    r_file_path = os.path.join(os.path.dirname(__file__), 'xbt_reject_code.csv')
 
     # Read the CSV file and convert it to a DataFrame
     dfa = pd.read_csv(a_file_path)
@@ -1153,16 +1154,16 @@ def create_flag_feature(profile):
         df_data.loc[idx, 'TEMP_quality_control'] = df_data.loc[idx, 'TEMP_RAW_quality_control']
         # add QCA to the history
         codes = codes._append({'HISTORY_INSTITUTION': profile.global_atts['institution'],
-                                                        'HISTORY_QC_CODE': 'QCA',
-                                                        'HISTORY_PARAMETER': 'TEMP',
-                                                        'HISTORY_SOFTWARE': 'Unknown',
-                                                        'HISTORY_DATE': profile.data['TIME'].strftime('%Y-%m-%d %H:%M:%S'),
-                                                        'HISTORY_START_DEPTH': df_data['DEPTH'].values[0],
-                                                        'HISTORY_STOP_DEPTH': df_data['DEPTH'].values[-1],
-                                                        'HISTORY_QC_CODE_DESCRIPTION': 'scientific_qc_applied',
-                                                        'HISTORY_TEMP_QC_CODE_VALUE': 1,
-                                                        'HISTORY_SOFTWARE_RELEASE': '',
-                                                        'HISTORY_PREVIOUS_VALUE': 0}, ignore_index=True)
+                               'HISTORY_QC_CODE': 'QCA',
+                               'HISTORY_PARAMETER': 'TEMP',
+                               'HISTORY_SOFTWARE': 'Unknown',
+                               'HISTORY_DATE': profile.data['TIME'].strftime('%Y-%m-%d %H:%M:%S'),
+                               'HISTORY_START_DEPTH': df_data['DEPTH'].values[0],
+                               'HISTORY_STOP_DEPTH': df_data['DEPTH'].values[-1],
+                               'HISTORY_QC_CODE_DESCRIPTION': 'scientific_qc_applied',
+                               'HISTORY_TEMP_QC_CODE_VALUE': 1,
+                               'HISTORY_SOFTWARE_RELEASE': '',
+                               'HISTORY_PREVIOUS_VALUE': 0}, ignore_index=True)
 
     # merge the codes with the flag codes
     mapcodes = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
@@ -1186,7 +1187,6 @@ def create_flag_feature(profile):
             mapcodes = mapcodes[~nan_values]
         else:
             LOGGER.error('New QC code encountered, please code in the new value')
-            exit(1)
 
     # check for duplicated history codes at the same depth so we don't duplicate the QC code in the fft variable
     # this will keep the first value. If the PREVIOUS_VALUE is 99.99 and it is in the first position, it will be kept
