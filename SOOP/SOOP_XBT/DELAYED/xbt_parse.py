@@ -362,7 +362,7 @@ def parse_globalatts_nc(profile):
         profile.global_atts['ship_name'] = 'Unknown'
         profile.global_atts['ship_IMO'] = 'Unknown'
         LOGGER.warning('PLATFORM_CODE: Vessel call sign %s is unknown in AODN vocabulary, Please contact info@aodn.org.au. %s' %
-                       profile.global_atts['Platform_code'], profile.XBT_input_filename)
+                       (profile.global_atts['Platform_code'], profile.XBT_input_filename))
 
     # extract the information and assign correctly
     att_name = 'XBT_recorder_type'
