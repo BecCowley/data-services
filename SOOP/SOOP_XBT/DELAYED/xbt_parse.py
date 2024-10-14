@@ -574,7 +574,15 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     df = df.drop(irem, axis=1)
 
     # drop rows where all NaN values which does happen in these old files sometimes
-    df = df.dropna(subset=['TEMP','DEPTH','TEMP_RAW','DEPTH_RAW'],how='all')
+    df = df.dropna(subset=['TEMP', 'DEPTH', 'TEMP_RAW', 'DEPTH_RAW'], how='all')
+
+    # check for duplicated depths and log if found
+    if df['DEPTH'].duplicated().any():
+        LOGGER.warning('Duplicated depths found in %s' % profile_qc.XBT_input_filename)
+
+    # check for mismatch in DEPTH and DEPTH_RAW
+    if not np.allclose(df['DEPTH'], df['DEPTH_RAW'], rtol=1e-3):
+        LOGGER.warning('DEPTH and DEPTH_RAW are not the same in %s' % profile_qc.XBT_input_filename)
 
     # how many parameters do we have, not including DEPTH?
     profile_qc.nprof = len([col for col in df.columns if ('_quality_control' not in col and 'RAW'
