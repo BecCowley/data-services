@@ -166,7 +166,7 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
         profile_qc = check_for_PL_flag(profile_qc)
 
         # adjust lat lon qc flags if required
-        profile_qc = adjust_position_qc_flags(profile_qc)
+        profile_qc = adjust_position_qc_flags(profile_qc, profile_noqc)
         # adjust date and time QC flags if required
         profile_qc = adjust_time_qc_flags(profile_qc)
 
@@ -590,7 +590,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     return profile_qc, profile_noqc
 
 
-def adjust_position_qc_flags(profile):
+def adjust_position_qc_flags(profile, profile_noqc):
     """ When a 'PE' flag is present in the Act_Code, the latitude and longitude qc flags need to be adjusted if not
     already set (applies to data processed with older versions of MQUEST)
     Also, if the temperature QC flags are not set correctly (3 for PER, 2 for PEA), these should be updated.
@@ -618,13 +618,53 @@ def adjust_position_qc_flags(profile):
             df.loc[mask, 'TEMP_quality_control'] = 2
 
     if profile.histories['HISTORY_QC_CODE'].str.contains('LOA').any():
+
+        # if there are duplicated LOA flags in the histories, keep the one where hISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value
+        if len(profile.histories[profile.histories['HISTORY_QC_CODE'].str.contains('LOA')]) > 1:
+            # get the rows with LOA flags
+            loa_rows = profile.histories[profile.histories['HISTORY_QC_CODE'].str.contains('LOA')]
+            # do any of these PREVIOUS_VALUE match the profile_noqc.histories PREVIOUS_VALUE?
+            if np.any(np.round(loa_rows['HISTORY_PREVIOUS_VALUE'].values, 4) == np.round(profile_noqc.histories.loc[
+                                                                                             profile_noqc.histories[
+                                                                                                 'HISTORY_QC_CODE'].str.contains(
+                                                                                                 'LOA'), 'HISTORY_PREVIOUS_VALUE'].values,
+                                                                                         4)):
+                # get the row where the PREVIOUS_VALUE matches the profile_noqc PREVIOUS_VALUE
+                loa_row = loa_rows[
+                    np.round(loa_rows['HISTORY_PREVIOUS_VALUE'].values, 4) == np.round(profile_noqc.histories.loc[
+                                                                                           profile_noqc.histories[
+                                                                                               'HISTORY_QC_CODE'].str.contains(
+                                                                                               'LOA'), 'HISTORY_PREVIOUS_VALUE'].values,
+                                                                                       4)]
+                LOGGER.info(
+                    'Duplicate LOA flags in original file, keeping the one where PREVIOUS_VALUE matches the RAW PREVIOUS_VALUE')
+                # drop the other rows
+                profile.histories = profile.histories.drop(loa_rows.index.difference(loa_row.index))
+            else:
+                LOGGER.error('Duplicate LOA flags in original file, none match the RAW PREVIOUS_VALUE!')
+                exit(1)
+
         # check HISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value
         if np.round(float(profile.histories.loc[
                               profile.histories['HISTORY_QC_CODE'].str.contains(
                                   'LOA'), 'HISTORY_PREVIOUS_VALUE'].values),
-                    4) != np.round(profile.data['LONGITUDE_RAW'], 4):
-            LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_value!')
-            exit(1)
+                    4) != np.round(profile.data['LONGITUDE_RAW'], 4) or (
+        np.allclose(profile.data['LONGITUDE_RAW'], profile.data['LONGITUDE'], atol=0.1)):
+
+            # check if the profile_noqc history has a similar value within tolerance
+            if not np.allclose(float(profile.histories.loc[
+                                         profile.histories['HISTORY_QC_CODE'].str.contains(
+                                             'LOA'), 'HISTORY_PREVIOUS_VALUE'].values),
+                               float(profile_noqc.histories.loc[
+                                         profile_noqc.histories['HISTORY_QC_CODE'].str.contains(
+                                             'LOA'), 'HISTORY_PREVIOUS_VALUE'].values), atol=0.1):
+                LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_VALUE or the RAW PREVIOUS_VALUE!')
+            else:
+                # set the LONGITUDE_RAW to the value in the noqc file
+                profile.data['LONGITUDE_RAW'] = np.round(float(profile_noqc.histories.loc[
+                                                                   profile_noqc.histories[
+                                                                       'HISTORY_QC_CODE'].str.contains(
+                                                                       'LOA'), 'HISTORY_PREVIOUS_VALUE'].values), 4)
         if profile.data['LONGITUDE_quality_control'] != 5:
             # PEA on longitude
             profile.data['LONGITUDE_quality_control'] = 5
@@ -656,22 +696,20 @@ def adjust_time_qc_flags(profile):
     if len(profile.histories[profile.histories['HISTORY_QC_CODE'].str.contains("TEA|TER")]) == 0:
         return profile
 
-    # get the temperature QC codes
-    tempqc = profile.data['data']['TEMP_quality_control']
+    # change temperature QC codes
     if profile.histories['HISTORY_QC_CODE'].str.contains('TEA').any() & profile.data['TIME_quality_control'] != 5:
         # TEA
         profile.data['TIME_quality_control'] = 5
         LOGGER.info('TIME correction (TEA) in original file, changing TIME flag to level 5.')
         # change to flag 2 for temperature for all depths where qc is less than 2
-        tempqc[tempqc < 2] = 2
+
+        profile.data['data'].loc[profile.data['data']['TEMP_quality_control'] < 2, 'TEMP_quality_control'] = 2
         # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
-        if profile.histories.loc[
-            profile.histories['HISTORY_QC_CODE'].str.contains('TEA'), 'HISTORY_PREVIOUS_VALUE'].values != \
+        if pd.to_datetime(profile.histories.loc[
+                              profile.histories['HISTORY_QC_CODE'].str.contains(
+                                  'TEA'), 'HISTORY_PREVIOUS_VALUE'].values, format='%Y%m%d%H%M%S') != \
                 profile.data['TIME_RAW']:
             LOGGER.error('TIME_RAW not the same as the PREVIOUS_value!')
-            exit(1)
-    # update the temperature QC flags
-    profile.data['data']['TEMP_quality_control'] = tempqc
 
     return profile
 
@@ -992,35 +1030,39 @@ def parse_histories_nc(profile):
 
         # Combine duplicated TEA flags to a single TEA for TIME variable TEMP_QC_CODE_VALUE is set to 2, not 5
         # Also change just DATE TEA flags to TIME
-        df_dups = df.loc[df['HISTORY_QC_CODE'].str.contains('TEA')]
-        if len(df_dups) > 0:
-            ti = df.loc[df['HISTORY_PARAMETER'].str.contains('TIME'), 'HISTORY_PREVIOUS_VALUE'].values
-            ti = str(int(ti[0]))
-            if len(ti) == 4:
-                # assume HHMM format and add SS as zeros
-                ti = ti + '00'
-            elif len(ti) == 0:
-                # get the time value from the TIME variable as this hasn't been changed
-                ti = profile.data['TIME'].strftime('%H%M%S')
+        dfTEA = df[df['HISTORY_QC_CODE'] == 'TEA'].copy()
+        if len(dfTEA) > 0:
+            # get the date value from the TIME variable
+            dtt = profile.data['TIME'].strftime('%Y%m%d')
+            # get the TIME value from the TIME variable
+            ti = profile.data['TIME'].strftime('%H%M%S')
 
-            dat = df.loc[df['HISTORY_PARAMETER'].str.contains('DATE'), 'HISTORY_PREVIOUS_VALUE'].values
-            if len(dat) == 0:
-                # get the date value from the TIME variable as this hasn't been changed
-                dat = profile.data['TIME'].strftime('%Y%m%d')
-            else:
-                dat = str(int(dat))
+            # is there a 'TIME' parameter in the TEA flags?
+            timerows = dfTEA[dfTEA['HISTORY_PARAMETER'] == 'TIME'].copy()
+            # include the date information
+            timerows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = timerows['HISTORY_PREVIOUS_VALUE'].apply(
+                lambda x: dtt + str(int(x)) + '00').astype(float)
+
+            # now check for any 'DATE' parameter in the TEA flags
+            daterows = dfTEA[dfTEA['HISTORY_PARAMETER'] == 'DATE'].copy()
             try:
-                dt = datetime.strptime(dat + ti, '%Y%m%d%H%M%S')
+                daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
+                    lambda x: datetime.strptime(str(int(x)), '%Y%m%d').strftime('%Y%m%d') + ti).astype(float)
             except:
-                dt = datetime.strptime(dat + ti, '%d%m%Y%H%M%S')
+                daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
+                    lambda x: datetime.strptime(str(int(x)), '%d%m%Y').strftime('%Y%m%d') + ti).astype(float)
+
+            # update the df with the new values
+            df.update(timerows)
+            df.update(daterows)
 
             # change the 'DATE' label to TIME  and update the TEA PREVIOUS_VALUE to the new datetime value
             df.loc[((df['HISTORY_PARAMETER'].str.contains('DATE') | df['HISTORY_PARAMETER'].str.contains('TIME')) &
-                    (df['HISTORY_QC_CODE'].str.contains('TEA'))), ['HISTORY_PARAMETER',
-                                                                   'HISTORY_PREVIOUS_VALUE']] = 'TIME', dt
+                    (df['HISTORY_QC_CODE'].str.contains('TEA'))), ['HISTORY_PARAMETER']] = 'TIME'
 
             # remove any duplicated lines
-            df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE']) & df.HISTORY_PARAMETER.eq('TIME'))]
+            df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_PREVIOUS_VALUE'])
+                      & df.HISTORY_PARAMETER.eq('TIME'))]
 
     # assign the dataframe back to profile at this stage
     profile.histories = df
