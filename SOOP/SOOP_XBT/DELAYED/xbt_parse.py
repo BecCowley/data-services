@@ -1113,7 +1113,7 @@ def combine_histories(profile_qc, profile_noqc):
                 LOGGER.warning('HISTORY: Updating raw longitude to match the previous value in *raw.nc file. %s'
                                % profile_noqc.XBT_input_filename)
                 profile_qc.data['LONGITUDE_RAW'] = profile_noqc.histories.loc[
-                    profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LOA'), 'HISTORY_PREVIOUS_VALUE'][0]
+                    profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LOA'), 'HISTORY_PREVIOUS_VALUE'].values[0]
     # TODO: handle other extra histories in noqc file here:
     if len(profile_noqc.histories) > 1:
         LOGGER.warning('QC flags and codes in the RAW file. Please review. %s' % profile_noqc.XBT_input_filename)
