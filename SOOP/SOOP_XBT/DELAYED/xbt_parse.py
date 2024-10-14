@@ -793,48 +793,52 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
     ind = 0
 
     for s in nms:
-        if att_name in list(profile_qc.global_atts.keys()):
+        if att_name in list(s.global_atts.keys()):
             item_val = s.global_atts[att_name]
             item_val = ''.join(item_val.split())
-            if item_val in list(ptyp_list.keys()):
+            if item_val in list(ptyp_list.keys()) and item_val not in list(fre_list.keys()):
                 # old PTYP surface code, need to match up PEQ$code
-                item_val = ptyp_list[item_val].split(',')[0]
+                item_val = ptyp_list[item_val]
+            elif item_val not in list(fre_list.keys()):
+                # record the orignal value
+                profile_qc.global_atts[vv[ind] + '_origname'] = item_val
+                # try fuzzy matching here
+                imatch = difflib.get_close_matches(item_val[0:4], list(ptyp_list.keys()), n=1, cutoff=0.5)
+                if imatch:
+                    LOGGER.warning('Probe type %s not found in WMO1770, using closest match %s' % (item_val, imatch[0]))
+                    item_val = ptyp_list[imatch[0]]
 
             if item_val in list(fre_list.keys()):
-                probetype = peq_list[item_val].split(',')[0]
+                probetype = peq_list[item_val]
                 coef_a = fre_list[item_val].split(',')[0]
                 coef_b = fre_list[item_val].split(',')[1]
 
                 profile_qc.data[vv[ind]] = item_val
                 profile_qc.global_atts[vv[ind] + '_name'] = probetype
                 profile_qc.global_atts[xx[ind]] = 'a: ' + coef_a + ', b: ' + coef_b
+                profile_qc.data['PROBE_TYPE_quality_control'] = 1
             else:
-                profile_qc.global_atts[xx[ind]] = []
-                profile_qc.data[vv[ind]] = []
-                profile_qc.global_atts[vv[ind] + '_name'] = []
-                LOGGER.warning('{item_val} missing from FRE part in xbt_config file'.format(item_val=item_val))
+                # Handle case where no good match is found
+                profile_qc.global_atts[xx[ind]] = 'Unknown'
+                profile_qc.data[vv[ind]] = item_val
+                profile_qc.global_atts[vv[ind] + '_name'] = 'Unknown'
+                profile_qc.data['PROBE_TYPE_quality_control'] = 0
+                LOGGER.warning('PROBE_TYPE {item_val} is unknown'.format(item_val=item_val))
         else:
-            _error('XBT_probetype_fallrate_equation missing from {input_nc_path}'.format(
+            profile_qc.global_atts[xx[ind]] = 'Unknown'
+            profile_qc.data[vv[ind]] = '1023'
+            profile_qc.global_atts[vv[ind] + '_name'] = 'Unknown'
+            profile_qc.data['PROBE_TYPE_quality_control'] = 0
+            LOGGER.error('XBT_probetype_fallrate_equation missing from {input_nc_path}'.format(
                 input_nc_path=profile_qc.XBT_input_filename))
         ind = ind + 1
 
     # select a QC flag for the probe type
-    if not profile_qc.data['PROBE_TYPE']:
-        # no probe type assigned
-        profile_qc.data['PROBE_TYPE_quality_control'] = 3
-        # TODO: need to handle the qC flags for temp and depth here, they both need to be changed to 3 and
-        #  histories updated
-        LOGGER.error('Probe type is unknown. Review code handling!')
-        exit(1)
-    else:
-        # TODO: if the probe types are different in raw and edited, need to handle this.
-        #  Has it been changed? what does the data look like? Need to assign 5 to changed profile, include the PR flag
-        #  and adjust the QC on the temperature and depth
-        if profile_qc.data['PROBE_TYPE'] != profile_qc.data['PROBE_TYPE_RAW']:
-            LOGGER.error('Probe types are different in ed and raw files. Review code handling!')
-            exit(1)
-        else:
-            profile_qc.data['PROBE_TYPE_quality_control'] = 1
+    # TODO: if the probe types are different in raw and edited, need to handle this.
+    #  Has it been changed? what does the data look like? Need to assign 5 to changed profile, include the PR flag
+    #  and adjust the QC on the temperature and depth
+    if profile_qc.data['PROBE_TYPE'] != profile_qc.data['PROBE_TYPE_RAW']:
+        LOGGER.error('Probe types are different in ed and raw files.')
 
     return profile_qc
 
