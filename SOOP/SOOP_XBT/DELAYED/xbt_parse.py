@@ -882,15 +882,15 @@ def parse_histories_nc(profile):
 
     df = df.astype({'HISTORY_SOFTWARE_RELEASE': np.str_, 'HISTORY_QC_CODE': np.str_})
 
-    # convert only the CSIRO codes, find any institution codes that are not 'CS'
-    if not df['HISTORY_INSTITUTION'].str.contains('CS').all():
-        LOGGER.warning('Institution code for some flags is not CSIRO, contains %s' %
-                       df.loc[~df['HISTORY_INSTITUTION'].str.contains('CS'), 'HISTORY_INSTITUTION'].unique())
-        # remove any codes that are not CSIRO
-        df = df[df['HISTORY_INSTITUTION'].str.contains('CS')]
-        nhist = len(df)
-
     if nhist > 0:
+        # convert only the CSIRO codes, find any institution codes that are not 'CS'
+        if not df['HISTORY_INSTITUTION'].str.contains('CS').all():
+            LOGGER.warning('Institution code for some flags is not CSIRO, contains %s' %
+                           df.loc[~df['HISTORY_INSTITUTION'].str.contains('CS'), 'HISTORY_INSTITUTION'].unique())
+            # remove any codes that are not CSIRO
+            df = df[df['HISTORY_INSTITUTION'].str.contains('CS')]
+            nhist = len(df)
+
         df['HISTORY_QC_CODE'] = df['HISTORY_QC_CODE'].str.replace('\x00', '')
         df['HISTORY_DATE'] = df['HISTORY_DATE'].str.replace('\x00', '')
         df['HISTORY_DATE'] = df['HISTORY_DATE'].str.replace(' ', '0')
