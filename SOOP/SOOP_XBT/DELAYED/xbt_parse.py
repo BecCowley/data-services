@@ -1152,26 +1152,26 @@ def restore_temp_val(profile):
     df = profile.data['data']
     # find the depths in the profile data
     ind = np.in1d(np.round(df['DEPTH'], 2), np.round(depths, 2)).nonzero()[0]
-    # temps should be equal to df['TEMP_RAW'][ind], let's check they are equal
-    if (temps != df['TEMP_RAW'][ind]).all():
-        # check they are within 0.01 of each other
-        if not np.allclose(temps, df['TEMP_RAW'][ind], atol=0.01):
-            # check the median difference with a bigger tolerance:
-            if np.median(np.abs(temps - df['TEMP_RAW'][ind])) > 0.01:
-                LOGGER.error('TEMP_RAW values do not match the HISTORY_PREVIOUS_VALUE for CS flags')
-                exit(1)
-            else:
-                # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value
-                profile.histories.loc[idx, 'HISTORY_PREVIOUS_VALUE'] = df['TEMP_RAW'][ind]
-                LOGGER.info('Updated HISTORY_PREVIOUS_VALUE for CS flags')
-        else:
+    # makes sure we have the same number of CS flags in the profile data as in the histories before proceeding
+    if (len(ind) > 0) & (len(temps) == len(ind)):
+        # temps should be equal to df['TEMP_RAW'][ind], let's check they are equal and there are no missing values
+        if (temps != df['TEMP_RAW'][ind]).all() and (temps.max() <= 99) and (df['TEMP_RAW'][ind].max() <= 99):
+            # check they are within 0.01 of each other
+            if not np.allclose(temps, df['TEMP_RAW'][ind], atol=0.01):
+                # check the median difference with a bigger tolerance:
+                if np.median(np.abs(temps - df['TEMP_RAW'][ind])) > 0.01:
+                    LOGGER.error('TEMP_RAW values do not match the HISTORY_PREVIOUS_VALUE for CS flags')
+                    return profile
+
             # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value
             profile.histories.loc[idx, 'HISTORY_PREVIOUS_VALUE'] = df['TEMP_RAW'][ind]
             LOGGER.info('Updated HISTORY_PREVIOUS_VALUE for CS flags')
-    # update the TEMP values
-    df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
-    # update profile data
-    profile.data['data'] = df
+            # update the TEMP values
+            df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
+            # update profile data
+            profile.data['data'] = df
+    else:
+        LOGGER.info('No CS flags or depths do not match in the profile data')
 
     return profile
 
@@ -1247,12 +1247,45 @@ def create_flag_feature(profile):
     # this will keep the first value. If the PREVIOUS_VALUE is 99.99 and it is in the first position, it will be kept
     # however, we just want to check that the previous_values are the same as the TEMP_RAW values and if not, do something
     # first sort by start_depth and then previous_value to try and eliminate the 99.99 values
-    mapcodes = mapcodes.sort_values(['HISTORY_START_DEPTH', 'HISTORY_PREVIOUS_VALUE'])
-    dup_df = mapcodes[mapcodes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)]
-    if len(dup_df) > 0:
-        mapcodes = mapcodes.drop_duplicates(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'],
-                                      keep='first')
-        LOGGER.warning('Duplicate QC code encountered, and removed for flag_feature_type array. Please review')
+    # Separate the rows where HISTORY_PARAMETER is not TEMP
+    non_temp_mapcodes = mapcodes[mapcodes['HISTORY_PARAMETER'] != 'TEMP']
+    # get the index of duplicated rows for non-TEMP variables
+    idx = non_temp_mapcodes[
+        (non_temp_mapcodes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False))].index
+    if len(idx) > 0:
+        # TODO: if DEPTH is duplicated, check the previous value is the same as the DEPTH_RAW value, will need indexing
+        LOGGER.warning('Duplicate QC code encountered, and removed in create_flag_feature: %s. Please review'
+                       % non_temp_mapcodes.loc[idx, 'HISTORY_QC_CODE'].unique())
+        # duplicates have to be one of the names variables, check the previous value against the *_RAW value
+        var = non_temp_mapcodes['HISTORY_PARAMETER'][idx].unique()[0] + '_RAW'
+        if var not in ['LONGITUDE_RAW', 'TIME_RAW']:
+            # check the previous value is not the same as the *_RAW value, handle LONGITUDE duplicates in adjust_position_qc_flags
+            idx = idx[~(non_temp_mapcodes['HISTORY_PREVIOUS_VALUE'][idx] == profile.data[var])]
+            if len(idx) > 0:
+                LOGGER.warning('Previous value is not the same as the %s value, removed from the dataset' % var)
+                non_temp_mapcodes = non_temp_mapcodes.drop(idx)
+        # else it is TEA
+        elif var == 'TIME_RAW':
+            # check the previous value is the same as the TIME_RAW value
+            # convert the previous value to a datetime object
+            prevval = pd.to_datetime(non_temp_mapcodes['HISTORY_PREVIOUS_VALUE'][idx], format='%Y%m%d%H%M%S')
+            # identify the rows where the previous value is not the same as the TIME_RAW value and remove them
+            idx = idx[~(prevval == profile.data['TIME_RAW'])]
+            if len(idx) > 0:
+                LOGGER.warning('Previous value is not the same as the TIME_RAW value, removed from the dataset')
+                non_temp_mapcodes = non_temp_mapcodes.drop(idx)
+
+    # Filter the rows where HISTORY_PARAMETER is TEMP
+    temp_mapcodes = mapcodes[mapcodes['HISTORY_PARAMETER'] == 'TEMP']
+    # get the index of the rows to drop for TEMP variables only
+    idx = temp_mapcodes[(temp_mapcodes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)) &
+                        (temp_mapcodes['HISTORY_PREVIOUS_VALUE'] > 90)].index
+    if len(idx) > 0:
+        LOGGER.warning('Duplicate QC code encountered, and removed in create_flag_feature: %s. Please review'
+                       % temp_mapcodes.loc[idx, 'HISTORY_QC_CODE'].unique())
+        temp_mapcodes = temp_mapcodes.drop(idx)
+    # Concatenate the non-TEMP rows back with the sorted TEMP rows
+    mapcodes = pd.concat([non_temp_mapcodes, temp_mapcodes])
 
     # now need to assign the codes to the correct depths.
     # code only added in one location at the start depth, QC flags indicate the quality applied
