@@ -362,7 +362,7 @@ def parse_globalatts_nc(profile):
         profile.global_atts['ship_name'] = 'Unknown'
         profile.global_atts['ship_IMO'] = 'Unknown'
         LOGGER.warning('PLATFORM_CODE: Vessel call sign %s is unknown in AODN vocabulary, Please contact info@aodn.org.au. %s' %
-                       profile.global_atts['Platform_code'], profile.XBT_input_filename)
+                       (profile.global_atts['Platform_code'], profile.XBT_input_filename))
 
     # extract the information and assign correctly
     att_name = 'XBT_recorder_type'
@@ -896,7 +896,7 @@ def parse_histories_nc(profile):
         # convert only the CSIRO codes, find any institution codes that are not 'CS'
         if not df['HISTORY_INSTITUTION'].str.contains('CS').all():
             LOGGER.warning('HISTORY_INSTITUTION code for some flags is not CSIRO, contains %s %s' %
-                           df.loc[~df['HISTORY_INSTITUTION'].str.contains('CS'), 'HISTORY_INSTITUTION'].unique(), profile.XBT_input_filename)
+                           (df.loc[~df['HISTORY_INSTITUTION'].str.contains('CS'), 'HISTORY_INSTITUTION'].unique(), profile.XBT_input_filename))
             # remove any codes that are not CSIRO
             df = df[df['HISTORY_INSTITUTION'].str.contains('CS')]
             nhist = len(df)
