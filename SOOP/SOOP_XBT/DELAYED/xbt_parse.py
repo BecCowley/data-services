@@ -337,7 +337,7 @@ def parse_globalatts_nc(profile):
 
     # if the platform code didn't come through, assign unknown type
     if 'Platform_code' not in profile.global_atts.keys():
-        LOGGER.error('Platform_code is missing, GCLL has not been read or is missing. %s' % profile.XBT_input_filename)
+        LOGGER.error('PLATFORM_CODE is missing, GCLL has not been read or is missing. %s' % profile.XBT_input_filename)
         # assign unknown to the platform code
         profile.global_atts['Platform_code'] = 'Unknown'
 
@@ -356,12 +356,12 @@ def parse_globalatts_nc(profile):
             difflib.get_close_matches(profile.global_atts['Platform_code'], ships, n=1, cutoff=0.8)[0]
         profile.global_atts['ship_name'] = ships[profile.global_atts['Callsign']][0]
         profile.global_atts['ship_IMO'] = ships[profile.global_atts['Callsign']][1]
-        LOGGER.warning('Vessel call sign %s seems to be wrong. Using the closest match to the AODN vocabulary: %s %s' % (
+        LOGGER.warning('PLATFORM_CODE: Vessel call sign %s seems to be wrong. Using the closest match to the AODN vocabulary: %s %s' % (
             profile.global_atts['Platform_code'], profile.global_atts['Callsign'], profile.XBT_input_filename))
     else:
         profile.global_atts['ship_name'] = 'Unknown'
         profile.global_atts['ship_IMO'] = 'Unknown'
-        LOGGER.warning('Vessel call sign %s is unknown in AODN vocabulary, Please contact info@aodn.org.au. %s' %
+        LOGGER.warning('PLATFORM_CODE: Vessel call sign %s is unknown in AODN vocabulary, Please contact info@aodn.org.au. %s' %
                        profile.global_atts['Platform_code'], profile.XBT_input_filename)
 
     # extract the information and assign correctly
@@ -440,7 +440,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     # position and time QC - check this is not empty. Assume 1 if it is
     q_pos = int(profile_qc.netcdf_file_obj['Q_Pos'][0].data)
     if not q_pos:
-        LOGGER.info('Missing position QC, flagging position with flag 1 %s' % profile_qc.XBT_input_filename)
+        LOGGER.info('Missing LATITUDE or LONGITUDE QC, flagging position with flag 1 %s' % profile_qc.XBT_input_filename)
         q_pos = 1
     profile_qc.data['LATITUDE_quality_control'] = q_pos
     profile_qc.data['LONGITUDE_quality_control'] = q_pos
@@ -455,7 +455,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
 
     q_date_time = int(profile_qc.netcdf_file_obj['Q_Date_Time'][0])
     if not q_date_time:
-        LOGGER.info('Missing time QC, flagging time with flag 1 %s' % profile_qc.XBT_input_filename)
+        LOGGER.info('Missing TIME QC, flagging time with flag 1 %s' % profile_qc.XBT_input_filename)
         q_date_time = 1
 
     # need to be a bit more specific as some times have missing padding at the end, some at the start.
@@ -529,7 +529,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 invalid_to_ma_array(prof_flag, fillvalue=99))  # replace masked values for IMOS IODE flags
             # if the size of the array isn't equal to the number of depths, adjust here
             if len(prof) != ndeps[ivar]:
-                LOGGER.warning('Resizing arrays to the number of depths recorded in original MQNC file. %s'
+                LOGGER.warning('Resizing TEMP and DEPTH arrays to the number of depths recorded in original MQNC file. %s'
                                % s.XBT_input_filename)
                 prof = np.ma.resize(prof, ndeps[ivar])
                 prof_flag = np.ma.resize(prof_flag, ndeps[ivar])
@@ -581,7 +581,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
 
     # check for duplicated depths and log if found
     if df['DEPTH'].duplicated().any():
-        LOGGER.warning('Duplicated depths found in %s' % profile_qc.XBT_input_filename)
+        LOGGER.warning('Duplicated DEPTH found in %s' % profile_qc.XBT_input_filename)
 
     # check for mismatch in DEPTH and DEPTH_RAW
     if not np.allclose(df['DEPTH'], df['DEPTH_RAW'], rtol=1e-3):
@@ -866,7 +866,7 @@ def parse_histories_nc(profile):
     # nhist can sometimes be incorrect, so we need to check the length of the data
     if nhist != len(df['HISTORY_QC_CODE']):
         nhist = len(df['HISTORY_QC_CODE'])
-        LOGGER.warning('Updating nhist to match length of history codes. %s' % profile.XBT_input_filename)
+        LOGGER.warning('HISTORY: Updating nhist to match length of history codes. %s' % profile.XBT_input_filename)
 
     df['HISTORY_INSTITUTION'] = [''.join(chr(x) for x in bytearray(xx)).strip()
                                  for xx in profile.netcdf_file_obj['Ident_Code'][0:nhist].data]
@@ -1565,7 +1565,7 @@ if __name__ == '__main__':
                 # add the histories to the big dataframe
                 dfhist = pd.concat([dfhist, profile_ed.histories], ignore_index=True)
         else:
-            LOGGER.warning('file %s is in keys file, but does not exist' % f)
+            LOGGER.warning('Profile not processed, file %s is in keys file, but does not exist' % f)
     # write the dataframe to a parquet file
     pq_filename = os.path.join(os.path.dirname(keys.dbase_name), os.path.basename(keys.dbase_name) + '.parquet')
     dfall.to_parquet(pq_filename, index=False)
