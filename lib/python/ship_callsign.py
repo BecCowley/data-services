@@ -56,6 +56,7 @@ def ship_callsign_list():
             value_list[0] = value_list[0].replace(str_to_rm, '')
             platform_codes[callsign] = tuple(value_list)
         if platform_codes[callsign][1] is not None and str_imo in platform_codes[callsign][1]:
+            value_list = list(platform_codes[callsign])
             value_list[1] = value_list[1].replace(str_imo, '')
             platform_codes[callsign] = tuple(value_list)
 
