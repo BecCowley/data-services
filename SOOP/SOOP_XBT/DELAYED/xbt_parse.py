@@ -333,7 +333,7 @@ def parse_globalatts_nc(profile):
         else:
             if srfc_code_iter != '':
                 LOGGER.warning('%s code is not defined in srfc_code in xbt_config file. Please edit xbt_config %s'
-                               %(srfc_code_iter, profile.xbt_input_filename))
+                               %(srfc_code_iter, profile.XBT_input_filename))
 
     # if the platform code didn't come through, assign unknown type
     if 'Platform_code' not in profile.global_atts.keys():
