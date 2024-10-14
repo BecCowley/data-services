@@ -334,10 +334,11 @@ def parse_globalatts_nc(profile):
                 LOGGER.warning('%s code is not defined in srfc_code in xbt_config file. Please edit xbt_config'
                                % srfc_code_iter)
 
-    # if the platform code didn't come through, need to stop
+    # if the platform code didn't come through, assign unknown type
     if 'Platform_code' not in profile.global_atts.keys():
         LOGGER.error('Platform_code is missing, GCLL has not been read or is missing')
-        breakpoint()
+        # assign unknown to the platform code
+        profile.global_atts['Platform_code'] = 'Unknown'
 
     # get the ship details
     # note that the callsign and ship name are filled from the original file values, but will be replaced here if they exist in the AODN vocabulary
@@ -1275,11 +1276,11 @@ def check_nc_to_be_created(profile):
                  for xx in profile.netcdf_file_obj['Act_Code'][0:nhist].data]
     depth = np.round(profile.netcdf_file_obj.variables['Depthpress'][:], 2)
 
-    if len(depth) == 0:
+    if np.sum(~depth.mask) == 0:
         LOGGER.error('No data in the file')
         return False
 
-    if data_type != 'XB' and data_type != 'BA' and data_type != 'TE':
+    if data_type != 'XB':  # and data_type != 'BA' and data_type != 'TE':
         LOGGER.error('Profile not processed as it is type %s' % data_type)
         return False
 
@@ -1459,7 +1460,10 @@ if __name__ == '__main__':
     # write the dataframe to a parquet file
     pq_filename = os.path.join(os.path.dirname(keys.dbase_name), os.path.basename(keys.dbase_name) + '.parquet')
     dfall.to_parquet(pq_filename, index=False)
-    pq_filename = os.path.join(os.path.dirname(keys.dbase_name), os.path.basename(keys.dbase_name) + '_histories.parquet')
+    pq_filename = os.path.join(os.path.dirname(keys.dbase_name),
+                               os.path.basename(keys.dbase_name) + '_histories.parquet')
     dfhist.to_parquet(pq_filename, index=False)
     pq_filename = os.path.join(os.path.dirname(keys.dbase_name), os.path.basename(keys.dbase_name) + '_globals.parquet')
     globsall.to_parquet(pq_filename, index=False)
+
+    print('All done')
