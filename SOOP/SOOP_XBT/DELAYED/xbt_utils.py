@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.ma as ma
+import re
 
 
 class XbtException(Exception):
@@ -33,6 +34,11 @@ def invalid_to_ma_array(invalid_array, fillvalue=0):
     return array
 
 
+# Define a function to remove control characters
+def remove_control_chars(s):
+    return re.sub(r'[\x00-\x1F\x7F]', '', s)
+
+
 def decode_bytearray(byte_array):
     '''
     decode a numpy masked array of bytes into a regular string
@@ -55,25 +61,3 @@ def temp_prof_info(netcdf_file_obj):
         prof_type[i] = decode_bytearray(netcdf_file_obj['Prof_Type'][i])
 
     return prof_type
-
-
-def invalid_to_ma_array(invalid_array, fillvalue=0):
-    """
-    returns a masked array from an invalid XBT variable
-    """
-    masked = []
-    array  = []
-    for val in invalid_array:
-        val = [''.join(chr(x)) for x in bytearray(val)][0]
-        val = val.replace(' ', '')
-        if val == '' or  val == '\x00':
-            masked.append(True)
-            array.append(np.inf)
-        else:
-            masked.append(False)
-            array.append(int(val))
-
-    array = ma.array(array, mask=masked, fill_value=fillvalue)
-    array = ma.fix_invalid(array)
-    array = ma.array(array).astype(int)
-    return array

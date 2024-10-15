@@ -18,7 +18,7 @@ from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
 from configparser import ConfigParser
 
 # from local directory
-from xbt_utils import _error, invalid_to_ma_array, decode_bytearray, temp_prof_info
+from xbt_utils import _error, invalid_to_ma_array, decode_bytearray, temp_prof_info, remove_control_chars
 
 
 class XbtProfile(object):
@@ -236,15 +236,20 @@ def parse_globalatts_nc(profile):
     profile.global_atts = dict()
 
     # voyage/cruise identifier
-    profile.global_atts['XBT_cruise_ID'] = decode_bytearray(
-        profile.netcdf_file_obj.variables['Cruise_ID'][:]).strip()
+    vv = decode_bytearray(profile.netcdf_file_obj['Cruise_ID'][:])
+    # remove control characters from the cruise_id
+    profile.global_atts['XBT_cruise_ID'] = remove_control_chars(vv).strip()
+
     # which node the data entered into the GTS
-    profile.global_atts['XBT_gts_insertion_node'] = \
-        decode_bytearray(profile.netcdf_file_obj['Source_ID'][:]).replace('\x00', '').strip()
-    # source_id = 'AMMC' if source_id == '' else source_id
+    vv = decode_bytearray(profile.netcdf_file_obj['Source_ID'][:])
+    # remove control characters from the source_id
+    profile.global_atts['XBT_gts_insertion_node'] = remove_control_chars(vv).strip()
 
     # get the institution code from the first two characters of the Stream_Ident
-    institute = decode_bytearray(profile.netcdf_file_obj['Stream_Ident'][:]).strip()[:2]
+    institute = decode_bytearray(profile.netcdf_file_obj['Stream_Ident'][:])
+    # remove control characters from the stream_ident
+    institute = remove_control_chars(institute).strip()
+
     # create a dictionary of the institution codes
     institute_list = read_section_from_xbt_config('INSTITUTE')
     if institute in list(institute_list.keys()):
@@ -255,25 +260,38 @@ def parse_globalatts_nc(profile):
                        % (institute, profile.XBT_input_filename))
 
     for count in range(profile.nprof):
-        try:
-            profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = \
-                decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count]).replace('\x00', '').strip()
-            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] \
-                = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Standard'][count].data)).replace('\x00',
-                                                                                                              '').strip()
-        except:
+        vv = decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count])
+        if not vv or len(vv) == 0:
             profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = np.nan
             profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = np.nan
-    try:
-        profile.global_atts['XBT_predrop_comments'] \
-            = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['PreDropComments'][:].data)).replace(
-            '\x00', '').strip()
-        profile.global_atts['XBT_postdrop_comments'] \
-            = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['PostDropComments'][:].data)).replace(
-            '\x00', '').strip()
-    except:
-        profile.global_atts['XBT_predrop_comments'] = ''
-        profile.global_atts['XBT_postdrop_comments'] = ''
+        else:
+            # remove control characters from the digit_code
+            vv = int(remove_control_chars(vv).strip())
+            profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = vv
+
+        # now the same for the precision code
+        vv = decode_bytearray(profile.netcdf_file_obj['Standard'][count])
+        if not vv or len(vv) == 0:
+            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = np.nan
+        else:
+            # remove control characters from the standard
+            vv = int(remove_control_chars(vv).strip())
+            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = vv
+
+    # get predrop and postdrop comments
+    if 'PreDropComments' in profile.netcdf_file_obj.variables:
+        vv = decode_bytearray(profile.netcdf_file_obj['PreDropComments'][:])
+        if not vv or vv.ndim == 0:
+            profile.global_atts['XBT_predrop_comments'] = ''
+        else:
+            profile.global_atts['XBT_predrop_comments'] = remove_control_chars(vv).strip()
+
+    if 'PostDropComments' in profile.netcdf_file_obj.variables:
+        vv = decode_bytearray(profile.netcdf_file_obj['PostDropComments'][:])
+        if not vv or vv.ndim == 0:
+            profile.global_atts['XBT_postdrop_comments'] = ''
+        else:
+            profile.global_atts['XBT_postdrop_comments'] = remove_control_chars(vv).strip()
 
     profile.global_atts['geospatial_vertical_units'] = 'meters'
     profile.global_atts['geospatial_vertical_positive'] = 'down'
@@ -438,10 +456,15 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     profile_qc.data['LONGITUDE_RAW'] = np.round(lon_raw, 4)
 
     # position and time QC - check this is not empty. Assume 1 if it is
-    q_pos = int(profile_qc.netcdf_file_obj['Q_Pos'][0].data)
-    if not q_pos:
-        LOGGER.info('Missing LATITUDE or LONGITUDE QC, flagging position with flag 1 %s' % profile_qc.XBT_input_filename)
+    q_pos = profile_qc.netcdf_file_obj['Q_Pos'][0]
+    if not q_pos or q_pos.ndim == 0:
+        LOGGER.info(
+            'Missing LATITUDE or LONGITUDE QC, flagging position with flag 1 %s' % profile_qc.XBT_input_filename)
         q_pos = 1
+    else:
+        # Apply the function to each element in the masked array
+        q_pos = int(np.ma.array([remove_control_chars(str(item)) for item in q_pos.data], mask=q_pos.mask)[0])
+
     profile_qc.data['LATITUDE_quality_control'] = q_pos
     profile_qc.data['LONGITUDE_quality_control'] = q_pos
 
@@ -453,10 +476,14 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     woce_date_raw = profile_noqc.netcdf_file_obj['woce_date'][0]
     woce_time_raw = profile_noqc.netcdf_file_obj['woce_time'][0]
 
-    q_date_time = int(profile_qc.netcdf_file_obj['Q_Date_Time'][0])
-    if not q_date_time:
-        LOGGER.info('Missing TIME QC, flagging time with flag 1 %s' % profile_qc.XBT_input_filename)
+    q_date_time = profile_qc.netcdf_file_obj['Q_Date_Time'][0]
+    # remove control characters from the q_date_time
+    if not q_date_time or q_date_time.ndim == 0:
+        LOGGER.info('Missing TIME QC, flagging date with flag 1 %s' % profile_qc.XBT_input_filename)
         q_date_time = 1
+    else:
+        q_date_time = int(
+            np.ma.array([remove_control_chars(str(item)) for item in q_date_time.data], mask=q_date_time.mask)[0])
 
     # need to be a bit more specific as some times have missing padding at the end, some at the start.
     # could break if hour is 00 and there are no zeros!
@@ -860,8 +887,13 @@ def parse_histories_nc(profile):
     df = pd.DataFrame()
     nhist = int(profile.netcdf_file_obj['Num_Hists'][0].data)
 
-    df['HISTORY_QC_CODE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
+    # read the Act_Code and remove control characters
+    vv =  [''.join(chr(x) for x in bytearray(xx)).strip()
                              for xx in profile.netcdf_file_obj['Act_Code'][:].data if bytearray(xx).strip()]
+    vv = [remove_control_chars(str(x)) for x in vv]
+    # Remove empty strings from the list
+    vv = [x for x in vv if x]
+    df['HISTORY_QC_CODE'] = vv
 
     # nhist can sometimes be incorrect, so we need to check the length of the data
     if nhist != len(df['HISTORY_QC_CODE']):
