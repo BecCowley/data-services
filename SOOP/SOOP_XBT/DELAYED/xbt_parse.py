@@ -264,20 +264,20 @@ def parse_globalatts_nc(profile):
     for count in range(profile.nprof):
         vv = decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count])
         if not vv or len(vv) == 0:
-            profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = np.nan
-            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = np.nan
+            profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = ''
+            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = ''
         else:
             # remove control characters from the digit_code
-            vv = int(remove_control_chars(vv).strip())
+            vv = remove_control_chars(vv).strip()
             profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = vv
 
         # now the same for the precision code
         vv = decode_bytearray(profile.netcdf_file_obj['Standard'][count])
         if not vv or len(vv) == 0:
-            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = np.nan
+            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = ''
         else:
             # remove control characters from the standard
-            vv = int(remove_control_chars(vv).strip())
+            vv = remove_control_chars(vv).strip()
             profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = vv
 
     # get predrop and postdrop comments
@@ -702,21 +702,31 @@ def adjust_position_qc_flags(profile, profile_noqc):
             != np.round(profile.data['LONGITUDE_RAW'], 6)).any() or (
                 np.allclose(profile.data['LONGITUDE_RAW'], profile.data['LONGITUDE'], atol=0.01)):
 
-            # check if the profile_noqc history has a similar value within tolerance
-            if not np.allclose(float(profile.histories.loc[
-                                         profile.histories['HISTORY_QC_CODE'].str.contains(
-                                             'LOA'), 'HISTORY_PREVIOUS_VALUE'].values),
-                               float(profile_noqc.histories.loc[
-                                         profile_noqc.histories['HISTORY_QC_CODE'].str.contains(
-                                             'LOA'), 'HISTORY_PREVIOUS_VALUE'].values), atol=0.01):
-                LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_VALUE or the RAW PREVIOUS_VALUE! %s'
-                             % profile.XBT_input_filename)
-            else:
-                # set the LONGITUDE_RAW to the value in the noqc file
-                profile.data['LONGITUDE_RAW'] = np.round(float(profile_noqc.histories.loc[
-                                                                   profile_noqc.histories[
-                                                                       'HISTORY_QC_CODE'].str.contains(
-                                                                       'LOA'), 'HISTORY_PREVIOUS_VALUE'].values), 6)
+            # check if there are any histories in the noqc file
+            if len(profile_noqc.histories) > 0:
+                # is there LOA in the noqc file?
+                if not profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LOA').any():
+                    LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_VALUE! %s'
+                                 % profile.XBT_input_filename)
+                else:
+                    # check if the profile_noqc history has a similar value within tolerance
+                    if not np.allclose(float(profile.histories.loc[
+                                                profile.histories['HISTORY_QC_CODE'].str.contains(
+                                                    'LOA'), 'HISTORY_PREVIOUS_VALUE'].values),
+                                    float(profile_noqc.histories.loc[
+                                                profile_noqc.histories['HISTORY_QC_CODE'].str.contains(
+                                                    'LOA'), 'HISTORY_PREVIOUS_VALUE'].values), atol=0.01):
+                        LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_VALUE or the RAW PREVIOUS_VALUE! %s'
+                                    % profile.XBT_input_filename)
+                    else:
+                        # set the LONGITUDE_RAW to the value in the noqc file
+                        profile.data['LONGITUDE_RAW'] = np.round(float(profile_noqc.histories.loc[
+                                                                        profile_noqc.histories[
+                                                                            'HISTORY_QC_CODE'].str.contains(
+                                                                            'LOA'), 'HISTORY_PREVIOUS_VALUE'].values), 6)
+                        LOGGER.info('LONGITUDE_RAW not the same as the PREVIOUS_VALUE, setting to the RAW PREVIOUS_VALUE! %s'
+                                    % profile.XBT_input_filename)
+
         if profile.data['LONGITUDE_quality_control'] != 5:
             # PEA on longitude
             profile.data['LONGITUDE_quality_control'] = 5
