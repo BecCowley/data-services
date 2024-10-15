@@ -283,14 +283,14 @@ def parse_globalatts_nc(profile):
     # get predrop and postdrop comments
     if 'PreDropComments' in profile.netcdf_file_obj.variables:
         vv = decode_bytearray(profile.netcdf_file_obj['PreDropComments'][:])
-        if not vv or vv.ndim == 0:
+        if not vv or len(vv) == 0:
             profile.global_atts['XBT_predrop_comments'] = ''
         else:
             profile.global_atts['XBT_predrop_comments'] = remove_control_chars(vv).strip()
 
     if 'PostDropComments' in profile.netcdf_file_obj.variables:
         vv = decode_bytearray(profile.netcdf_file_obj['PostDropComments'][:])
-        if not vv or vv.ndim == 0:
+        if not vv or len(vv) == 0:
             profile.global_atts['XBT_postdrop_comments'] = ''
         else:
             profile.global_atts['XBT_postdrop_comments'] = remove_control_chars(vv).strip()
