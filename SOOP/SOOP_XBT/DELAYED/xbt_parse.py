@@ -106,8 +106,8 @@ class XbtKeys(object):
             station_number, istn = np.unique(station_number, return_index=True)
 
             # read in the position information
-            latitude = np.round(netcdf_file_obj['obslat'][:].data, 4)
-            longitude = np.round(netcdf_file_obj['obslng'][:].data, 4)
+            latitude = np.round(netcdf_file_obj['obslat'][:].data, 6)
+            longitude = np.round(netcdf_file_obj['obslng'][:].data, 6)
             # sort them as per the station number
             latitude = latitude[istn]
             longitude = longitude[istn]
@@ -431,8 +431,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     profile_qc.data = dict()
 
     # Location information
-    profile_qc.data['LATITUDE'] = np.round(profile_qc.netcdf_file_obj['latitude'][0].__float__(), 4)
-    profile_qc.data['LATITUDE_RAW'] = np.round(profile_noqc.netcdf_file_obj['latitude'][0].__float__(), 4)
+    profile_qc.data['LATITUDE'] = np.round(profile_qc.netcdf_file_obj['latitude'][0].__float__(), 6)
+    profile_qc.data['LATITUDE_RAW'] = np.round(profile_noqc.netcdf_file_obj['latitude'][0].__float__(), 6)
 
     # check if scale factor has been applied, shouldn't have a negative longitude:
     lon = profile_qc.netcdf_file_obj['longitude'][0].__float__()
@@ -447,13 +447,13 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     # Change the 360 degree longitude to degrees_east (0-180, -180 to 0)
     if lon > 180:
         lon = lon - 360
-    profile_qc.data['LONGITUDE'] = np.round(lon, 4)
+    profile_qc.data['LONGITUDE'] = np.round(lon, 6)
 
-    lon_raw = np.round(profile_noqc.netcdf_file_obj['longitude'][0].__float__(), 4)
+    lon_raw = np.round(profile_noqc.netcdf_file_obj['longitude'][0].__float__(), 6)
     # Change the 360 degree longitude to degrees_east (0-180, -180 to 0)
     if lon_raw > 180:
         lon_raw = lon_raw - 360
-    profile_qc.data['LONGITUDE_RAW'] = np.round(lon_raw, 4)
+    profile_qc.data['LONGITUDE_RAW'] = np.round(lon_raw, 6)
 
     # position and time QC - check this is not empty. Assume 1 if it is
     q_pos = profile_qc.netcdf_file_obj['Q_Pos'][0]
@@ -645,7 +645,7 @@ def adjust_position_qc_flags(profile, profile_noqc):
         if np.round(float(profile.histories.loc[
                               profile.histories['HISTORY_QC_CODE'].str.contains(
                                   'LAA'), 'HISTORY_PREVIOUS_VALUE'].values),
-                    4) != np.round(profile.data['LATITUDE_RAW'], 4):
+                    6) != np.round(profile.data['LATITUDE_RAW'], 6):
             LOGGER.error('LATITUDE_RAW not the same as the PREVIOUS_value! %s' % profile.XBT_input_filename)
         if profile.data['LATITUDE_quality_control'] != 5:
             # PEA on latitude
@@ -663,33 +663,38 @@ def adjust_position_qc_flags(profile, profile_noqc):
             # get the rows with LOA flags
             loa_rows = profile.histories[profile.histories['HISTORY_QC_CODE'].str.contains('LOA')]
             # do any of these PREVIOUS_VALUE match the profile_noqc.histories PREVIOUS_VALUE?
-            if np.any(np.round(loa_rows['HISTORY_PREVIOUS_VALUE'].values, 4) == np.round(profile_noqc.histories.loc[
+            if np.any(np.round(loa_rows['HISTORY_PREVIOUS_VALUE'].values, 6) == np.round(profile_noqc.histories.loc[
                                                                                              profile_noqc.histories[
                                                                                                  'HISTORY_QC_CODE'].str.contains(
                                                                                                  'LOA'), 'HISTORY_PREVIOUS_VALUE'].values,
-                                                                                         4)):
+                                                                                         6)):
                 # get the row where the PREVIOUS_VALUE matches the profile_noqc PREVIOUS_VALUE
                 loa_row = loa_rows[
-                    np.round(loa_rows['HISTORY_PREVIOUS_VALUE'].values, 4) == np.round(profile_noqc.histories.loc[
+                    np.round(loa_rows['HISTORY_PREVIOUS_VALUE'].values, 6) == np.round(profile_noqc.histories.loc[
                                                                                            profile_noqc.histories[
                                                                                                'HISTORY_QC_CODE'].str.contains(
                                                                                                'LOA'), 'HISTORY_PREVIOUS_VALUE'].values,
-                                                                                       4)]
+                                                                                       6)]
                 LOGGER.info(
                     'Duplicate LOA flags in original file, keeping the one where PREVIOUS_VALUE matches the RAW PREVIOUS_VALUE. %s' % profile.XBT_input_filename)
                 # drop the other rows
                 profile.histories = profile.histories.drop(loa_rows.index.difference(loa_row.index))
+                # check that there is only one LOA value now
+                if len(profile.histories[profile.histories['HISTORY_QC_CODE'].str.contains('LOA')]) > 1:
+                    LOGGER.error('Duplicate LOA flags in original file, none match the RAW PREVIOUS_VALUE! %s'
+                                 % profile.XBT_input_filename)
+                    exit(1)
             else:
                 LOGGER.error('Duplicate LOA flags in original file, none match the RAW PREVIOUS_VALUE! %s'
                              % profile.XBT_input_filename)
                 exit(1)
 
         # check HISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value
-        if np.round(float(profile.histories.loc[
-                              profile.histories['HISTORY_QC_CODE'].str.contains(
-                                  'LOA'), 'HISTORY_PREVIOUS_VALUE'].values),
-                    4) != np.round(profile.data['LONGITUDE_RAW'], 4) or (
-        np.allclose(profile.data['LONGITUDE_RAW'], profile.data['LONGITUDE'], atol=0.1)):
+        if (np.round(profile.histories.loc[
+                         profile.histories['HISTORY_QC_CODE'].str.contains(
+                             'LOA'), 'HISTORY_PREVIOUS_VALUE'].values, 6) \
+            != np.round(profile.data['LONGITUDE_RAW'], 6)).any() or (
+                np.allclose(profile.data['LONGITUDE_RAW'], profile.data['LONGITUDE'], atol=0.01)):
 
             # check if the profile_noqc history has a similar value within tolerance
             if not np.allclose(float(profile.histories.loc[
@@ -697,7 +702,7 @@ def adjust_position_qc_flags(profile, profile_noqc):
                                              'LOA'), 'HISTORY_PREVIOUS_VALUE'].values),
                                float(profile_noqc.histories.loc[
                                          profile_noqc.histories['HISTORY_QC_CODE'].str.contains(
-                                             'LOA'), 'HISTORY_PREVIOUS_VALUE'].values), atol=0.1):
+                                             'LOA'), 'HISTORY_PREVIOUS_VALUE'].values), atol=0.01):
                 LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_VALUE or the RAW PREVIOUS_VALUE! %s'
                              % profile.XBT_input_filename)
             else:
@@ -705,7 +710,7 @@ def adjust_position_qc_flags(profile, profile_noqc):
                 profile.data['LONGITUDE_RAW'] = np.round(float(profile_noqc.histories.loc[
                                                                    profile_noqc.histories[
                                                                        'HISTORY_QC_CODE'].str.contains(
-                                                                       'LOA'), 'HISTORY_PREVIOUS_VALUE'].values), 4)
+                                                                       'LOA'), 'HISTORY_PREVIOUS_VALUE'].values), 6)
         if profile.data['LONGITUDE_quality_control'] != 5:
             # PEA on longitude
             profile.data['LONGITUDE_quality_control'] = 5
@@ -1140,8 +1145,8 @@ def combine_histories(profile_qc, profile_noqc):
         # copy this information to the LONGITUDE_RAW value if it isn't the same
         if 'LOA' in profile_noqc.histories['HISTORY_QC_CODE'].values:
             if np.round(profile_noqc.histories.loc[profile_noqc.histories['HISTORY_QC_CODE'].str.contains('LOA'),
-            'HISTORY_PREVIOUS_VALUE'], 4).values != np.round(
-                profile_qc.data['LONGITUDE_RAW'], 4):
+            'HISTORY_PREVIOUS_VALUE'], 6).values != np.round(
+                profile_qc.data['LONGITUDE_RAW'], 6):
                 LOGGER.warning('HISTORY: Updating raw longitude to match the previous value in *raw.nc file. %s'
                                % profile_noqc.XBT_input_filename)
                 profile_qc.data['LONGITUDE_RAW'] = profile_noqc.histories.loc[
