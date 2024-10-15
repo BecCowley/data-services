@@ -196,12 +196,14 @@ def check_sums_of_temp_depth(profile_qc):
     # check that the sums of TEMP and TEMP_RAW and DEPTH and DEPTH_RAW are the same within a tolerance
     # check the sum of the TEMP and TEMP_RAW columns
     if not np.isclose(np.sum(profile_qc.data['data']['TEMP']), np.sum(profile_qc.data['data']['TEMP_RAW']), rtol=1e-3):
-        LOGGER.error('Please review. The sum of TEMP and TEMP_RAW are not the same in %s' % profile_qc.XBT_input_filename)
+        LOGGER.error(
+            'Please review. The sum of TEMP and TEMP_RAW are not the same in %s' % profile_qc.XBT_input_filename)
 
     # check the sum of the DEPTH and DEPTH_RAW columns
     if not np.isclose(np.sum(profile_qc.data['data']['DEPTH']), np.sum(profile_qc.data['data']['DEPTH_RAW']),
                       rtol=1e-3):
-        LOGGER.error('Please review. The sum of DEPTH and DEPTH_RAW are not the same in %s' % profile_qc.XBT_input_filename)
+        LOGGER.error(
+            'Please review. The sum of DEPTH and DEPTH_RAW are not the same in %s' % profile_qc.XBT_input_filename)
 
 
 def get_recorder_type(profile):
@@ -346,12 +348,13 @@ def parse_globalatts_nc(profile):
                     profile.global_atts[att_name] = profile.global_atts[att_name].replace(' ', '')
             except ValueError:
                 LOGGER.warning(
-                    '"%s = %s" could not be converted to %s(). Please review. %s' % (att_name, profile.global_atts[att_name],
-                                                                  att_type.upper()), profile.XBT_input_filename)
+                    '"%s = %s" could not be converted to %s(). Please review. %s' % (
+                    att_name, profile.global_atts[att_name],
+                    att_type.upper()), profile.XBT_input_filename)
         else:
             if srfc_code_iter != '':
                 LOGGER.warning('%s code is not defined in srfc_code in xbt_config file. Please edit xbt_config %s'
-                               %(srfc_code_iter, profile.XBT_input_filename))
+                               % (srfc_code_iter, profile.XBT_input_filename))
 
     # if the platform code didn't come through, assign unknown type
     if 'Platform_code' not in profile.global_atts.keys():
@@ -374,13 +377,15 @@ def parse_globalatts_nc(profile):
             difflib.get_close_matches(profile.global_atts['Platform_code'], ships, n=1, cutoff=0.8)[0]
         profile.global_atts['ship_name'] = ships[profile.global_atts['Callsign']][0]
         profile.global_atts['ship_IMO'] = ships[profile.global_atts['Callsign']][1]
-        LOGGER.warning('PLATFORM_CODE: Vessel call sign %s seems to be wrong. Using the closest match to the AODN vocabulary: %s %s' % (
-            profile.global_atts['Platform_code'], profile.global_atts['Callsign'], profile.XBT_input_filename))
+        LOGGER.warning(
+            'PLATFORM_CODE: Vessel call sign %s seems to be wrong. Using the closest match to the AODN vocabulary: %s %s' % (
+                profile.global_atts['Platform_code'], profile.global_atts['Callsign'], profile.XBT_input_filename))
     else:
         profile.global_atts['ship_name'] = 'Unknown'
         profile.global_atts['ship_IMO'] = 'Unknown'
-        LOGGER.warning('PLATFORM_CODE: Vessel call sign %s is unknown in AODN vocabulary, Please contact info@aodn.org.au. %s' %
-                       (profile.global_atts['Platform_code'], profile.XBT_input_filename))
+        LOGGER.warning(
+            'PLATFORM_CODE: Vessel call sign %s is unknown in AODN vocabulary, Please contact info@aodn.org.au. %s' %
+            (profile.global_atts['Platform_code'], profile.XBT_input_filename))
 
     # extract the information and assign correctly
     att_name = 'XBT_recorder_type'
@@ -556,8 +561,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 invalid_to_ma_array(prof_flag, fillvalue=99))  # replace masked values for IMOS IODE flags
             # if the size of the array isn't equal to the number of depths, adjust here
             if len(prof) != ndeps[ivar]:
-                LOGGER.warning('Resizing TEMP and DEPTH arrays to the number of depths recorded in original MQNC file. %s'
-                               % s.XBT_input_filename)
+                LOGGER.warning(
+                    'Resizing TEMP and DEPTH arrays to the number of depths recorded in original MQNC file. %s'
+                    % s.XBT_input_filename)
                 prof = np.ma.resize(prof, ndeps[ivar])
                 prof_flag = np.ma.resize(prof_flag, ndeps[ivar])
                 dep = np.ma.resize(dep, ndeps[ivar])
@@ -725,7 +731,7 @@ def adjust_position_qc_flags(profile, profile_noqc):
         profile.data['LONGITUDE_quality_control'] = 3
         profile.data['LATITUDE_quality_control'] = 3
         LOGGER.info('Position Reject (PER) in original file, changing LONGITUDE & LATITUDE flags to level 3.%s'
-                        % profile.XBT_input_filename)
+                    % profile.XBT_input_filename)
         # change to flag 3 for temperature for all depths where qc is less than 3
         mask = df['TEMP_quality_control'] < 3
         df.loc[mask, 'TEMP_quality_control'] = 3
@@ -749,7 +755,7 @@ def adjust_time_qc_flags(profile):
         # TEA
         profile.data['TIME_quality_control'] = 5
         LOGGER.info('TIME correction (TEA) in original file, changing TIME flag to level 5.%s'
-                        % profile.XBT_input_filename)
+                    % profile.XBT_input_filename)
         # change to flag 2 for temperature for all depths where qc is less than 2
 
         profile.data['data'].loc[profile.data['data']['TEMP_quality_control'] < 2, 'TEMP_quality_control'] = 2
@@ -759,7 +765,7 @@ def adjust_time_qc_flags(profile):
                                   'TEA'), 'HISTORY_PREVIOUS_VALUE'].values, format='%Y%m%d%H%M%S') != \
                 profile.data['TIME_RAW']:
             LOGGER.error('TIME_RAW not the same as the PREVIOUS_VALUE! %s'
-                        % profile.XBT_input_filename)
+                         % profile.XBT_input_filename)
 
     return profile
 
@@ -933,7 +939,8 @@ def parse_histories_nc(profile):
         # convert only the CSIRO codes, find any institution codes that are not 'CS'
         if not df['HISTORY_INSTITUTION'].str.contains('CS').all():
             LOGGER.warning('HISTORY_INSTITUTION code for some flags is not CSIRO, contains %s %s' %
-                           (df.loc[~df['HISTORY_INSTITUTION'].str.contains('CS'), 'HISTORY_INSTITUTION'].unique(), profile.XBT_input_filename))
+                           (df.loc[~df['HISTORY_INSTITUTION'].str.contains('CS'), 'HISTORY_INSTITUTION'].unique(),
+                            profile.XBT_input_filename))
             # remove any codes that are not CSIRO
             df = df[df['HISTORY_INSTITUTION'].str.contains('CS')]
             nhist = len(df)
@@ -1079,8 +1086,9 @@ def parse_histories_nc(profile):
                     df.loc[(df['HISTORY_QC_CODE'].str.contains('FSR')), ['HISTORY_QC_CODE',
                                                                          'HISTORY_TEMP_QC_CODE_VALUE']] = 'FSA', 2
                 else:
-                    LOGGER.error('HISTORY_QC_CODE_VALUE is not 2 at the same depth as FSR flag, not changing it to FSA. %s'
-                                 % profile.XBT_input_filename)
+                    LOGGER.error(
+                        'HISTORY_QC_CODE_VALUE is not 2 at the same depth as FSR flag, not changing it to FSA. %s'
+                        % profile.XBT_input_filename)
 
         # Change the PEA flag to LA or LO and ensure the TEMP_QC_CODE_VALUE is set to 2, not 5
         df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
@@ -1122,9 +1130,8 @@ def parse_histories_nc(profile):
             df.loc[((df['HISTORY_PARAMETER'].str.contains('DATE') | df['HISTORY_PARAMETER'].str.contains('TIME')) &
                     (df['HISTORY_QC_CODE'].str.contains('TEA'))), ['HISTORY_PARAMETER']] = 'TIME'
 
-            # remove any duplicated lines
-            df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_PREVIOUS_VALUE'])
-                      & df.HISTORY_PARAMETER.eq('TIME'))]
+    # remove any duplicated lines for any code
+    df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_PREVIOUS_VALUE', 'HISTORY_START_DEPTH']))]
 
     # assign the dataframe back to profile at this stage
     profile.histories = df
@@ -1219,7 +1226,7 @@ def restore_temp_val(profile):
             # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value
             profile.histories.loc[idx, 'HISTORY_PREVIOUS_VALUE'] = df['TEMP_RAW'][ind]
             LOGGER.info('Updated HISTORY_PREVIOUS_VALUE for CS flags %s'
-                                 % profile.XBT_input_filename)
+                        % profile.XBT_input_filename)
             # update the TEMP values
             df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
             # update profile data
@@ -1311,8 +1318,9 @@ def create_flag_feature(profile):
         (non_temp_mapcodes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False))].index
     if len(idx) > 0:
         # TODO: if DEPTH is duplicated, check the previous value is the same as the DEPTH_RAW value, will need indexing
-        LOGGER.warning('HISTORY: Duplicate QC code encountered, and removed in create_flag_feature: %s. Please review %s'
-                       % (non_temp_mapcodes.loc[idx, 'HISTORY_QC_CODE'].unique(), profile.XBT_input_filename))
+        LOGGER.warning(
+            'HISTORY: Duplicate QC code encountered, and removed in create_flag_feature: %s. Please review %s'
+            % (non_temp_mapcodes.loc[idx, 'HISTORY_QC_CODE'].unique(), profile.XBT_input_filename))
         # duplicates have to be one of the names variables, check the previous value against the *_RAW value
         var = non_temp_mapcodes['HISTORY_PARAMETER'][idx].unique()[0] + '_RAW'
         if var not in ['LONGITUDE_RAW', 'TIME_RAW']:
@@ -1431,11 +1439,13 @@ def check_nc_to_be_created(profile):
         return False
 
     if duplicate_flag == 'D':
-        LOGGER.error('Profile not processed. Tagged as duplicate in original netcdf file %s' % profile.XBT_input_filename)
+        LOGGER.error(
+            'Profile not processed. Tagged as duplicate in original netcdf file %s' % profile.XBT_input_filename)
         return False
 
     if 'DU' in histcodes:
-        LOGGER.error('Profile not processed. Tagged as test probe in original netcdf file %s' % profile.XBT_input_filename)
+        LOGGER.error(
+            'Profile not processed. Tagged as test probe in original netcdf file %s' % profile.XBT_input_filename)
         return False
 
     data_vars = temp_prof_info(profile.netcdf_file_obj)
@@ -1566,8 +1576,8 @@ if __name__ == '__main__':
     globsall = pd.DataFrame()
 
     for f in keys.data['station_number']:
-        # if f != 64076660:
-        #       continue
+        if f != 88127762:
+            continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)
         # make input_filename here
