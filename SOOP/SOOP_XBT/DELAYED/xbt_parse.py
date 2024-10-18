@@ -552,29 +552,52 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 depcode = 'depth'
             else:
                 depcode = 'press'
-            dep = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 2)
+            dep = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 4)
+            # resize the arrays to eliminate empty values
+            dep = np.ma.masked_array(dep.compressed())
             depth_press_flag = s.netcdf_file_obj.variables['DepresQ'][ivar, :, 0].flatten()
+            # resize the arrays to eliminate empty values
+            depth_press_flag = np.ma.masked_array(depth_press_flag.compressed())
             qc = np.ma.masked_array(
                 invalid_to_ma_array(depth_press_flag, fillvalue=0))
 
-            prof = np.ma.masked_values(
-                np.round(s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0], 2),
-                99.99)  # mask the 99.99 from CSA flagging of TEMP
+            prof = np.round(s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0], 4)
+            # resize the arrays to eliminate empty values
+            prof = np.ma.masked_array(prof.compressed())
+            # mask the 99.99 from CSA flagging of TEMP
+            prof = np.ma.masked_where(prof == 99.99, prof)
             prof = np.ma.masked_invalid(prof)  # mask nan and inf values
             prof.set_fill_value(999999)
 
             prof_flag = s.netcdf_file_obj.variables['ProfQP'][ivar, 0, :, 0, 0].flatten()
+            # resize the arrays to eliminate empty values
+            prof_flag = np.ma.masked_array(prof_flag.compressed())
             prof_flag = np.ma.masked_array(
                 invalid_to_ma_array(prof_flag, fillvalue=99))  # replace masked values for IMOS IODE flags
             # if the size of the array isn't equal to the number of depths, adjust here
-            if len(prof) != ndeps[ivar]:
+            if ((len(prof) != ndeps[ivar]) or (len(prof) != len(dep)) or (len(prof) != len(prof_flag)) or
+                    (len(prof) != len(qc))):
                 LOGGER.warning(
                     'Resizing TEMP and DEPTH arrays to the number of depths recorded in original MQNC file. %s'
                     % s.XBT_input_filename)
-                prof = np.ma.resize(prof, ndeps[ivar])
-                prof_flag = np.ma.resize(prof_flag, ndeps[ivar])
-                dep = np.ma.resize(dep, ndeps[ivar])
-                qc = np.ma.resize(qc, ndeps[ivar])
+                # Create a new array of the desired size filled with NaN
+                resized_prof = np.full(ndeps[ivar], np.nan)
+                # Copy the original values into the new array
+                resized_prof[:len(prof)] = prof
+                prof = resized_prof
+                # repeat for prof_flag
+                resized_prof = np.full(ndeps[ivar], np.nan)
+                resized_prof[:len(prof_flag)] = prof_flag
+                prof_flag = resized_prof
+                # and for dep
+                resized_prof = np.full(ndeps[ivar], np.nan)
+                resized_prof[:len(dep)] = dep
+                dep = resized_prof
+                # and for qc
+                resized_prof = np.full(ndeps[ivar], np.nan)
+                resized_prof[:len(qc)] = qc
+                qc = resized_prof
+
             df[var + depcode] = dep
             df[var + depcode + '_quality_control'] = qc
             df[var] = prof
