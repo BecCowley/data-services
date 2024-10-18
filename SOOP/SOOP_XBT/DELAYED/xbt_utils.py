@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.ma as ma
-import re
+import re, os
+import pandas as pd
 
 
 class XbtException(Exception):
@@ -10,6 +11,21 @@ class XbtException(Exception):
 def _error(message):
     """ Raise an exception with the given message."""
     raise XbtException('{message}'.format(message=message))
+
+def read_qc_config():
+    # set up a dataframe of the codes and their values
+    # codes from the new cookbook, read from csv file
+    # Specify the file path
+    a_file_path = os.path.join(os.path.dirname(__file__), 'xbt_accept_code.csv')
+    r_file_path = os.path.join(os.path.dirname(__file__), 'xbt_reject_code.csv')
+
+    # Read the CSV file and convert it to a DataFrame
+    dfa = pd.read_csv(a_file_path)
+    dfr = pd.read_csv(r_file_path)
+    # merge the two dataframes
+    df = pd.concat([dfa, dfr])
+
+    return df
 
 
 def invalid_to_ma_array(invalid_array, fillvalue=0):
