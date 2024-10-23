@@ -1613,7 +1613,7 @@ if __name__ == '__main__':
             if check_nc_to_be_created(profile_ed):
                 # for example where depths are different, metadata is different etc between the ed and raw files.
                 profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo)
-                if profile_ed is None:
+                if not profile_ed:
                     continue
                 profile_df, globals_df = make_dataframe(profile_ed, profile_raw, profile_turo)
                 # add the station number to the dataframe
