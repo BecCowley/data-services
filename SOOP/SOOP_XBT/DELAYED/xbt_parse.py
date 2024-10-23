@@ -186,7 +186,7 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     # Probe type goes into a variable with coefficients as attributes, and assign QC to probe types
     profile_qc = get_fallrate_eq_coef(profile_qc, profile_noqc)
     # if probetype is not XBT return empty profile_qc
-    if profile_qc.global_atts['XBT_probe_type'] == '':
+    if profile_qc.data['PROBE_TYPE'] == '':
         return []
 
     # check that the sums of TEMP and TEMP_RAW and DEPTH and DEPTH_RAW are the same within a tolerance
@@ -841,7 +841,7 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
             # is it in the PEQ list
             elif item_val in list(peq_list.keys()) and item_val not in list(fre_list.keys()):
                 LOGGER.warning('PROBE_TYPE %s is not an XBT type, not converted' % item_val)
-                profile_qc.PROBE_TYPE = ''
+                profile_qc.data['PROBE_TYPE'] = ''
                 # this is not an XBT
                 return profile_qc
             elif item_val not in list(fre_list.keys()):
