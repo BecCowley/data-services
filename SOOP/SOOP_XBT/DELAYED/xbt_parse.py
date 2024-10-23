@@ -251,7 +251,7 @@ def parse_globalatts_nc(profile):
     profile.global_atts['XBT_gts_insertion_node'] = remove_control_chars(vv).strip()
 
     # get the institution code from the first two characters of the Stream_Ident
-    institute = decode_bytearray(profile.netcdf_file_obj['Stream_Ident'][:])
+    institute = decode_bytearray(profile.netcdf_file_obj['Stream_Ident'][:2])
     # remove control characters from the stream_ident
     institute = remove_control_chars(institute).strip()
 
