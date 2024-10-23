@@ -1160,7 +1160,7 @@ def combine_histories(profile_qc, profile_noqc):
                     print('HISTORY: Duplicate %s flags found, need to troubleshoot. %s' % (vv, profile_qc.XBT_input_filename))
                     exit(1)
                     # find the first flag looking at HISTORY_DATE
-                    idx = combined_histories.loc[combined_histories['HISTORY_PARAMETER'].str.contains(vv),
+                    idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
                         'HISTORY_DATE'].idxmin()
                     if len(idx) > 0:
                         LOGGER.warning('PREVIOUS_VALUE is not the same as the %s value, removed from the dataset %s'
@@ -1183,22 +1183,22 @@ def combine_histories(profile_qc, profile_noqc):
                     LOGGER.warning(
                         'HISTORY: Multiple %s flags found in the noqc file. %s' % (vv, profile_noqc.XBT_input_filename))
                     # find the first flag looking at HISTORY_DATE
-                    idx = combined_histories.loc[combined_histories['HISTORY_PARAMETER'].str.contains(vv),
+                    idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
                         'HISTORY_DATE'].idxmin()
                     # remove the other LOA flags
-                    combined_histories = combined_histories.drop(
-                        combined_histories.loc[
-                            combined_histories['HISTORY_PARAMETER'].str.contains(vv)].index.difference(
+                    non_temp_codes = non_temp_codes.drop(
+                        non_temp_codes.loc[
+                            non_temp_codes['HISTORY_PARAMETER'].str.contains(vv)].index.difference(
                             [idx]))
 
             # copy this information to the PARAMETER_RAW value if it isn't the same
-            if np.round(combined_histories.loc[combined_histories['HISTORY_PARAMETER'].str.contains(vv),
+            if np.round(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
             'HISTORY_PREVIOUS_VALUE'].values, 6) != np.round(
                 profile_qc.data[var], 6):
                 LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
                                % (vv, profile_qc.XBT_input_filename))
-                profile_qc.data[var] = combined_histories.loc[
-                    combined_histories['HISTORY_PARAMETER'].str.contains(vv), 'HISTORY_PREVIOUS_VALUE'].values[
+                profile_qc.data[var] = non_temp_codes.loc[
+                    non_temp_codes['HISTORY_PARAMETER'].str.contains(vv), 'HISTORY_PREVIOUS_VALUE'].values[
                     0]
 
         # Filter the rows where HISTORY_PARAMETER is TEMP
