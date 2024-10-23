@@ -185,6 +185,9 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
 
     # Probe type goes into a variable with coefficients as attributes, and assign QC to probe types
     profile_qc = get_fallrate_eq_coef(profile_qc, profile_noqc)
+    # if probetype is not XBT return empty profile_qc
+    if profile_qc.global_atts['XBT_probe_type'] == '':
+        return []
 
     # check that the sums of TEMP and TEMP_RAW and DEPTH and DEPTH_RAW are the same within a tolerance
     # check_sums_of_temp_depth(profile_qc)
@@ -835,6 +838,12 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
             if item_val in list(ptyp_list.keys()) and item_val not in list(fre_list.keys()):
                 # old PTYP surface code, need to match up PEQ$code
                 item_val = ptyp_list[item_val]
+            # is it in the PEQ list
+            elif item_val in list(peq_list.keys()) and item_val not in list(fre_list.keys()):
+                LOGGER.warning('PROBE_TYPE %s is not an XBT type, not converted' % item_val)
+                profile_qc.PROBE_TYPE = ''
+                # this is not an XBT
+                return profile_qc
             elif item_val not in list(fre_list.keys()):
                 # record the orignal value
                 profile_qc.global_atts[vv[ind] + '_origname'] = item_val
@@ -1604,6 +1613,8 @@ if __name__ == '__main__':
             if check_nc_to_be_created(profile_ed):
                 # for example where depths are different, metadata is different etc between the ed and raw files.
                 profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo)
+                if profile_ed is None:
+                    continue
                 profile_df, globals_df = make_dataframe(profile_ed, profile_raw, profile_turo)
                 # add the station number to the dataframe
                 profile_df['station_number'] = f
