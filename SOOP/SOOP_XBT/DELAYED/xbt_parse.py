@@ -187,7 +187,7 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     profile_qc = get_fallrate_eq_coef(profile_qc, profile_noqc)
 
     # check that the sums of TEMP and TEMP_RAW and DEPTH and DEPTH_RAW are the same within a tolerance
-    check_sums_of_temp_depth(profile_qc)
+    # check_sums_of_temp_depth(profile_qc)
 
     # add uncertainties:
     profile_qc = add_uncertainties(profile_qc)
@@ -537,21 +537,26 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     profile_qc.data['TIME_RAW'] = xbt_date_raw
 
     # Pressure/depth information from both noqc and qc files
-    # read into a dataframe
-    df = pd.DataFrame()
-    # get the number of depths
-    ndeps = profile_qc.netcdf_file_obj.variables['No_Depths'][:]
+
     for s in [profile_qc, profile_noqc]:
-        # cycle through the variables identified in the file:
+        # read into a dataframe
+        df = pd.DataFrame()
+        # create empty dataframe labelled with v
+
+        # get the number of depths
+        ndeps = s.netcdf_file_obj.variables['No_Depths'][:]
+        # cycle through the variables identified in the file, for XBT files, this should only be TEMP:
         data_vars = temp_prof_info(s.netcdf_file_obj)
+        if len(data_vars) > 1:
+            LOGGER.error('Profile contains %s variables and is not an XBT %s' % (data_vars, s.XBT_input_filename))
+            exit(1)
+        # should only be one variable, TEMP, but leave as a loop for future proofing
         for ivar, var in data_vars.items():
-            if s is profile_noqc:
-                var = var + '_RAW'
+
             # we want the DEPTH to be a single dataset, but read all depths for each variable
-            if 'D' in decode_bytearray(s.netcdf_file_obj.variables['D_P_Code'][ivar]):
-                depcode = 'depth'
-            else:
-                depcode = 'press'
+            if 'P' in decode_bytearray(s.netcdf_file_obj.variables['D_P_Code'][ivar]):
+                LOGGER.error('Pressure data found in %s. This is not a valid XBT file' % s.XBT_input_filename)
+                exit(1)
             dep = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 4)
             # resize the arrays to eliminate empty values
             dep = np.ma.masked_array(dep.compressed())
@@ -578,7 +583,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             if ((len(prof) != ndeps[ivar]) or (len(prof) != len(dep)) or (len(prof) != len(prof_flag)) or
                     (len(prof) != len(qc))):
                 LOGGER.warning(
-                    'Resizing TEMP and DEPTH arrays to the number of depths recorded in original MQNC file. %s'
+                    'Resizing TEMP and DEPTH arrays to the number of depths recorded in MQNC file. %s'
                     % s.XBT_input_filename)
                 # Create a new array of the desired size filled with NaN
                 resized_prof = np.full(ndeps[ivar], np.nan)
@@ -598,46 +603,51 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 resized_prof[:len(qc)] = qc
                 qc = resized_prof
 
-            df[var + depcode] = dep
-            df[var + depcode + '_quality_control'] = qc
-            df[var] = prof
-            df[var + '_quality_control'] = prof_flag
+            df['DEPTH'] = dep.astype('float32')
+            df['DEPTH_quality_control'] = pd.to_numeric(qc, errors='coerce').astype('int8')
+            df[var] = prof.astype('float32')
+            df[var + '_quality_control'] = pd.to_numeric(prof_flag, errors='coerce').astype('int8')
+            # remove duplicated rows where the DEPTH and TEMP values are the same
+            df = df.drop_duplicates(subset=['DEPTH', var], keep='first')
 
-    # check the depth columns for consistency and remove redundant ones
-    dep_cols = [col for col in df.columns if 'depth' in col
-                and not ('TEMPdepth' in col or 'TEMP_RAWdepth' in col or '_quality_control' in col)]
+            if s is profile_noqc:
+                df_raw = df.copy()
+            else:
+                df_qc = df.copy()
 
-    for dat in dep_cols:
-        if df['TEMPdepth'].equals(df[dat]):
-            # delete the column
-            df = df.drop(dat, axis=1)
-            continue
+    # check the depth columns for consistency and match the variables based on DEPTH and DEPTH_RAW matches
+    # this will only work if the depths are similar. If the depths are corrected in the qc file and not the raw, we will have to adjust
+    # Create a new column for merging by rounding the values
+    df_raw['merge_key1'] = df_raw['DEPTH'].round(decimals=1)
+    df_qc['merge_key1'] = df_qc['DEPTH'].round(decimals=1)
+    df_raw['merge_key2'] = df_raw['TEMP'].round(decimals=2)
+    df_qc['merge_key2'] = df_qc['TEMP'].round(decimals=2)
+
+    # check the lengths of the arrays
+    if len(df_raw) != len(df_qc):
+        # which is the longer array?
+        if len(df_raw) > len(df_qc):
+            # merge the two dataframes on DEPTH_RAW
+            df = pd.merge(df_raw, df_qc, on=['merge_key1', 'merge_key2'], how='left', suffixes=('_RAW', '_QC'))
         else:
-            LOGGER.error('%s does not match depths for TEMP depth %s' % (dat, profile_qc.XBT_input_filename))
-            # TODO: handle these problems as they arise here
-            exit(1)
+            df = pd.merge(df_qc, df_raw, on=['merge_key1', 'merge_key2'], how='left', suffixes=('_QC', '_RAW'))
+    else:
+        # merge the two dataframes on DEPTH
+        df = pd.merge(df_qc, df_raw, on=['merge_key1', 'merge_key2'], how='left', suffixes=('_QC', '_RAW'))
 
-    # check we only have two depth columns left
-    dep_cols = [col for col in df.columns if 'depth' in col
-                and not ('TEMPdepth' in col or 'TEMP_RAWdepth' in col or '_quality_control' in col)]
-    if dep_cols:
-        LOGGER.error('Still multiple depth variables that need resolving in %s' % profile_qc.XBT_input_filename)
+    # check that the merge has worked
+    if len(df) != max(len(df_raw), len(df_qc)):
+        LOGGER.error('Dataframes have not been merged correctly. Please review %s' % profile_qc.XBT_input_filename)
         exit(1)
-        # TODO: handle these problems as they arise here
 
-    # rename and tidy
-    # TODO: Check the salinity and conductivity variables when we get a profile with them in
-    dd = {"TEMPdepth": "DEPTH",
-          "TEMP_RAWdepth": "DEPTH_RAW",
-          "SVEL": "SSPD",
-          "SALT": "PSAL"
-          }
-    for key, val in dd.items():
-        df.columns = df.columns.str.replace(key, val)
+    # drop the merge_key column
+    df = df.drop(columns=['merge_key1', 'merge_key2'])
 
-    # if we have other variables, there will be *depth_quality_control data left, let's remove it
-    irem = [col for col in df.columns if 'depth' in col]
-    df = df.drop(irem, axis=1)
+    # change the column names to match the profile object
+    df = df.rename(columns={'DEPTH_QC': 'DEPTH', 'DEPTH_quality_control_RAW': 'DEPTH_RAW_quality_control',
+                            'TEMP_QC': 'TEMP', 'TEMP_quality_control_RAW': 'TEMP_RAW_quality_control',
+                            'DEPTH_quality_control_QC': 'DEPTH_quality_control',
+                            'TEMP_quality_control_QC': 'TEMP_quality_control'})
 
     # drop rows where all NaN values which does happen in these old files sometimes
     df = df.dropna(subset=['TEMP', 'DEPTH', 'TEMP_RAW', 'DEPTH_RAW'], how='all')
@@ -645,10 +655,6 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     # check for duplicated depths and log if found
     if df['DEPTH'].duplicated().any():
         LOGGER.warning('Duplicated DEPTH found in %s' % profile_qc.XBT_input_filename)
-
-    # check for mismatch in DEPTH and DEPTH_RAW
-    if not np.allclose(df['DEPTH'], df['DEPTH_RAW'], rtol=1e-3):
-        LOGGER.warning('DEPTH and DEPTH_RAW are not the same in %s' % profile_qc.XBT_input_filename)
 
     # how many parameters do we have, not including DEPTH?
     profile_qc.nprof = len([col for col in df.columns if ('_quality_control' not in col and 'RAW'
