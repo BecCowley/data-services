@@ -547,7 +547,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
         # create empty dataframe labelled with v
 
         # get the number of depths
-        ndeps = s.netcdf_file_obj.variables['No_Depths'][:]
+        ndeps = s.netcdf_file_obj.variables['No_Depths'][:][0]
         # cycle through the variables identified in the file, for XBT files, this should only be TEMP:
         data_vars = temp_prof_info(s.netcdf_file_obj)
         if len(data_vars) > 1:
@@ -563,11 +563,24 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             dep = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 4)
             # resize the arrays to eliminate empty values
             dep = np.ma.masked_array(dep.compressed())
+            # if the size of the depth array is not the same as ndeps, change ndeps
+            if len(dep) != ndeps:
+                ndeps = len(dep)
             depth_press_flag = s.netcdf_file_obj.variables['DepresQ'][ivar, :, 0].flatten()
             # resize the arrays to eliminate empty values
             depth_press_flag = np.ma.masked_array(depth_press_flag.compressed())
             qc = np.ma.masked_array(
                 invalid_to_ma_array(depth_press_flag, fillvalue=0))
+            # if the size of the array isn't equal to the number of depths, adjust here
+            if len(qc) != ndeps:
+                if len(qc) < ndeps:
+                    # Create a new array of the desired size filled with NaN
+                    resized_qc = np.full(ndeps, np.nan)
+                    resized_qc[:len(qc)] = qc
+                    qc = resized_qc
+                else:
+                    # qc is bigger than the number of depths, so resize the qc
+                    qc = qc[:ndeps]
 
             prof = np.round(s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0], 4)
             # resize the arrays to eliminate empty values
@@ -582,29 +595,24 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             prof_flag = np.ma.masked_array(prof_flag.compressed())
             prof_flag = np.ma.masked_array(
                 invalid_to_ma_array(prof_flag, fillvalue=99))  # replace masked values for IMOS IODE flags
-            # if the size of the array isn't equal to the number of depths, adjust here
-            if ((len(prof) != ndeps[ivar]) or (len(prof) != len(dep)) or (len(prof) != len(prof_flag)) or
-                    (len(prof) != len(qc))):
-                LOGGER.warning(
-                    'Resizing TEMP and DEPTH arrays to the number of depths recorded in MQNC file. %s'
-                    % s.XBT_input_filename)
-                # Create a new array of the desired size filled with NaN
-                resized_prof = np.full(ndeps[ivar], np.nan)
-                # Copy the original values into the new array
-                resized_prof[:len(prof)] = prof
-                prof = resized_prof
-                # repeat for prof_flag
-                resized_prof = np.full(ndeps[ivar], np.nan)
-                resized_prof[:len(prof_flag)] = prof_flag
-                prof_flag = resized_prof
-                # and for dep
-                resized_prof = np.full(ndeps[ivar], np.nan)
-                resized_prof[:len(dep)] = dep
-                dep = resized_prof
-                # and for qc
-                resized_prof = np.full(ndeps[ivar], np.nan)
-                resized_prof[:len(qc)] = qc
-                qc = resized_prof
+            # if the size of the TEMP isn't equal to the number of depths, exit
+            if (len(prof) != ndeps):
+                LOGGER.error('Profile %s has %s depths but %s values for %s' % (s.XBT_input_filename, ndeps, len(prof), var))
+                exit(1)
+            if len(prof_flag) != ndeps:
+                if len(prof_flag) < ndeps:
+                    LOGGER.warning(
+                        'Resizing %s and %s arrays to the number of depths recorded in MQNC file. %s' % (var, var, s.XBT_input_filename))
+                    # Create a new array of the desired size filled with NaN
+                    resized_prof = np.full(ndeps, np.nan)
+                    resized_prof[:len(prof)] = prof
+                    prof = resized_prof
+                    resized_prof_flag = np.full(ndeps, np.nan)
+                    resized_prof_flag[:len(prof_flag)] = prof_flag
+                    prof_flag = resized_prof_flag
+                else:
+                    # prof_flag is bigger than the number of depths, so resize the qc
+                    prof_flag = prof_flag[:ndeps]
 
             df['DEPTH'] = dep.astype('float32')
             df['DEPTH_quality_control'] = pd.to_numeric(qc, errors='coerce').astype('int8')
