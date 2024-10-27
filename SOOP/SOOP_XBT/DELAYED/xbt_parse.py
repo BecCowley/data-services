@@ -1216,14 +1216,25 @@ def combine_histories(profile_qc, profile_noqc):
                             [idx]))
 
             # copy this information to the PARAMETER_RAW value if it isn't the same
-            if np.round(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
-            'HISTORY_PREVIOUS_VALUE'].values, 6) != np.round(
-                profile_qc.data[var], 6):
-                LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
-                               % (vv, profile_qc.XBT_input_filename))
-                profile_qc.data[var] = non_temp_codes.loc[
-                    non_temp_codes['HISTORY_PARAMETER'].str.contains(vv), 'HISTORY_PREVIOUS_VALUE'].values[
-                    0]
+            if vv not in ['TIME']:
+                if np.round(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
+                'HISTORY_PREVIOUS_VALUE'].values, 6) != np.round(
+                    profile_qc.data[var], 6):
+                    LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
+                                   % (vv, profile_qc.XBT_input_filename))
+                    profile_qc.data[var] = non_temp_codes.loc[
+                        non_temp_codes['HISTORY_PARAMETER'].str.contains(vv), 'HISTORY_PREVIOUS_VALUE'].values[
+                        0]
+            else:
+                # TIME_RAW is in datetime format and HISTORY_PREVIOUS_VALUE is in float format
+                # convert the HISTORY_PREVIOUS_VALUE to a datetime object
+                prevval = datetime.strptime(str(int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
+                    'HISTORY_PREVIOUS_VALUE'].values[0])), '%Y%m%d%H%M%S')
+                # check the previous value is the same as the TIME_RAW value
+                if not prevval == profile_qc.data[var]:
+                    LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
+                                   % (vv, profile_qc.XBT_input_filename))
+                    profile_qc.data[var] = prevval
 
         # Filter the rows where HISTORY_PARAMETER is TEMP
         temp_codes = combined_histories[combined_histories['HISTORY_PARAMETER'] == 'TEMP']
