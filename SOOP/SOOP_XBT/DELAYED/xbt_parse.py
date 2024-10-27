@@ -967,6 +967,10 @@ def parse_histories_nc(profile):
         else:
             df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
 
+    # put a check in here for DATI and LALO codes and break if they exist
+    if df['HISTORY_PARAMETER'].str.contains('DATI|LALO').any():
+        LOGGER.error('DATI or LALO codes found in %s' % profile.XBT_input_filename)
+        exit(1)
 
     # update variable names to match what is in the file
     names = {'DEPH': 'DEPTH', 'DATI': 'DATE, TIME', 'DATE': 'DATE', 'TIME': 'TIME', 'LATI': 'LATITUDE',
@@ -979,6 +983,9 @@ def parse_histories_nc(profile):
         LOGGER.error("HISTORY_PARAMETER values %s are not defined. Please review output for this file %s" % (
             missing, profile.XBT_input_filename))
         exit(1)
+    # fix any variable names that are incorrect, only PEA, PER, TEA, TER should have something that is not TEMP
+    mask = newdf['HISTORY_QC_CODE'].str.contains('PEA|PER|TEA|TER')
+    newdf.loc[~mask, 'HISTORY_PARAMETER'] = 'TEMP'
 
     # update institute names to be more descriptive
     names = read_section_from_xbt_config('INSTITUTE')
