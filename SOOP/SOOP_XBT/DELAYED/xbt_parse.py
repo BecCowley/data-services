@@ -561,8 +561,11 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 LOGGER.error('Pressure data found in %s. This is not a valid XBT file' % s.XBT_input_filename)
                 exit(1)
             dep = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 4)
+            # eliminate nan depths if there are any
+            dep = np.ma.masked_invalid(dep)
             # resize the arrays to eliminate empty values
             dep = np.ma.masked_array(dep.compressed())
+
             # if the size of the depth array is not the same as ndeps, change ndeps
             if len(dep) != ndeps:
                 ndeps = len(dep)
@@ -583,6 +586,17 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                     qc = qc[:ndeps]
 
             prof = np.round(s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0], 4)
+            # resize the data if it has 99.99 or nan in it
+            if ndeps < len(prof):
+                # check the extra length contains valid data
+                prof_rem = prof[ndeps:]
+                if np.isnan(prof_rem).all() or np.isclose(prof_rem, 99.99).all() or prof_rem.mask.all():
+                    # keep the valid data
+                    prof = prof[:ndeps]
+                else:
+                    LOGGER.error('Profile %s has %s depths but %s values for %s' % (s.XBT_input_filename, ndeps, len(prof), var))
+                    exit(1)
+
             # resize the arrays to eliminate empty values
             prof = np.ma.masked_array(prof.compressed())
             # mask the 99.99 from CSA flagging of TEMP
