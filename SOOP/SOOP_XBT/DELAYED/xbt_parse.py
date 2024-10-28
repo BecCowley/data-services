@@ -1326,8 +1326,10 @@ def restore_temp_val(profile):
         # update profile data
         profile.data['data'] = df
     else:
-        LOGGER.info('No CSR flags or surface depths do not match in the profile data. Please review. %s'
-                    % profile.XBT_input_filename)
+        # are all the TEMP_quality_control values >2? If not, log error
+        if not (df['TEMP_quality_control'][:] > 2).all():
+            LOGGER.info('No CSR flags or surface depths do not match in the profile data. Please review. %s'
+                        % profile.XBT_input_filename)
 
     return profile
 
