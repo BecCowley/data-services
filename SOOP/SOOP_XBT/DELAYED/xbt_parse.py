@@ -1179,6 +1179,7 @@ def combine_histories(profile_qc, profile_noqc):
                 subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)
             if dup_idx.any():
                 # TODO: if DEPTH is duplicated, check the previous value is the same as the DEPTH_RAW value, will need indexing
+                dup_idx = dup_idx.reindex(non_temp_codes.index, fill_value=False)
                 LOGGER.warning(
                     'HISTORY: Duplicate QC code encountered, and removed in create_flag_feature: %s. Please review %s'
                     % (non_temp_codes.loc[dup_idx, 'HISTORY_QC_CODE'].unique(), profile_qc.XBT_input_filename))
@@ -1188,7 +1189,7 @@ def combine_histories(profile_qc, profile_noqc):
                         exit(1)
                     # will be 'LATITUDE, LONGITUDE' or 'DATE, TIME'
                     # find the first flag looking at HISTORY_DATE
-                    idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
+                    idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
                         'HISTORY_DATE'].idxmin()
                     if len(idx) > 0:
                         LOGGER.warning('PREVIOUS_VALUE is not the same as the %s value, removed from the dataset %s'
@@ -1198,9 +1199,9 @@ def combine_histories(profile_qc, profile_noqc):
                 elif vv == 'TIME':
                     # check the previous value is the same as the TIME_RAW value
                     # convert the previous value to a datetime object
-                    prevval = pd.to_datetime(non_temp_codes['HISTORY_PREVIOUS_VALUE'][dup_idx], format='%Y%m%d%H%M%S')
+                    prevval = pd.to_datetime(non_temp_codes[dup_idx]['HISTORY_PREVIOUS_VALUE'], format='%Y%m%d%H%M%S')
                     # identify the rows where the previous value is not the same as the TIME_RAW value and remove them
-                    idx = dup_idx[~(prevval == profile_qc.data['TIME_RAW'])]
+                    idx = non_temp_codes[dup_idx][~(prevval == profile_qc.data['TIME_RAW'])].index
                     if len(idx) > 0:
                         LOGGER.warning('PREVIOUS_VALUE is not the same as the TIME_RAW value, removed from the dataset %s'
                                        % profile_qc.XBT_input_filename)
@@ -1211,16 +1212,15 @@ def combine_histories(profile_qc, profile_noqc):
                     LOGGER.warning(
                         'HISTORY: Multiple %s flags found in the noqc file. %s' % (vv, profile_noqc.XBT_input_filename))
                     # find the first flag looking at HISTORY_DATE
-                    idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
-                        'HISTORY_DATE'].idxmin()
+                    idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'] == vv, 'HISTORY_DATE'].idxmin()
                     # remove the other LOA flags
                     non_temp_codes = non_temp_codes.drop(
                         non_temp_codes.loc[
-                            non_temp_codes['HISTORY_PARAMETER'].str.contains(vv)].index.difference(
+                            non_temp_codes['HISTORY_PARAMETER'].values == vv].index.difference(
                             [idx]))
 
             # copy this information to the PARAMETER_RAW value if it isn't the same, check only where the parameter exactly matches vv
-            if vv not in ['TIME', 'LATITUDE, LONGITUDE', 'DATE, TIME']:
+            if vv in ['LATITUDE', 'LONGITUDE']:
                 if np.round(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
                 'HISTORY_PREVIOUS_VALUE'].values, 6) != np.round(
                     profile_qc.data[var], 6):
