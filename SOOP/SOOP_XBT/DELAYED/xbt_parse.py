@@ -475,7 +475,11 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     q_pos = profile_qc.netcdf_file_obj['Q_Pos'][0]
     if not q_pos or q_pos.ndim == 0:
         # only one value in the array
-        q_pos = int(decode_bytearray(profile_qc.netcdf_file_obj['Q_Pos'][:]))
+        q_pos = remove_control_chars(str(decode_bytearray(profile_qc.netcdf_file_obj['Q_Pos'][:])))
+        if q_pos:
+            q_pos = int(q_pos)
+        else:
+            q_pos = 1
     else:
         # Apply the function to each element in the masked array
         q_pos = int(np.ma.array([remove_control_chars(str(item)) for item in q_pos.data], mask=q_pos.mask)[0])
