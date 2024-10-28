@@ -631,17 +631,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     # check the lengths of the arrays
     if len(df_raw) != len(df_qc):
         # there might be a couple of reasons for this.
-        #1. the DEPTH has been depth corrected, can check by creating a depth_raw * 1.0336 depth array and check for matches
-        depth_corrected = df_raw['DEPTH_RAW'].values * 1.0336
-        # round the corrected depth
-        depth_corrected = depth_corrected.round(decimals=1)
-        # check for matches
-        matches = df_qc['DEPTH'].round(decimals=1).isin(depth_corrected)
-        if matches.sum() == len(df_raw):
-            # if all the depths match, then we can merge the dataframes
-            df = pd.concat([df_raw, df_qc], axis=1)
-        # 2. There is an extra depth added at 3.7m in the df_qc file and we need to put a nan row in the df_raw file
-        elif len(df_raw) + 1 == len(df_qc):
+        # 1. There is an extra depth added at 3.7m in the df_qc file and we need to put a nan row in the df_raw file
+        if len(df_raw) + 1 == len(df_qc):
             # check if there is a 3.7m depth in the df_qc and not in the df_raw
             if 3.7 in df_qc['DEPTH'].values and 3.7 not in df_raw['DEPTH_RAW'].values:
                 # what index is the 3.7m depth at in the df_qc
@@ -652,6 +643,10 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 df_raw = pd.concat([df_raw.iloc[:idx], nan_row, df_raw.iloc[idx:]]).reset_index(drop=True)
                 # concatenate the two dataframes
                 df = pd.concat([df_raw, df_qc], axis=1)
+        # 2. The profiles aren't the same, there has been a bug that caused the edited file to be overwritten with a diffent profile
+            else:
+                LOGGER.error('DEPTH_RAW and DEPTH counts are significantly different. Please review %s' % profile_qc.XBT_input_filename)
+                exit(1)
     else:
         # simplest case where the lengths are the same but actual values might be different
         # concatenate the two dataframes
