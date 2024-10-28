@@ -618,8 +618,6 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             df['DEPTH_quality_control'] = pd.to_numeric(qc, errors='coerce').astype('int8')
             df[var] = prof.astype('float32')
             df[var + '_quality_control'] = pd.to_numeric(prof_flag, errors='coerce').astype('int8')
-            # remove duplicated rows where the DEPTH and TEMP values are the same
-            df = df.drop_duplicates(subset=['DEPTH', var], keep='first')
 
             if s is profile_noqc:
                 df_raw = df.copy()
@@ -627,32 +625,42 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 df_qc = df.copy()
 
     # check the depth columns for consistency and match the variables based on DEPTH and DEPTH_RAW matches
-    # this will only work if the depths are similar. If the depths are corrected in the qc file and not the raw, we will have to adjust
-    # Create a new column for merging by rounding the values
-    df_raw['merge_key1'] = df_raw['DEPTH'].round(decimals=1)
-    df_qc['merge_key1'] = df_qc['DEPTH'].round(decimals=1)
-    df_raw['merge_key2'] = df_raw['TEMP'].round(decimals=2)
-    df_qc['merge_key2'] = df_qc['TEMP'].round(decimals=2)
+    # add a suffix to df_raw for concatenation
+    df_raw = df_raw.add_suffix('_RAW')
 
     # check the lengths of the arrays
     if len(df_raw) != len(df_qc):
-        # which is the longer array?
-        if len(df_raw) > len(df_qc):
-            # merge the two dataframes on DEPTH_RAW
-            df = pd.merge(df_raw, df_qc, on=['merge_key1', 'merge_key2'], how='left', suffixes=('_RAW', '_QC'))
-        else:
-            df = pd.merge(df_qc, df_raw, on=['merge_key1', 'merge_key2'], how='left', suffixes=('_QC', '_RAW'))
+        # there might be a couple of reasons for this.
+        #1. the DEPTH has been depth corrected, can check by creating a depth_raw * 1.0336 depth array and check for matches
+        depth_corrected = df_raw['DEPTH_RAW'].values * 1.0336
+        # round the corrected depth
+        depth_corrected = depth_corrected.round(decimals=1)
+        # check for matches
+        matches = df_qc['DEPTH'].round(decimals=1).isin(depth_corrected)
+        if matches.sum() == len(df_raw):
+            # if all the depths match, then we can merge the dataframes
+            df = pd.concat([df_raw, df_qc], axis=1)
+        # 2. There is an extra depth added at 3.7m in the df_qc file and we need to put a nan row in the df_raw file
+        elif len(df_raw) + 1 == len(df_qc):
+            # check if there is a 3.7m depth in the df_qc and not in the df_raw
+            if 3.7 in df_qc['DEPTH'].values and 3.7 not in df_raw['DEPTH_RAW'].values:
+                # what index is the 3.7m depth at in the df_qc
+                idx = df_qc[df_qc['DEPTH'] == 3.7].index[0]
+                # create a row of nans at the location where idx is
+                nan_row = pd.DataFrame(np.nan, index=[idx], columns=df_raw.columns)
+                # insert the nan row at the correct position
+                df_raw = pd.concat([df_raw.iloc[:idx], nan_row, df_raw.iloc[idx:]]).reset_index(drop=True)
+                # concatenate the two dataframes
+                df = pd.concat([df_raw, df_qc], axis=1)
     else:
-        # merge the two dataframes on DEPTH
-        df = pd.merge(df_qc, df_raw, on=['merge_key1', 'merge_key2'], how='left', suffixes=('_QC', '_RAW'))
+        # simplest case where the lengths are the same but actual values might be different
+        # concatenate the two dataframes
+        df = pd.concat([df_qc, df_raw], axis=1)
 
     # check that the merge has worked
     if len(df) != max(len(df_raw), len(df_qc)):
         LOGGER.error('Dataframes have not been merged correctly. Please review %s' % profile_qc.XBT_input_filename)
         exit(1)
-
-    # drop the merge_key column
-    df = df.drop(columns=['merge_key1', 'merge_key2'])
 
     # change the column names to match the profile object
     df = df.rename(columns={'DEPTH_QC': 'DEPTH', 'DEPTH_quality_control_RAW': 'DEPTH_RAW_quality_control',
@@ -1240,7 +1248,7 @@ def combine_histories(profile_qc, profile_noqc):
             LOGGER.warning(
                 'HISTORY: Duplicate QC code encountered, and removed in create_flag_feature: %s. Please review'
                 % temp_codes.loc[idx, 'HISTORY_QC_CODE'].unique())
-            temp_mapcodes = temp_codes.drop(idx)
+            temp_codes = temp_codes.drop(idx)
         # Concatenate the non-TEMP rows back with the sorted TEMP rows
         combined_histories = pd.concat([non_temp_codes, temp_codes])
 
@@ -1314,16 +1322,16 @@ def restore_temp_val(profile):
                                  % profile.XBT_input_filename)
                     return profile
 
-            # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value
-            profile.histories.loc[idx, 'HISTORY_PREVIOUS_VALUE'] = df['TEMP_RAW'][ind]
-            # LOGGER.info('Updated HISTORY_PREVIOUS_VALUE for CS flags %s'
-            #             % profile.XBT_input_filename)
-            # update the TEMP values
-            df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
-            # update profile data
-            profile.data['data'] = df
+        # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value
+        profile.histories.loc[idx, 'HISTORY_PREVIOUS_VALUE'] = df['TEMP_RAW'][ind]
+        # LOGGER.info('Updated HISTORY_PREVIOUS_VALUE for CS flags %s'
+        #             % profile.XBT_input_filename)
+        # update the TEMP values
+        df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
+        # update profile data
+        profile.data['data'] = df
     else:
-        LOGGER.info('No CSR flags or depths do not match in the profile data. Please review. %s'
+        LOGGER.info('No CSR flags or surface depths do not match in the profile data. Please review. %s'
                     % profile.XBT_input_filename)
 
     return profile
