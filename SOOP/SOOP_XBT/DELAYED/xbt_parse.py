@@ -967,11 +967,6 @@ def parse_histories_nc(profile):
         else:
             df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
 
-    # put a check in here for DATI and LALO codes and break if they exist
-    if df['HISTORY_PARAMETER'].str.contains('DATI|LALO').any():
-        LOGGER.error('DATI or LALO codes found in %s' % profile.XBT_input_filename)
-        exit(1)
-
     # update variable names to match what is in the file
     names = {'DEPH': 'DEPTH', 'DATI': 'DATE, TIME', 'DATE': 'DATE', 'TIME': 'TIME', 'LATI': 'LATITUDE',
              'LONG': 'LONGITUDE', 'LALO': 'LATITUDE, LONGITUDE', 'TEMP': 'TEMP'}
@@ -1180,9 +1175,10 @@ def combine_histories(profile_qc, profile_noqc):
                     'HISTORY: Duplicate QC code encountered, and removed in create_flag_feature: %s. Please review %s'
                     % (non_temp_codes.loc[dup_idx, 'HISTORY_QC_CODE'].unique(), profile_qc.XBT_input_filename))
                 if vv not in ['LONGITUDE', 'TIME', 'LATITUDE']:
-                    # TODO: this would be DEPTH and will need troubleshooting
-                    print('HISTORY: Duplicate %s flags found, need to troubleshoot. %s' % (vv, profile_qc.XBT_input_filename))
-                    exit(1)
+                    if vv in ['DEPTH']:
+                        print('HISTORY: Duplicate %s flags found, need to troubleshoot. %s' % (vv, profile_qc.XBT_input_filename))
+                        exit(1)
+                    # will be 'LATITUDE, LONGITUDE' or 'DATE, TIME'
                     # find the first flag looking at HISTORY_DATE
                     idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
                         'HISTORY_DATE'].idxmin()
@@ -1215,20 +1211,19 @@ def combine_histories(profile_qc, profile_noqc):
                             non_temp_codes['HISTORY_PARAMETER'].str.contains(vv)].index.difference(
                             [idx]))
 
-            # copy this information to the PARAMETER_RAW value if it isn't the same
-            if vv not in ['TIME']:
-                if np.round(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
+            # copy this information to the PARAMETER_RAW value if it isn't the same, check only where the parameter exactly matches vv
+            if vv not in ['TIME', 'LATITUDE, LONGITUDE', 'DATE, TIME']:
+                if np.round(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
                 'HISTORY_PREVIOUS_VALUE'].values, 6) != np.round(
                     profile_qc.data[var], 6):
                     LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
                                    % (vv, profile_qc.XBT_input_filename))
                     profile_qc.data[var] = non_temp_codes.loc[
-                        non_temp_codes['HISTORY_PARAMETER'].str.contains(vv), 'HISTORY_PREVIOUS_VALUE'].values[
-                        0]
-            else:
+                        non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'].values[0]
+            elif vv in ['TIME']:
                 # TIME_RAW is in datetime format and HISTORY_PREVIOUS_VALUE is in float format
                 # convert the HISTORY_PREVIOUS_VALUE to a datetime object
-                prevval = datetime.strptime(str(int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].str.contains(vv),
+                prevval = datetime.strptime(str(int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
                     'HISTORY_PREVIOUS_VALUE'].values[0])), '%Y%m%d%H%M%S')
                 # check the previous value is the same as the TIME_RAW value
                 if not prevval == profile_qc.data[var]:
