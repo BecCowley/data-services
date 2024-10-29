@@ -1397,8 +1397,10 @@ def create_flag_feature(profile):
             # get the index of the depth in the data
             ii = (np.abs(df_data['DEPTH'] - row['HISTORY_START_DEPTH'])).argmin()
             if df_data.loc[ii, 'TEMP_quality_control'] > row['HISTORY_TEMP_QC_CODE_VALUE']:
+                # if ii is index 0, use index
+                ind = 0 if ii == 0 else ii - 1
                 # is the previous 'TEMP_quality_control' value the same as the one at this depth
-                if df_data.loc[ii, 'TEMP_quality_control'] != df_data.loc[ii - 1, 'TEMP_quality_control']:
+                if df_data.loc[ii, 'TEMP_quality_control'] != df_data.loc[ind, 'TEMP_quality_control']:
                     LOGGER.warning('TEMP_quality_control value is not the same as the HISTORY_TEMP_QC_CODE_VALUE value. %s' % profile.XBT_input_filename)
                     # change the history qc code to match the df_data['TEMP_quality_control'] value
                     codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = df_data.loc[ii, 'TEMP_quality_control']
