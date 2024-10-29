@@ -1360,6 +1360,8 @@ def create_flag_feature(profile):
 
     # create a dataframe with the codes and their integer representation
     df = read_qc_config()
+    # make a new column in df with just the first two characters of the code column
+    df['code_short'] = df['code'].str[:2]
     df_data = profile.data['data'].copy(deep=True)
 
     # set the fields to zeros to start
@@ -1389,26 +1391,57 @@ def create_flag_feature(profile):
                                'HISTORY_SOFTWARE_RELEASE': '',
                                'HISTORY_PREVIOUS_VALUE': 0}, ignore_index=True)
 
+    # only continue if there are codes to map
+    if codes.empty:
+        profile.histories = codes
+        return profile
+
+    # first get the quality at each depth and add the information to the history tabel
+    for idx, row in codes.iterrows():
+        # get the index of the depth in the data
+        ii = (np.abs(df_data['DEPTH'] - row['HISTORY_START_DEPTH'])).argmin()
+        codes.loc[idx, 'tempqc'] = df_data.loc[ii, 'TEMP_quality_control']
+    # for CSR flags, replace the tempqc values with the TEMP_quality_control value that is one deeper than the deepest CSR flag
+    # get the index of the CS flags
+    idx = codes['HISTORY_QC_CODE'].str.contains('CSR')
+    # get the depths of the CS flags
+    depths = codes.loc[idx, 'HISTORY_START_DEPTH'].values
+    # if there are CSR flags
+    if len(depths) > 0:
+        # find the next deepest depth
+        ideps = df_data['DEPTH'] > depths[-1]
+        # update any codes['tempqc'] where start_depth == 0
+        idx = codes['HISTORY_START_DEPTH'] == df_data['DEPTH'].values[0]
+        codes.loc[idx, 'tempqc'] = df_data.loc[ideps, 'TEMP_quality_control'].values[0]
+
     # check the TEMP_quality_control values are the same as the HISTORY_TEMP_QC_CODE_VALUE values
     for idx, row in codes.iterrows():
         # check here that the TEMP_quality_control value is the same as the tempqc value
-        # don't need to check codes where group_label is 'ACT_CODES_FULL_PROFILE' or 'ACT_CODES_SINGLE_POINT'
-        if row['HISTORY_QC_CODE'] not in df[df['group_label'].str.contains('ACT_CODES_FULL_PROFILE|ACT_CODES_SINGLE_POINT')]['code'].values:
-            # get the index of the depth in the data
-            ii = (np.abs(df_data['DEPTH'] - row['HISTORY_START_DEPTH'])).argmin()
-            if df_data.loc[ii, 'TEMP_quality_control'] > row['HISTORY_TEMP_QC_CODE_VALUE']:
-                # if ii is index 0, use index
-                ind = 0 if ii == 0 else ii - 1
-                # is the previous 'TEMP_quality_control' value the same as the one at this depth
-                if df_data.loc[ii, 'TEMP_quality_control'] != df_data.loc[ind, 'TEMP_quality_control']:
-                    LOGGER.warning('TEMP_quality_control value is not the same as the HISTORY_TEMP_QC_CODE_VALUE value. %s' % profile.XBT_input_filename)
-                    # change the history qc code to match the df_data['TEMP_quality_control'] value
-                    codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = df_data.loc[ii, 'TEMP_quality_control']
-                    # adjust the A or R flag to match the new tempqc value
-                    if codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
-                        codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
-                    else:
-                        codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'R'
+        # skip the CSR and position flags as they are handled specifically
+        if row['HISTORY_QC_CODE'] not in ['REA','TEA','LAA','LOA','PER','TER','CSR']:
+            if row['tempqc'] != row['HISTORY_TEMP_QC_CODE_VALUE']:
+                # get the df['tempqc'] value for the two-character code
+                tempqc = df.loc[df['code_short'].str.contains(row['HISTORY_QC_CODE'][:2]), 'tempqc'].values
+                # check if the two character code appears more than once in the df['code_short'] column
+                if np.size(tempqc) > 1:
+                    # if so, then we need to check that the TEMP_quality_control value is in the same category as the tempqc value
+                    # where the categories are 1,2,5 and 3,4
+                    if ((row['HISTORY_TEMP_QC_CODE_VALUE'] in [1, 2, 5] and row['tempqc'] in [3 ,4]) or
+                            (row['HISTORY_TEMP_QC_CODE_VALUE'] in [3, 4] and row['tempqc'] in [1, 2, 5])):
+                        # update the HISTORY_TEMP_QC_CODE_VALUE to the tempqc value as the TEMP_quality_control value is in the wrong category
+                        if row['tempqc'] in [1, 2, 5]:
+                            codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = tempqc[0]
+                            # also change the HISTORY_QC_CODE to A
+                            codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
+                        else:
+                            codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = tempqc[1]
+                            # also change the HISTORY_QC_CODE to R
+                            codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'R'
+                else:
+                    # if the two character code only appears once, then update the tempqc value in the codes table
+                    codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = tempqc
+    # delete the tempqc column in codes, no longer required
+    codes = codes.drop(columns=['tempqc'])
 
     # merge the codes with the flag codes
     mapcodes = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
@@ -1464,6 +1497,12 @@ def create_flag_feature(profile):
     tempdf['tempqc'] = tempdf.max(axis=1)
     # overwrite the tempqc value with 5 where there is a 5 in the tempdf
     tempdf.loc[idx, 'tempqc'] = 5
+
+    # find any depths where the tempqc value is less than the TEMP_quality_control value not including the 5 values
+    idx = (df_data['TEMP_quality_control'] > tempdf['tempqc']) & (df_data['TEMP_quality_control'] != 5)
+    if idx.any():
+        LOGGER.error('TEMP_quality_control values are greater than the tempqc values. %s' % profile.XBT_input_filename)
+        exit(1)
 
     # update the TEMP_quality_control field with the tempdf values
     df_data['TEMP_quality_control'] = tempdf['tempqc']

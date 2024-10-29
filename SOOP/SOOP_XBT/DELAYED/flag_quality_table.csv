@@ -57,7 +57,7 @@ position_error,0,,PE,PER,0,,down,4096,,,3,3,,3,1
 duplicate_profile,0,,DU,DUR,0,,down,8192,,,,,,4,1
 test_probe,0,,TP,TPR,0,,down,16384,,,4,4,,4,4
 probe_type,0,,PR,PRR,0,,down,32768,,,,,3,3,3
-spike,1,,SP,SPR,,,down,65536,,,,,,3,1
+spike,1,,SP,SPR,,,down,65536,,,,,,4,1
 insulation_penetration,1,,IP,IPR,,,down,131072,,,,,,3,1
 surface_temperature_anomaly,1,,SA,SAR,0,,down,262144,,,,,,3,1
 surface_offset,1,,SO,SOR,0,,down,524288,,,,,,3,1
