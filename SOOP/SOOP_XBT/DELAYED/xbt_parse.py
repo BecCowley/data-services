@@ -149,10 +149,8 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
         profile_noqc.histories = []
     else:
         # we need to carry the depths information into the history parsing, so copy the data array into profile_noqc
-        profile_noqc.data = dict()
-        profile_noqc.data['data'] = pd.DataFrame()
         profile_noqc.data['data']['DEPTH'] = profile_qc.data['data']['DEPTH_RAW']
-        profile_noqc.data['data']['TEMP_quality_control'] = profile_qc.data['data']['TEMP_quality_control']
+        profile_noqc.data['data']['TEMP_quality_control'] = profile_qc.data['data']['TEMP_RAW_quality_control']
         profile_noqc = parse_histories_nc(profile_noqc)
         # check for histories in the noqc file and reconcile:
         if len(profile_noqc.histories) > 0:
@@ -445,6 +443,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     """ Parse variable data from all sources into a dictionary attached to the profile_qc structure
     """
     profile_qc.data = dict()
+    profile_noqc.data = dict()
+    profile_qc.data['data'] = pd.DataFrame()
+    profile_noqc.data['data'] = pd.DataFrame()
 
     # Location information
     profile_qc.data['LATITUDE'] = np.round(profile_qc.netcdf_file_obj['latitude'][0].__float__(), 6)
@@ -542,6 +543,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     profile_qc.data['TIME'] = xbt_date
     profile_qc.data['TIME_quality_control'] = q_date_time
     profile_qc.data['TIME_RAW'] = xbt_date_raw
+    profile_noqc.data['TIME'] = xbt_date_raw
 
     # Pressure/depth information from both noqc and qc files
 
