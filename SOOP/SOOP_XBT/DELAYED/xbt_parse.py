@@ -1389,6 +1389,23 @@ def create_flag_feature(profile):
                                'HISTORY_SOFTWARE_RELEASE': '',
                                'HISTORY_PREVIOUS_VALUE': 0}, ignore_index=True)
 
+    # check the TEMP_quality_control values are the same as the HISTORY_TEMP_QC_CODE_VALUE values
+    for idx, row in codes.iterrows():
+        # check here that the TEMP_quality_control value is the same as the tempqc value
+        # don't need to check codes where group_label is 'ACT_CODES_FULL_PROFILE' or 'ACT_CODES_SINGLE_POINT'
+        if row['HISTORY_QC_CODE'] not in df[df['group_label'].str.contains('ACT_CODES_FULL_PROFILE|ACT_CODES_SINGLE_POINT')]['code'].values:
+            # get the index of the depth in the data
+            ii = (np.abs(df_data['DEPTH'] - row['HISTORY_START_DEPTH'])).argmin()
+            if df_data.loc[ii, 'TEMP_quality_control'] > row['HISTORY_TEMP_QC_CODE_VALUE']:
+                LOGGER.warning('TEMP_quality_control value is not the same as the HISTORY_TEMP_QC_CODE_VALUE value. %s' % profile.XBT_input_filename)
+                # change the history qc code to match the df_data['TEMP_quality_control'] value
+                codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = df_data.loc[ii, 'TEMP_quality_control']
+                # adjust the A or R flag to match the new tempqc value
+                if codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
+                    codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
+                else:
+                    codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'R'
+
     # merge the codes with the flag codes
     mapcodes = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
 
