@@ -1432,7 +1432,7 @@ def create_flag_feature(profile):
             # fill the tempdf from the depth index to the maximum index
             tempdf.loc[ii:, row['code']] = row['tempqc']
         # for flags that have been interpolated or filtered, these are 5 and 2 deeper. Change the flag at these depths to 5
-        if row['HISTORY_QC_CODE'] in ['LAA', 'LOA', 'SPA', 'HFA', 'TEA', 'IPA']:
+        if row['HISTORY_QC_CODE'] in ['SPA', 'HFA', 'IPA', 'EIA']:
             # 2 should have been assigned above, now just overwriting with 5
             tempdf.loc[ii, row['code']] = 5
 

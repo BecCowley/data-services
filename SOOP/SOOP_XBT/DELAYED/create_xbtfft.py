@@ -7,6 +7,8 @@ def create_xbtfft():
     # Read the CSV file and convert it to a DataFrame
     file_path = 'flag_quality_table.csv'
     df = pd.read_csv(file_path)
+    # drop the rows with 'selected' in the rule_direction column
+    df = df[df['rule_direction'] != 'selected']
     # keep only the name, full_code
     df = df[['name', 'full_code', 'XBT_accept_code', 'XBT_reject_code', 'TEMP_quality_control','depth']]
     # replace the NaN values with 0 in depth column
