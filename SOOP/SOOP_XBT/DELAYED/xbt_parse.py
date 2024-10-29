@@ -1397,14 +1397,16 @@ def create_flag_feature(profile):
             # get the index of the depth in the data
             ii = (np.abs(df_data['DEPTH'] - row['HISTORY_START_DEPTH'])).argmin()
             if df_data.loc[ii, 'TEMP_quality_control'] > row['HISTORY_TEMP_QC_CODE_VALUE']:
-                LOGGER.warning('TEMP_quality_control value is not the same as the HISTORY_TEMP_QC_CODE_VALUE value. %s' % profile.XBT_input_filename)
-                # change the history qc code to match the df_data['TEMP_quality_control'] value
-                codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = df_data.loc[ii, 'TEMP_quality_control']
-                # adjust the A or R flag to match the new tempqc value
-                if codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
-                    codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
-                else:
-                    codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'R'
+                # is the previous 'TEMP_quality_control' value the same as the one at this depth
+                if df_data.loc[ii, 'TEMP_quality_control'] != df_data.loc[ii - 1, 'TEMP_quality_control']:
+                    LOGGER.warning('TEMP_quality_control value is not the same as the HISTORY_TEMP_QC_CODE_VALUE value. %s' % profile.XBT_input_filename)
+                    # change the history qc code to match the df_data['TEMP_quality_control'] value
+                    codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = df_data.loc[ii, 'TEMP_quality_control']
+                    # adjust the A or R flag to match the new tempqc value
+                    if codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
+                        codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
+                    else:
+                        codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'R'
 
     # merge the codes with the flag codes
     mapcodes = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
@@ -1424,11 +1426,12 @@ def create_flag_feature(profile):
     if nan_values.any():
         # we have an extra flag that we haven't coded
         # if any of the flags are in this list which I know about, remove them
-        if mapcodes.loc[nan_values, 'HISTORY_QC_CODE'].str.contains("BB|DC|GS|MS"):
+        if mapcodes.loc[nan_values, 'HISTORY_QC_CODE'].str.contains("BB|DC|GS|MS").any():
             mapcodes = mapcodes[~nan_values]
         else:
             LOGGER.error('HISTORY: new QC code encountered, please code in the new value. %s %s' % (
                 mapcodes.loc[nan_values, 'HISTORY_QC_CODE'].unique(), profile.XBT_input_filename))
+            exit(1)
 
     # now need to assign the codes to the correct depths.
     # code only added in one location at the start depth, QC flags indicate the quality applied
