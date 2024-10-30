@@ -1383,17 +1383,16 @@ def restore_temp_val(profile):
                     elif not (temps > 99).any() and (df['TEMP_RAW'][ind2] > 99).any():
                         df.loc[ind2, 'TEMP_RAW'] = temps
                         df.loc[ind2, 'TEMP'] = temps
-                        # update the TEMP_quality_control values
-                        df.loc[ind2, 'TEMP_quality_control'] = 3
-                        # update the TEMP_QC_CODE to CSR
-                        profile.histories.loc[idx2, 'HISTORY_QC_CODE'] = 'CSR'
-                        # update the TEMP_QC_CODE_VALUE to 3
-                        profile.histories.loc[idx2, 'HISTORY_TEMP_QC_CODE_VALUE'] = 3
                     else:
                         LOGGER.error('TEMP_RAW values and HISTORY_PREVIOUS_VALUE values are both > 99 for CS flags %s'
                                      % profile.XBT_input_filename)
                         exit(1)
-
+                    # update the TEMP_quality_control values
+                    df.loc[ind2, 'TEMP_quality_control'] = 3
+                    # update the TEMP_QC_CODE to CSR
+                    profile.histories.loc[idx2, 'HISTORY_QC_CODE'] = 'CSR'
+                    # update the TEMP_QC_CODE_VALUE to 3
+                    profile.histories.loc[idx2, 'HISTORY_TEMP_QC_CODE_VALUE'] = 3
     # update profile data
     profile.data['data'] = df
     return profile
