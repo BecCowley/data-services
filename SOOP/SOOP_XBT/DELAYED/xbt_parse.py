@@ -1337,12 +1337,18 @@ def restore_temp_val(profile):
                                  % profile.XBT_input_filename)
                     return profile
 
-        # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value
-        profile.histories.loc[idx, 'HISTORY_PREVIOUS_VALUE'] = df['TEMP_RAW'][ind]
-        # LOGGER.info('Updated HISTORY_PREVIOUS_VALUE for CS flags %s'
-        #             % profile.XBT_input_filename)
-        # update the TEMP values
-        df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
+        # update the TEMP values with the TEMP_RAW values if they do not contain values > 99
+        if not (df['TEMP_RAW'][ind] > 99).any():
+            df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
+        # update the TEMP_RAW values with the HISTORY_PREVIOUS_VALUE values if the TEMP_RAW values have values > 99 and the
+        # HISTORY_PREVIOUS_VALUE values do not
+        elif not (temps > 99).any() and (df['TEMP_RAW'][ind] > 99).any():
+            df.loc[ind, 'TEMP_RAW'] = temps
+            df.loc[ind, 'TEMP'] = temps
+        else:
+            LOGGER.error('TEMP_RAW values and HISTORY_PREVIOUS_VALUE values are both > 99 for CS flags %s'
+                         % profile.XBT_input_filename)
+            exit(1)
     else:
         # are all the TEMP_quality_control values >2? If not, log error
         if not (df['TEMP_quality_control'][:] > 2).all():
@@ -1364,18 +1370,29 @@ def restore_temp_val(profile):
                 depths2 = profile.histories.loc[idx2, 'HISTORY_START_DEPTH'].values
                 # find the depths in the profile data
                 ind2 = np.in1d(np.round(df['DEPTH'], 2), np.round(depths2, 2)).nonzero()[0]
+                temps = profile.histories['HISTORY_PREVIOUS_VALUE'][ind2].values.astype('float')
                 # is the first value of ind2 only one different from last value of ind?
                 if (ind2[0] - ind[-1]) == 1:
                     LOGGER.info('Restoring 99.99 values for SPA, IPA or HFA flags and changing flag to CSR. %s'
                                 % profile.XBT_input_filename)
-                    # update the TEMP values
-                    df.loc[ind2, 'TEMP'] = df['TEMP_RAW'][ind2]
-                    # update the TEMP_quality_control values
-                    df.loc[ind2, 'TEMP_quality_control'] = 3
-                    # update the TEMP_QC_CODE to CSR
-                    profile.histories.loc[idx2, 'HISTORY_QC_CODE'] = 'CSR'
-                    # update the TEMP_QC_CODE_VALUE to 3
-                    profile.histories.loc[idx2, 'HISTORY_TEMP_QC_CODE_VALUE'] = 3
+                    # update the TEMP values with the TEMP_RAW values if they do not contain values > 99
+                    if not (df['TEMP_RAW'][ind2] > 99).any():
+                        df.loc[ind2, 'TEMP'] = df.loc[ind2, 'TEMP_RAW']
+                    # update the TEMP_RAW values with the HISTORY_PREVIOUS_VALUE values if the TEMP_RAW values have values > 99 and the
+                    # HISTORY_PREVIOUS_VALUE values do not
+                    elif not (temps > 99).any() and (df['TEMP_RAW'][ind2] > 99).any():
+                        df.loc[ind2, 'TEMP_RAW'] = temps
+                        df.loc[ind2, 'TEMP'] = temps
+                        # update the TEMP_quality_control values
+                        df.loc[ind2, 'TEMP_quality_control'] = 3
+                        # update the TEMP_QC_CODE to CSR
+                        profile.histories.loc[idx2, 'HISTORY_QC_CODE'] = 'CSR'
+                        # update the TEMP_QC_CODE_VALUE to 3
+                        profile.histories.loc[idx2, 'HISTORY_TEMP_QC_CODE_VALUE'] = 3
+                    else:
+                        LOGGER.error('TEMP_RAW values and HISTORY_PREVIOUS_VALUE values are both > 99 for CS flags %s'
+                                     % profile.XBT_input_filename)
+                        exit(1)
 
     # update profile data
     profile.data['data'] = df
