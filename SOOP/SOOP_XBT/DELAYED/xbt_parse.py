@@ -922,46 +922,46 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
 def parse_histories_nc(profile):
     """ Parse the history records in Mquest files
     """
-    # let's use a pandas dataframe
+    # let's use a pandas dataframe with empty columns
     df = pd.DataFrame()
     nhist = int(profile.netcdf_file_obj['Num_Hists'][0].data)
 
-    # read the Act_Code and remove control characters
-    vv =  [''.join(chr(x) for x in bytearray(xx)).strip()
-                             for xx in profile.netcdf_file_obj['Act_Code'][:].data if bytearray(xx).strip()]
-    vv = [remove_control_chars(str(x)) for x in vv]
-    # Remove empty strings from the list
-    vv = [x for x in vv if x]
-    df['HISTORY_QC_CODE'] = vv
+    # for each column, extract the data
+    # list the data labels matching the columns in the dataframe
+    varname = ['Act_Code', 'Ident_Code', 'Act_Parm', 'PRC_Code', 'PRC_Date', 'Aux_ID', 'Flag_severity', 'Version',
+                'Previous_Val']
+    for var in varname:
+        if var not in profile.netcdf_file_obj.variables:
+            LOGGER.warning('Variable %s not found in %s' % (var, profile.XBT_input_filename))
+            df[var] = np.nan
+            continue
+        # test if the data is a byte array or a float
+        if np.issubdtype(profile.netcdf_file_obj[var].dtype, np.number):
+            vv = profile.netcdf_file_obj[var][0:nhist].data
+        else:
+            # if this is the Act_Code, check if the nhist is correct
+            if var == 'Act_Code':
+                vv = [''.join(chr(x) for x in bytearray(xx)).strip()
+                      for xx in profile.netcdf_file_obj[var][:].data if bytearray(xx).strip()]
+                vv = [remove_control_chars(str(x)) for x in vv]
+                # Remove empty strings from the list
+                vv = [x for x in vv if x]
+                if nhist != len(vv):
+                    nhist = len(vv)
+                    LOGGER.warning('HISTORY: Updating nhist to match length of history codes. %s' % profile.XBT_input_filename)
+            # convert the byte array to a string
+            vv = [''.join(chr(x) for x in bytearray(xx)).strip()
+                  for xx in profile.netcdf_file_obj[var][0:nhist].data if bytearray(xx).strip()]
+            vv = [remove_control_chars(str(x)) for x in vv]
+        df[var] = vv
+    # rename the columns
+    df.columns = ['HISTORY_QC_CODE', 'HISTORY_INSTITUTION', 'HISTORY_PARAMETER', 'HISTORY_SOFTWARE',
+                               'HISTORY_DATE', 'HISTORY_START_DEPTH', 'HISTORY_TEMP_QC_CODE_VALUE',
+                               'HISTORY_SOFTWARE_RELEASE', 'HISTORY_PREVIOUS_VALUE']
 
-    # nhist can sometimes be incorrect, so we need to check the length of the data
-    if nhist != len(df['HISTORY_QC_CODE']):
-        nhist = len(df['HISTORY_QC_CODE'])
-        LOGGER.warning('HISTORY: Updating nhist to match length of history codes. %s' % profile.XBT_input_filename)
-
-    df['HISTORY_INSTITUTION'] = [''.join(chr(x) for x in bytearray(xx)).strip()
-                                 for xx in profile.netcdf_file_obj['Ident_Code'][0:nhist].data]
-
-    df['HISTORY_PARAMETER'] = [''.join(chr(x) for x in bytearray(xx)).strip()
-                               for xx in profile.netcdf_file_obj['Act_Parm'][0:nhist].data]
-    df['HISTORY_SOFTWARE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
-                              for xx in profile.netcdf_file_obj['PRC_Code'][0:nhist].data]
-    df['HISTORY_DATE'] = [''.join(chr(x) for x in bytearray(xx)).strip()
-                          for xx in profile.netcdf_file_obj['PRC_Date'][0:nhist].data]
-    df['HISTORY_START_DEPTH'] = profile.netcdf_file_obj['Aux_ID'][0:nhist].data
-    df['HISTORY_TEMP_QC_CODE_VALUE'] = profile.netcdf_file_obj['Flag_severity'][0:nhist].data
-    df['HISTORY_SOFTWARE_RELEASE'] = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in
-                                      profile.netcdf_file_obj['Version'][0:nhist].data]
-
-    dat = [float(x.replace(':', '')) for x in
-           [''.join(chr(x) for x in bytearray(xx).strip()).rstrip('\x00')
-            for xx in profile.netcdf_file_obj.variables['Previous_Val'][0:nhist]] if x]
-    if dat:
-        df['HISTORY_PREVIOUS_VALUE'] = dat
-    else:
-        df['HISTORY_PREVIOUS_VALUE'] = np.nan
-
-    df = df.astype({'HISTORY_SOFTWARE_RELEASE': np.str_, 'HISTORY_QC_CODE': np.str_})
+    # change HISTORY_START_DEPTH and HISTORY_PREVIOUS_VALUE to float in the case where they were read as bytes
+    df['HISTORY_START_DEPTH'] = pd.to_numeric(df['HISTORY_START_DEPTH'], errors='coerce')
+    df['HISTORY_PREVIOUS_VALUE'] = pd.to_numeric(df['HISTORY_PREVIOUS_VALUE'], errors='coerce')
 
     if nhist > 0:
         # convert only the CSIRO codes, find any institution codes that are not 'CS'
