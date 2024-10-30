@@ -1343,14 +1343,42 @@ def restore_temp_val(profile):
         #             % profile.XBT_input_filename)
         # update the TEMP values
         df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
-        # update profile data
-        profile.data['data'] = df
     else:
         # are all the TEMP_quality_control values >2? If not, log error
         if not (df['TEMP_quality_control'][:] > 2).all():
             LOGGER.info('No CSR flags or surface depths do not match in the profile data. Please review. %s'
                         % profile.XBT_input_filename)
 
+    # find any depths with 99.99 values that are flagged with SPA or IPA or HFA
+    idx = (df['TEMP'] > 99)
+    if idx.any():
+        # check if there are any SPA, IPA or HFA flags at the same depth
+        idx2 = profile.histories['HISTORY_START_DEPTH'].isin(df.loc[idx, 'DEPTH'])
+        if idx2.any():
+            # get the flags
+            flags = profile.histories.loc[idx2, 'HISTORY_QC_CODE']
+            # if SPA, IPA or HFA flags are present, update the TEMP values to be 99.99
+            if flags.str.contains('SPA|IPA|HFA').any():
+                # are these flags adjacent to a CSR flag?
+                # get the depths of the SPA, IPA or HFA flags
+                depths2 = profile.histories.loc[idx2, 'HISTORY_START_DEPTH'].values
+                # find the depths in the profile data
+                ind2 = np.in1d(np.round(df['DEPTH'], 2), np.round(depths2, 2)).nonzero()[0]
+                # is the first value of ind2 only one different from last value of ind?
+                if (ind2[0] - ind[-1]) == 1:
+                    LOGGER.info('Restoring 99.99 values for SPA, IPA or HFA flags and changing flag to CSR. %s'
+                                % profile.XBT_input_filename)
+                    # update the TEMP values
+                    df.loc[ind2, 'TEMP'] = df['TEMP_RAW'][ind2]
+                    # update the TEMP_quality_control values
+                    df.loc[ind2, 'TEMP_quality_control'] = 3
+                    # update the TEMP_QC_CODE to CSR
+                    profile.histories.loc[idx2, 'HISTORY_QC_CODE'] = 'CSR'
+                    # update the TEMP_QC_CODE_VALUE to 3
+                    profile.histories.loc[idx2, 'HISTORY_TEMP_QC_CODE_VALUE'] = 3
+
+    # update profile data
+    profile.data['data'] = df
     return profile
 
 
@@ -1446,6 +1474,15 @@ def create_flag_feature(profile):
                     codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = tempqc
     # delete the tempqc column in codes, no longer required
     codes = codes.drop(columns=['tempqc'])
+    # delete the code_short column in df, no longer required
+    df = df.drop(columns=['code_short'])
+
+    # make sure the previous_values are the same as the data['TEMP_RAW'] values and replace missing TEMP values at CS
+    profile.histories = codes
+    profile.data['data'] = df_data
+    profile = restore_temp_val(profile)
+    codes = profile.histories
+    df_data = profile.data['data']
 
     # merge the codes with the flag codes
     mapcodes = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
@@ -1534,9 +1571,6 @@ def create_flag_feature(profile):
     profile.histories = mapcodes
     # update the profile data
     profile.data['data'] = df_data
-
-    # make sure the previous_values are the same as the data['TEMP_RAW'] values and replace missing TEMP values at CS
-    profile = restore_temp_val(profile)
 
     return profile
 
