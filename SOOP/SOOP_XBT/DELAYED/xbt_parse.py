@@ -1171,7 +1171,7 @@ def parse_histories_nc(profile):
         df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_PREVIOUS_VALUE', 'HISTORY_START_DEPTH']))]
 
     # assign the dataframe back to profile at this stage
-    profile.histories = df
+    profile.histories = df.reset_index(drop=True)
 
     return profile
 
@@ -1276,6 +1276,8 @@ def combine_histories(profile_qc, profile_noqc):
     if profile_qc.histories.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_START_DEPTH']).any():
         LOGGER.warning('HISTORY: Duplicated flags found in the qc file. %s' % profile_qc.XBT_input_filename)
 
+    # reset the index
+    profile_qc.histories = profile_qc.histories.reset_index(drop=True)
     return profile_qc
 
 
