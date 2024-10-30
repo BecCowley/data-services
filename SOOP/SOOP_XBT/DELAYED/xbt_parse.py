@@ -1396,16 +1396,16 @@ def create_flag_feature(profile):
         profile.histories = codes
         return profile
 
-    # first get the quality at each depth and add the information to the history tabel
+    # first get the quality at each depth and add the information to the history table
     for idx, row in codes.iterrows():
         # get the index of the depth in the data
         ii = (np.abs(df_data['DEPTH'] - row['HISTORY_START_DEPTH'])).argmin()
         codes.loc[idx, 'tempqc'] = df_data.loc[ii, 'TEMP_quality_control']
     # for CSR flags, replace the tempqc values with the TEMP_quality_control value that is one deeper than the deepest CSR flag
     # get the index of the CS flags
-    idx = codes['HISTORY_QC_CODE'].str.contains('CSR')
+    idx_csr = codes['HISTORY_QC_CODE'].str.contains('CSR')
     # get the depths of the CS flags
-    depths = codes.loc[idx, 'HISTORY_START_DEPTH'].values
+    depths = codes.loc[idx_csr, 'HISTORY_START_DEPTH'].values
     # if there are CSR flags
     if len(depths) > 0:
         # find the next deepest depth
@@ -1413,6 +1413,10 @@ def create_flag_feature(profile):
         # update any codes['tempqc'] where start_depth == 0
         idx = codes['HISTORY_START_DEPTH'] == df_data['DEPTH'].values[0]
         codes.loc[idx, 'tempqc'] = df_data.loc[ideps, 'TEMP_quality_control'].values[0]
+        # special case where CSR was used as a single flag to reject everything below. Let's change this flag to a SPR
+        if len(depths) == 1 and df_data.loc[ideps, 'TEMP_quality_control'].values[0] == 3:
+            codes.loc[idx_csr, 'HISTORY_QC_CODE'] = 'SPR'
+            codes.loc[idx_csr, 'HISTORY_TEMP_QC_CODE_VALUE'] = 4
 
     # check the TEMP_quality_control values are the same as the HISTORY_TEMP_QC_CODE_VALUE values
     for idx, row in codes.iterrows():
