@@ -1614,12 +1614,12 @@ def check_nc_to_be_created(profile):
 
     if duplicate_flag == 'D':
         LOGGER.error(
-            'Profile not processed. Tagged as duplicate in original netcdf file %s' % profile.XBT_input_filename)
+            'Profile not processed. Tagged as duplicate profile in original netcdf file %s' % profile.XBT_input_filename)
         return False
 
     if 'DU' in histcodes:
         LOGGER.error(
-            'Profile not processed. Tagged as test probe in original netcdf file %s' % profile.XBT_input_filename)
+            'Profile not processed. Tagged as duplicate profile in original netcdf file %s' % profile.XBT_input_filename)
         return False
 
     data_vars = temp_prof_info(profile.netcdf_file_obj)
