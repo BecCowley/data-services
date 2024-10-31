@@ -1395,6 +1395,19 @@ def restore_temp_val(profile):
                     profile.histories.loc[idx2, 'HISTORY_QC_CODE'] = 'CSR'
                     # update the TEMP_QC_CODE_VALUE to 3
                     profile.histories.loc[idx2, 'HISTORY_TEMP_QC_CODE_VALUE'] = 3
+                    # if there are any SPA, IPA or HFA flags at the same depth as the CSR flags, remove them
+                    # get the location of any SPA, IPA or HFA flags at the same depth as the CSR flags in the profile.histories
+                    idx3 = profile.histories['HISTORY_QC_CODE'].str.contains('SPA|IPA|HFA')
+                    if idx3.any():
+                        # get the indices of the CSR flags
+                        idx4 = profile.histories['HISTORY_QC_CODE'].str.contains('CSR')
+                        # do the idx3 and idx4 have depths the same?
+                        if (profile.histories.loc[idx3, 'HISTORY_START_DEPTH'].values == profile.histories.loc[idx4, 'HISTORY_START_DEPTH'].values).any():
+                            LOGGER.info('Removing SPA, IPA or HFA flags at the same depth as CSR flags. %s'
+                                        % profile.XBT_input_filename)
+                            # remove the SPA, IPA or HFA flags at the same depth as the CSR flags
+                            profile.histories = profile.histories.drop(profile.histories.loc[idx3].index)
+
     # update profile data
     profile.data['data'] = df
     return profile
