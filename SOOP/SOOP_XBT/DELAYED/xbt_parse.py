@@ -959,9 +959,11 @@ def parse_histories_nc(profile):
                                'HISTORY_DATE', 'HISTORY_START_DEPTH', 'HISTORY_TEMP_QC_CODE_VALUE',
                                'HISTORY_SOFTWARE_RELEASE', 'HISTORY_PREVIOUS_VALUE']
 
-    # change HISTORY_START_DEPTH and HISTORY_PREVIOUS_VALUE to float in the case where they were read as bytes
-    df['HISTORY_START_DEPTH'] = pd.to_numeric(df['HISTORY_START_DEPTH'], errors='coerce')
-    df['HISTORY_PREVIOUS_VALUE'] = pd.to_numeric(df['HISTORY_PREVIOUS_VALUE'], errors='coerce')
+    # change HISTORY_START_DEPTH and HISTORY_PREVIOUS_VALUE to float64
+    df['HISTORY_START_DEPTH'] = df['HISTORY_START_DEPTH'].astype('float32')
+    df['HISTORY_PREVIOUS_VALUE'] = df['HISTORY_PREVIOUS_VALUE'].astype('float32')
+    # change HISTORY_TEMP_QC_CODE_VALUE to int32
+    df['HISTORY_TEMP_QC_CODE_VALUE'] = df['HISTORY_TEMP_QC_CODE_VALUE'].astype('int32')
 
     if nhist > 0:
         # convert only the CSIRO codes, find any institution codes that are not 'CS'
@@ -1399,14 +1401,19 @@ def restore_temp_val(profile):
                     # get the location of any SPA, IPA or HFA flags at the same depth as the CSR flags in the profile.histories
                     idx3 = profile.histories['HISTORY_QC_CODE'].str.contains('SPA|IPA|HFA')
                     if idx3.any():
-                        # get the indices of the CSR flags
-                        idx4 = profile.histories['HISTORY_QC_CODE'].str.contains('CSR')
-                        # do the idx3 and idx4 have depths the same?
-                        if (profile.histories.loc[idx3, 'HISTORY_START_DEPTH'].values == profile.histories.loc[idx4, 'HISTORY_START_DEPTH'].values).any():
-                            LOGGER.info('Removing SPA, IPA or HFA flags at the same depth as CSR flags. %s'
-                                        % profile.XBT_input_filename)
-                            # remove the SPA, IPA or HFA flags at the same depth as the CSR flags
-                            profile.histories = profile.histories.drop(profile.histories.loc[idx3].index)
+                        LOGGER.info('Removing SPA, IPA or HFA flags at the same depth as CSR flags. %s'
+                                    % profile.XBT_input_filename)
+                        # Get the depths where HISTORY_QC_CODE is CSR
+                        csr_depths = profile.histories.loc[
+                            profile.histories['HISTORY_QC_CODE'] == 'CSR', 'HISTORY_START_DEPTH']
+
+                        # Remove rows where HISTORY_QC_CODE is SPA, HFA, or IPA and HISTORY_START_DEPTH is in csr_depths
+                        profile.histories = profile.histories[
+                            ~((profile.histories['HISTORY_QC_CODE'].isin(['SPA', 'HFA', 'IPA'])) &
+                              (profile.histories['HISTORY_START_DEPTH'].isin(csr_depths)))]
+                        # reset the index
+                        profile.histories = profile.histories.reset_index(drop=True)
+
 
     # update profile data
     profile.data['data'] = df
