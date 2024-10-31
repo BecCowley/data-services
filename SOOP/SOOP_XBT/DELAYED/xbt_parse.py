@@ -52,7 +52,7 @@ class XbtProfile(object):
         self.XBT_input_filename = input_filename
 
         # now read the data and metadata from the file
-        LOGGER.info('Parsing %s' % self.XBT_input_filename)
+        # LOGGER.info('Parsing %s' % self.XBT_input_filename)
         self.netcdf_file_obj = Dataset(file_path_name, 'r', format='NETCDF4')
 
 
