@@ -1137,6 +1137,9 @@ def parse_histories_nc(profile):
 
         # remove any duplicated lines for any code
         df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_PREVIOUS_VALUE', 'HISTORY_START_DEPTH']))]
+        # remove duplicated codes where one previous value is > 99 and parameter is TEMP
+        df = df[~((df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_START_DEPTH'])) &
+                    (df['HISTORY_PREVIOUS_VALUE'] > 99) & (df['HISTORY_PARAMETER'] == 'TEMP'))]
 
     # assign the dataframe back to profile at this stage
     profile.histories = df.reset_index(drop=True)
