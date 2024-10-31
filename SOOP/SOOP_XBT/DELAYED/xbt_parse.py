@@ -1471,7 +1471,7 @@ def create_flag_feature(profile):
     # delete the tempqc column in codes, no longer required
     codes = codes.drop(columns=['tempqc'])
     # delete the code_short column in df, no longer required
-    df = df.drop(columns=['code_short'])
+    df = df.drop(columns=['code_short', 'group_label'])
 
     # make sure the previous_values are the same as the data['TEMP_RAW'] values and replace missing TEMP values at CS
     profile.histories = codes
