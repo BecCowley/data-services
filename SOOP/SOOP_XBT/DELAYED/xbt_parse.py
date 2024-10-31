@@ -968,6 +968,10 @@ def parse_histories_nc(profile):
         date1 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%Y%m%d')
         date2 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%d%m%Y')
         df['HISTORY_DATE'] = date1.fillna(date2)
+    else:
+        # no history records
+        profile.histories = df
+        return profile
 
     # append the 'A' or 'R' to each code
     for idx, row in df.iterrows():
