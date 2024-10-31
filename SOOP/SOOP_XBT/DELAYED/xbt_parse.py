@@ -956,13 +956,18 @@ def parse_histories_nc(profile):
         qc_df = read_qc_config()
         # make a new column with the first two characters of the qc_df code
         qc_df['code_short'] = qc_df['code'].str[:2]
+        # create list of acceptable parameter names
+        parm_names = {'DEPH': 'DEPTH', 'DATI': 'DATE, TIME', 'DATE': 'DATE', 'TIME': 'TIME', 'LATI': 'LATITUDE',
+                 'LONG': 'LONGITUDE', 'LALO': 'LATITUDE, LONGITUDE', 'TEMP': 'TEMP'}
         # check that the history codes are in the list
         if not df['HISTORY_QC_CODE'].isin(qc_df['code_short']).all():
             missing = df.loc[~df['HISTORY_QC_CODE'].isin(qc_df['code_short']), 'HISTORY_QC_CODE']
             LOGGER.warning('HISTORY_QC_CODE values %s not found in the QC code list. Please review output for this file %s'
-                           % (missing, profile.XBT_input_filename))
-            # remove any codes that are not in the list
-            df = df[df['HISTORY_QC_CODE'].isin(qc_df['code_short'])]
+                           % (missing.values, profile.XBT_input_filename))
+            # remove any codes that are not in the list and where PARAMETER is not in names list
+            df = df.loc[df['HISTORY_QC_CODE'].isin(qc_df['code_short']) & df['HISTORY_PARAMETER'].isin(parm_names.keys())]
+            # reset nhist to the new length
+            nhist = len(df)
 
         # allow for history dates to be YYYYMMDD or DDMMYYYY
         date1 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%Y%m%d')
@@ -981,10 +986,8 @@ def parse_histories_nc(profile):
             df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
 
     # update variable names to match what is in the file
-    names = {'DEPH': 'DEPTH', 'DATI': 'DATE, TIME', 'DATE': 'DATE', 'TIME': 'TIME', 'LATI': 'LATITUDE',
-             'LONG': 'LONGITUDE', 'LALO': 'LATITUDE, LONGITUDE', 'TEMP': 'TEMP'}
     newdf = df.copy()
-    newdf['HISTORY_PARAMETER'] = df['HISTORY_PARAMETER'].map(names, na_action='ignore')
+    newdf['HISTORY_PARAMETER'] = df['HISTORY_PARAMETER'].map(parm_names, na_action='ignore')
     if any(newdf['HISTORY_PARAMETER'].isna()):
         # list the parameters that are not defined
         missing = newdf.loc[newdf['HISTORY_PARAMETER'].isna(), 'HISTORY_PARAMETER']
