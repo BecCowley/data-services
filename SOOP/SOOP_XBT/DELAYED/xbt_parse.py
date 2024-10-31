@@ -703,10 +703,10 @@ def adjust_position_qc_flags(profile):
     df = profile.data['data']
     if profile.histories['HISTORY_QC_CODE'].str.contains('LAA').any():
         # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
-        if np.round(float(profile.histories.loc[
+        if not np.isclose(float(profile.histories.loc[
                               profile.histories['HISTORY_QC_CODE'].str.contains(
                                   'LAA'), 'HISTORY_PREVIOUS_VALUE'].values),
-                    6) != np.round(profile.data['LATITUDE_RAW'], 6):
+                      profile.data['LATITUDE_RAW'], atol=1e-6).all():
             LOGGER.error('LATITUDE_RAW not the same as the PREVIOUS_value! %s' % profile.XBT_input_filename)
         if profile.data['LATITUDE_quality_control'] != 5:
             # PEA on latitude
@@ -718,11 +718,11 @@ def adjust_position_qc_flags(profile):
             df.loc[mask, 'TEMP_quality_control'] = 2
 
     if profile.histories['HISTORY_QC_CODE'].str.contains('LOA').any():
-        # check HISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value
-        if np.round(float(profile.histories.loc[
+        # check HISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value within a tolerance
+        if not np.isclose(float(profile.histories.loc[
                               profile.histories['HISTORY_QC_CODE'].str.contains(
                                   'LOA'), 'HISTORY_PREVIOUS_VALUE'].values),
-                    6) != np.round(profile.data['LONGITUDE_RAW'], 6):
+                      profile.data['LONGITUDE_RAW'], atol=1e-6).all():
             LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_value! %s' % profile.XBT_input_filename)
         if profile.data['LONGITUDE_quality_control'] != 5:
             # PEA on longitude
