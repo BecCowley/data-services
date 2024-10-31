@@ -163,8 +163,6 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
 
     # next section, only if there are QC flags present
     if len(profile_qc.histories) > 0:
-        # handle special case of premature launch where raw and edited files have different profile lengths:
-        profile_qc = check_for_PL_flag(profile_qc)
 
         # adjust lat lon qc flags if required
         profile_qc = adjust_position_qc_flags(profile_qc)
@@ -194,20 +192,6 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     profile_qc = add_uncertainties(profile_qc)
 
     return profile_qc
-
-
-def check_sums_of_temp_depth(profile_qc):
-    # check that the sums of TEMP and TEMP_RAW and DEPTH and DEPTH_RAW are the same within a tolerance
-    # check the sum of the TEMP and TEMP_RAW columns
-    if not np.isclose(np.sum(profile_qc.data['data']['TEMP']), np.sum(profile_qc.data['data']['TEMP_RAW']), rtol=1e-3):
-        LOGGER.error(
-            'Please review. The sum of TEMP and TEMP_RAW are not the same in %s' % profile_qc.XBT_input_filename)
-
-    # check the sum of the DEPTH and DEPTH_RAW columns
-    if not np.isclose(np.sum(profile_qc.data['data']['DEPTH']), np.sum(profile_qc.data['data']['DEPTH_RAW']),
-                      rtol=1e-3):
-        LOGGER.error(
-            'Please review. The sum of DEPTH and DEPTH_RAW are not the same in %s' % profile_qc.XBT_input_filename)
 
 
 def get_recorder_type(profile):
@@ -664,9 +648,10 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 # concatenate the two dataframes
                 df = pd.concat([df_raw, df_qc], axis=1)
         # 2. The profiles aren't the same, there has been a bug that caused the edited file to be overwritten with a diffent profile
-            else:
-                LOGGER.error('DEPTH_RAW and DEPTH counts are significantly different. Please review %s' % profile_qc.XBT_input_filename)
-                exit(1)
+        else:
+            LOGGER.warning('DEPTH_RAW and DEPTH counts are significantly different. Please review %s' % profile_qc.XBT_input_filename)
+            # concatenate the two dataframes with NaNs in the rows that don't match
+            df = pd.concat([df_qc, df_raw], axis=1)
     else:
         # simplest case where the lengths are the same but actual values might be different
         # concatenate the two dataframes
@@ -1264,33 +1249,6 @@ def combine_histories(profile_qc, profile_noqc):
     return profile_qc
 
 
-def check_for_PL_flag(profile):
-    # Special case, where the PLA code has been used, the temperature values are shifted up and the edited file
-    # therefore has a different number of records to the raw file. Need to pad the edited to the same size as raw
-    # since we are using the same DEPTH dimension for both:
-    if profile.histories['HISTORY_QC_CODE'].str.contains('PL').any():
-        # double check the length of the records is different, log it
-        if len(profile.data['TEMP']) < len(profile.data['TEMP_RAW']):
-            LOGGER.warning('Raw and edited profiles are different length due to PLA flag. Amending. %s'
-                           % profile.XBT_input_filename)
-            # edited temp is shorter, add blanks at end
-            for var in ['TEMP', 'DEPTH']:
-                tr = profile.data[var + '_RAW']
-                tt = profile.data[var]
-                t2 = np.ma.empty_like(tr)
-                t2[0:len(tt)] = tt
-                t2[len(tt):] = ma.masked
-                profile.data[var] = t2
-                tr = profile.data[var + '_RAW_quality_control']
-                tt = profile.data[var + '_quality_control']
-                t2 = np.ma.empty_like(tr)
-                t2[0:len(tt)] = tt
-                t2[len(tt):] = ma.masked
-                profile.data[var + '_quality_control'] = t2
-
-    return profile
-
-
 def restore_temp_val(profile):
     """
     Restore the temperature values that are associated with
@@ -1310,8 +1268,13 @@ def restore_temp_val(profile):
     df = profile.data['data']
     # find the depths in the profile data
     ind = np.in1d(np.round(df['DEPTH'], 2), np.round(depths, 2)).nonzero()[0]
+    # does this profile have a PLA flag? if so, use the previous values to replace the TEMP values
+    if 'PLA' in profile.histories['HISTORY_QC_CODE'].values:
+        LOGGER.info('Restoring TEMP values for CS flags where PLA exists %s' % profile.XBT_input_filename)
+        # update the TEMP values with the previous value
+        df.loc[ind, 'TEMP'] = temps
     # makes sure we have the same number of CS flags in the profile data as in the histories before proceeding
-    if (len(ind) > 0) & (len(temps) == len(ind)):
+    elif (len(ind) > 0) & (len(temps) == len(ind)):
         # temps should be equal to df['TEMP_RAW'][ind], let's check they are equal and there are no missing values
         if (temps != df['TEMP_RAW'][ind]).all() and (temps.max() <= 99) and (df['TEMP_RAW'][ind].max() <= 99):
             # check they are within 0.01 of each other
