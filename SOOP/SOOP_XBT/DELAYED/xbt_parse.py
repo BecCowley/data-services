@@ -966,20 +966,19 @@ def parse_histories_nc(profile):
     df['HISTORY_TEMP_QC_CODE_VALUE'] = df['HISTORY_TEMP_QC_CODE_VALUE'].astype('int32')
 
     if nhist > 0:
-        # convert only the CSIRO codes, find any institution codes that are not 'CS'
-        if not df['HISTORY_INSTITUTION'].str.contains('CS').all():
-            # LOGGER.warning('HISTORY_INSTITUTION code for some flags is not CSIRO, contains %s %s' %
-            #                (df.loc[~df['HISTORY_INSTITUTION'].str.contains('CS'), 'HISTORY_INSTITUTION'].unique(),
-            #                 profile.XBT_input_filename))
-            # remove any codes that are not CSIRO
-            df = df[df['HISTORY_INSTITUTION'].str.contains('CS')]
-            nhist = len(df)
+        # check that the history codes exist in our list
+        # read the set list of codes from the csv files
+        qc_df = read_qc_config()
+        # make a new column with the first two characters of the qc_df code
+        qc_df['code_short'] = qc_df['code'].str[:2]
+        # check that the history codes are in the list
+        if not df['HISTORY_QC_CODE'].isin(qc_df['code_short']).all():
+            missing = df.loc[~df['HISTORY_QC_CODE'].isin(qc_df['code_short']), 'HISTORY_QC_CODE']
+            LOGGER.warning('HISTORY_QC_CODE values %s not found in the QC code list. Please review output for this file %s'
+                           % (missing, profile.XBT_input_filename))
+            # remove any codes that are not in the list
+            df = df[df['HISTORY_QC_CODE'].isin(qc_df['code_short'])]
 
-        df['HISTORY_QC_CODE'] = df['HISTORY_QC_CODE'].str.replace('\x00', '')
-        df['HISTORY_DATE'] = df['HISTORY_DATE'].str.replace('\x00', '')
-        df['HISTORY_DATE'] = df['HISTORY_DATE'].str.replace(' ', '0')
-        df['HISTORY_PARAMETER'] = df['HISTORY_PARAMETER'].str.replace('\x00', '')
-        df['HISTORY_SOFTWARE'] = df['HISTORY_SOFTWARE'].str.replace('\x00', '')
         # allow for history dates to be YYYYMMDD or DDMMYYYY
         date1 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%Y%m%d')
         date2 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%d%m%Y')
@@ -1065,9 +1064,6 @@ def parse_histories_nc(profile):
                     LOGGER.error(
                         'HISTORY_QC_CODE_VALUE is not 2 at the same depth as FSR flag, not changing it to FSA. %s'
                         % profile.XBT_input_filename)
-
-        # read the set list of codes from the csv files
-        qc_df = read_qc_config()
 
         # set the software value to 2.1 for CS and PE, RE flags
         df.loc[
