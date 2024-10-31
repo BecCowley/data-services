@@ -1050,21 +1050,6 @@ def parse_histories_nc(profile):
         # all BDA flags should be set to 2, historically have been 1, but as low res, make them 2
         df.loc[(df['HISTORY_QC_CODE'].str.contains('BDA')), 'HISTORY_TEMP_QC_CODE_VALUE'] = 2
 
-        # change any FSR flags to FSA and flag 2, but first confirm that the TEMP_QC_CODE_VALUE is 2 at the same depth as FS
-        if df['HISTORY_QC_CODE'].str.contains('FSR').any():
-            # checking the QC values below the deepest CS flag
-            idepth = df.loc[df['HISTORY_QC_CODE'].str.contains('CS'), 'HISTORY_START_DEPTH'].values.max() + 1
-            # check the TEMP_QC_CODE_VALUE is 2 at the same depth as FS
-            if len(idepth) > 0:
-                if profile.data['data'].loc[
-                    profile.data['data']['DEPTH'] == idepth[0], 'TEMP_quality_control'].values != 2:
-                    df.loc[(df['HISTORY_QC_CODE'].str.contains('FSR')), ['HISTORY_QC_CODE',
-                                                                         'HISTORY_TEMP_QC_CODE_VALUE']] = 'FSA', 2
-                else:
-                    LOGGER.error(
-                        'HISTORY_QC_CODE_VALUE is not 2 at the same depth as FSR flag, not changing it to FSA. %s'
-                        % profile.XBT_input_filename)
-
         # set the software value to 2.1 for CS and PE, RE flags
         df.loc[
             df.HISTORY_QC_CODE.isin(['CSR', 'PEA', 'PER', 'REA']), ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
