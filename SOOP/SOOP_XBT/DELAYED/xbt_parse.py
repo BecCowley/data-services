@@ -357,7 +357,7 @@ def parse_globalatts_nc(profile):
                     att_name, profile.global_atts[att_name],
                     att_type.upper()), profile.XBT_input_filename)
         else:
-            if srfc_code_iter != '':
+            if srfc_code_iter != '' and srfc_code_iter != 'IOTA':
                 # collect the code in a list for the user to review
                 missing_codes.append(srfc_code_iter)
 
