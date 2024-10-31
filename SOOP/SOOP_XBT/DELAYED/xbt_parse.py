@@ -1173,9 +1173,6 @@ def combine_histories(profile_qc, profile_noqc):
             if dup_idx.any():
                 # TODO: if DEPTH is duplicated, check the previous value is the same as the DEPTH_RAW value, will need indexing
                 dup_idx = dup_idx.reindex(non_temp_codes.index, fill_value=False)
-                LOGGER.warning(
-                    'HISTORY: Duplicate QC code encountered, and removed in create_flag_feature: %s. Please review %s'
-                    % (non_temp_codes.loc[dup_idx, 'HISTORY_QC_CODE'].unique(), profile_qc.XBT_input_filename))
                 if vv not in ['LONGITUDE', 'TIME', 'LATITUDE']:
                     if vv in ['DEPTH']:
                         print('HISTORY: Duplicate %s flags found, need to troubleshoot. %s' % (vv, profile_qc.XBT_input_filename))
@@ -1196,14 +1193,14 @@ def combine_histories(profile_qc, profile_noqc):
                     # identify the rows where the previous value is not the same as the TIME_RAW value and remove them
                     idx = non_temp_codes[dup_idx][~(prevval == profile_qc.data['TIME_RAW'])].index
                     if len(idx) > 0:
-                        LOGGER.warning('PREVIOUS_VALUE is not the same as the TIME_RAW value, removed from the dataset %s'
+                        LOGGER.warning('Duplicated PREVIOUS_VALUE is not the same as the TIME_RAW value, removed %s'
                                        % profile_qc.XBT_input_filename)
                         non_temp_codes = non_temp_codes.drop(idx)
                 else:
                     # handle any duplicated position flags here
                     # keep the earliest LATITUDE or LONGITUDE flag and remove the others
                     LOGGER.warning(
-                        'HISTORY: Multiple %s flags found in the noqc file. %s' % (vv, profile_noqc.XBT_input_filename))
+                        'HISTORY: Multiple %s flags found in histories and duplicates removed. %s' % (vv, profile_noqc.XBT_input_filename))
                     # find the first flag looking at HISTORY_DATE
                     idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'] == vv, 'HISTORY_DATE'].idxmin()
                     # remove the other LOA flags
@@ -1239,8 +1236,8 @@ def combine_histories(profile_qc, profile_noqc):
                             (temp_codes['HISTORY_PREVIOUS_VALUE'] > 90)].index
         if len(idx) > 0:
             LOGGER.warning(
-                'HISTORY: Duplicate QC code encountered, and removed in create_flag_feature: %s. Please review'
-                % temp_codes.loc[idx, 'HISTORY_QC_CODE'].unique())
+                'HISTORY: Duplicate QC code encountered and removed in create_flag_feature: %s. Please review. %s'
+                % (temp_codes.loc[idx, 'HISTORY_QC_CODE'].unique(), profile_qc.XBT_input_filename))
             temp_codes = temp_codes.drop(idx)
         # Concatenate the non-TEMP rows back with the sorted TEMP rows
         combined_histories = pd.concat([non_temp_codes, temp_codes])
