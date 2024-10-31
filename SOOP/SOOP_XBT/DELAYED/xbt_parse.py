@@ -1506,6 +1506,13 @@ def create_flag_feature(profile):
                 else:
                     # if the two character code only appears once, then update the tempqc value in the codes table
                     codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = tempqc
+                    if row['tempqc'] in [1, 2, 5]:
+                        # also change the HISTORY_QC_CODE to A
+                        codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
+                    else:
+                        # also change the HISTORY_QC_CODE to R
+                        codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'R'
+
     # delete the tempqc column in codes, no longer required
     codes = codes.drop(columns=['tempqc'])
     # delete the code_short column in df, no longer required
