@@ -32,15 +32,10 @@ def ship_callsign_list():
         value_list = list(value)
         # Replace the string in the first element
         value_list[0] = value_list[0].replace(' ', '-')
+        # remove any ' from the vessel name, targeting the L'Astrolabe vessel
+        value_list[0] = value_list[0].replace("'", "")
         # Convert the list back to a tuple and update the dictionary
         platform_codes[key] = tuple(value_list)
-
-    # Astrolabe case to remove the "L'" from its name
-    if 'FHZI' in platform_codes.keys():
-        platform_codes['FHZI'] = 'Astrolabe'
-
-    if 'FASB' in platform_codes.keys():
-        platform_codes['FASB'] = 'Astrolabe'
 
     """ this section deals with vessels which have a different callsign, but a similar name. This is the case for new 
     vessels replacing their older 'version'. In the vocabulary, in order to deal with this special case, the vessel name
