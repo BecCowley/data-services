@@ -6,7 +6,7 @@ electrical_interference_interpolated,0,"SP, IP",EI,EIA,,,selected,,8,,,,,5,1
 electrical_interference_interpolated,0,,EI,EIA,,,down,,8,,,,,2,1
 high_frequency_noise_filtered,0,,HF,HFA,,,selected,,16,,,,,5,1
 high_frequency_noise_filtered,0,,HF,HFA,,,down,,16,,,,,2,1
-repeat_profile,0,,RE,REA,0,,down,,32,,,,,,
+repeat_profile,0,,RE,REA,0,,down,,32,,,,,0,0
 temperature_inversion_confirmed,0,,IV,IVA,,,down,,64,,,,,1,1
 temperature_inversion_unconfirmed,0,,PI,PIA,,,down,,128,,,,,2,1
 temperature_offset,0,"TO, TD, SA, SO",TO,TOA,,,down,,256,,,,,2,1
