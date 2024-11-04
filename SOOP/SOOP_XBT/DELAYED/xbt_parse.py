@@ -1050,37 +1050,6 @@ def parse_histories_nc(profile):
         names = {'CSCB': 'CSIRO Quality control cookbook for XBT data v1.1',
                  'CSCBv2': 'Australian XBT Quality Control Cookbook Version 2.1'}
         df['HISTORY_SOFTWARE'] = df['HISTORY_SOFTWARE'].map(names, na_action='ignore')
-        # sort the flags by depth order to help with finding STOP_DEPTH
-        # TODO: will keep the stop depth for now. Consider re-writing to loop over each of the lists of act_code types
-        df = df.sort_values('HISTORY_START_DEPTH')
-        dfdat = profile.data['data']
-        for idx, row in df.iterrows():
-            # Ensure start depth is the same as the value in the depth array
-            # Find the closest value to the start depth in the histories
-            ii = (dfdat['DEPTH'] - row['HISTORY_START_DEPTH']).abs().idxmin()
-            df.at[idx, 'HISTORY_START_DEPTH'] = dfdat.at[ii, 'DEPTH']
-
-            # QC,RE, TE, PE and EF etc flag applies to entire profile, stop_depth is deepest depth
-            res = row['HISTORY_QC_CODE'] in qc_df.loc[qc_df['group_label'].str.contains('ACT_CODES_FULL_PROFILE'),]
-            if res:
-                df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
-
-            # if the flag is in act_code_single_point list, then stop depth is same as start
-            res = row['HISTORY_QC_CODE'] in qc_df.loc[qc_df['group_label'].str.contains('ACT_CODES_SINGLE_POINT'),]
-            if res:
-                df.at[idx, "HISTORY_STOP_DEPTH"] = df.at[idx, 'HISTORY_START_DEPTH']
-
-            # TODO: surface flags in the act_code_next_flag category need to ignore the CS flags
-            # if the flag is in act_code_next_flag, then stop depth is the next depth or bottom
-            # find next deepest flag depth
-            res = row['HISTORY_QC_CODE'] in qc_df.loc[qc_df['group_label'].str.contains('ACT_CODES_TO_NEXT_FLAG'),]
-            stop_idx = df['HISTORY_START_DEPTH'] > row['HISTORY_START_DEPTH']
-            stop_depth = df['HISTORY_START_DEPTH'][stop_idx]
-            if any(stop_idx) & res:
-                ii = (np.abs(dfdat['DEPTH'] - stop_depth.values[0])).argmin()
-                df.at[idx, "HISTORY_STOP_DEPTH"] = dfdat['DEPTH'][ii]
-            elif res:  # if there isn't a deeper flag, use deepest depth
-                df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
 
         # change CSA to CSR and the flag to 3 to match new format
         df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
@@ -1147,6 +1116,40 @@ def parse_histories_nc(profile):
         # remove duplicated codes where one previous value is > 99 and parameter is TEMP
         df = df[~((df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_START_DEPTH'])) &
                     (df['HISTORY_PREVIOUS_VALUE'] > 99) & (df['HISTORY_PARAMETER'] == 'TEMP'))]
+
+        # sort the flags by depth order to help with finding STOP_DEPTH
+        # TODO: will keep the stop depth for now. Consider re-writing to loop over each of the lists of act_code types
+        df = df.sort_values('HISTORY_START_DEPTH')
+        dfdat = profile.data['data']
+        for idx, row in df.iterrows():
+            # Ensure start depth is the same as the value in the depth array
+            # Find the closest value to the start depth in the histories
+            ii = (dfdat['DEPTH'] - row['HISTORY_START_DEPTH']).abs().idxmin()
+            df.at[idx, 'HISTORY_START_DEPTH'] = dfdat.at[ii, 'DEPTH']
+            # QC,RE, TE, PE and EF etc flag applies to entire profile, stop_depth is deepest depth
+            res = row['HISTORY_QC_CODE'] in qc_df.loc[
+                qc_df['group_label'].str.contains('ACT_CODES_FULL_PROFILE'), 'code'].values
+            if res:
+                df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
+
+            # if the flag is in act_code_single_point list, then stop depth is same as start
+            res = row['HISTORY_QC_CODE'] in qc_df.loc[
+                qc_df['group_label'].str.contains('ACT_CODES_SINGLE_POINT'), 'code'].values
+            if res:
+                df.at[idx, "HISTORY_STOP_DEPTH"] = df.at[idx, 'HISTORY_START_DEPTH']
+
+            # TODO: surface flags in the act_code_next_flag category need to ignore the CS flags
+            # if the flag is in act_code_next_flag, then stop depth is the next depth or bottom
+            # find next deepest flag depth
+            res = row['HISTORY_QC_CODE'] in qc_df.loc[
+                qc_df['group_label'].str.contains('ACT_CODES_TO_NEXT_FLAG'), 'code'].values
+            stop_idx = df['HISTORY_START_DEPTH'] > row['HISTORY_START_DEPTH']
+            stop_depth = df['HISTORY_START_DEPTH'][stop_idx]
+            if any(stop_idx) & res:
+                ii = (np.abs(dfdat['DEPTH'] - stop_depth.values[0])).argmin()
+                df.at[idx, "HISTORY_STOP_DEPTH"] = dfdat['DEPTH'][ii]
+            elif res:  # if there isn't a deeper flag, use deepest depth
+                df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
 
     # assign the dataframe back to profile at this stage
     profile.histories = df.reset_index(drop=True)
