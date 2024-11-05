@@ -637,16 +637,25 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
         # there might be a couple of reasons for this.
         # 1. There is an extra depth added at 3.7m in the df_qc file and we need to put a nan row in the df_raw file
         if len(df_raw) + 1 == len(df_qc):
-            # check if there is a 3.7m depth in the df_qc and not in the df_raw
-            if 3.7 in df_qc['DEPTH'].values and 3.7 not in df_raw['DEPTH_RAW'].values:
+            # check if there is a 3.7m depth in the df_qc and not in the df_raw could also be depth corrected (3.7 *1.0336)
+            tf = ((np.isclose(3.7, df_qc['DEPTH'].values, atol=1e-6).any()
+                  and ~np.isclose(3.7, df_raw['DEPTH_RAW'].values, atol=1e-6).any())
+                  or (np.isclose(3.7 * 1.0336, df_qc['DEPTH'].values, atol=1e-6).any()
+                      and ~np.isclose(3.7 * 1.0336, df_raw['DEPTH_RAW'].values, atol=1e-6).any()))
+            if tf:
                 # what index is the 3.7m depth at in the df_qc
-                idx = df_qc[df_qc['DEPTH'] == 3.7].index[0]
+                idx = df_qc[np.isclose(3.7, df_qc['DEPTH'].values, atol=1e-6) |
+                            np.isclose(3.7 * 1.0336, df_qc['DEPTH'].values, atol=1e-6)].index[0]
                 # create a row of nans at the location where idx is
                 nan_row = pd.DataFrame(np.nan, index=[idx], columns=df_raw.columns)
                 # insert the nan row at the correct position
                 df_raw = pd.concat([df_raw.iloc[:idx], nan_row, df_raw.iloc[idx:]]).reset_index(drop=True)
                 # concatenate the two dataframes
                 df = pd.concat([df_raw, df_qc], axis=1)
+            else:
+                LOGGER.warning('DEPTH_RAW and DEPTH counts are one depth different. Please review %s' % profile_qc.XBT_input_filename)
+                # concatenate the two dataframes with NaNs in the rows that don't match
+                df = pd.concat([df_qc, df_raw], axis=1)
         # 2. The profiles aren't the same, there has been a bug that caused the edited file to be overwritten with a diffent profile
         else:
             LOGGER.warning('DEPTH_RAW and DEPTH counts are significantly different. Please review %s' % profile_qc.XBT_input_filename)
