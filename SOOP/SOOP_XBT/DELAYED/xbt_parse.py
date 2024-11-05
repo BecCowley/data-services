@@ -1539,10 +1539,10 @@ def create_flag_feature(profile):
     tempdf.loc[idx, 'tempqc'] = 5
 
     # find any depths where the tempqc value is less than the TEMP_quality_control value not including the 5 values
+    # and ignore where LOA has changed the QC to 2 from 1
     idx = (df_data['TEMP_quality_control'] > tempdf['tempqc']) & (df_data['TEMP_quality_control'] != 5)
-    if idx.any():
-        LOGGER.error('TEMP_quality_control values are greater than the tempqc values. %s' % profile.XBT_input_filename)
-        exit(1)
+    if idx.any() & ~(codes['HISTORY_QC_CODE'].str.contains('LOA')).any():
+        LOGGER.warning('TEMP_quality_control values are greater than the tempqc values. %s' % profile.XBT_input_filename)
 
     # update the TEMP_quality_control field with the tempdf values
     df_data['TEMP_quality_control'] = tempdf['tempqc']
