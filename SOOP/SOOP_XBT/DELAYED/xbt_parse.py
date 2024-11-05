@@ -1591,7 +1591,7 @@ def check_nc_to_be_created(profile):
         LOGGER.error('Profile not processed, No data in the file: %s' % profile.XBT_input_filename)
         return False
 
-    if data_type != 'XB':  # and data_type != 'BA' and data_type != 'TE':
+    if (data_type != 'XB') and (data_type != 'BA'):  # and data_type != 'BA' and data_type != 'TE':
         LOGGER.error('Profile not processed as it is type %s %s ' % (data_type, profile.XBT_input_filename))
         return False
 
