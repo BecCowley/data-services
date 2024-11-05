@@ -1315,7 +1315,7 @@ def restore_temp_val(profile):
 
     # find any depths with 99.99 values that are flagged with SPA or IPA or HFA
     idx = (df['TEMP'] > 99)
-    if idx.any():
+    if idx.any() and ind.any():
         # check if there are any SPA, IPA or HFA flags at the same depth
         idx2 = profile.histories['HISTORY_START_DEPTH'].isin(df.loc[idx, 'DEPTH'])
         if idx2.any():
