@@ -1006,6 +1006,17 @@ def parse_histories_nc(profile):
     # fix any variable names that are incorrect, only PEA, PER, TEA, TER should have something that is not TEMP
     mask = newdf['HISTORY_QC_CODE'].str.contains('PEA|PER|TEA|TER')
     newdf.loc[~mask, 'HISTORY_PARAMETER'] = 'TEMP'
+    # fix PER to be LATITUDE, LONGITUDE
+    mask = newdf['HISTORY_QC_CODE'].str.contains('PER') & newdf['HISTORY_PARAMETER'].str.contains('TEMP')
+    newdf.loc[mask, 'HISTORY_PARAMETER'] = 'LATITUDE, LONGITUDE'
+    # fix TEA, TER to be TIME
+    mask = newdf['HISTORY_QC_CODE'].str.contains('TEA|TER') & newdf['HISTORY_PARAMETER'].str.contains('TEMP')
+    newdf.loc[mask, 'HISTORY_PARAMETER'] = 'TIME'
+    # finally, PEA should be LATITUDE or LONGITUDE
+    mask = newdf['HISTORY_QC_CODE'].str.contains('PEA') & newdf['HISTORY_PARAMETER'].str.contains('TEMP')
+    # we don't know which one, so warn if there are any
+    if any(mask):
+        LOGGER.warning('PEA flag with TEMP in HISTORY_PARAMETER. Please review %s' % profile.XBT_input_filename)
 
     # update institute names to be more descriptive
     names = read_section_from_xbt_config('INSTITUTE')
