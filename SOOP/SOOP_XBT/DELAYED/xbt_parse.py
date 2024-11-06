@@ -1029,147 +1029,146 @@ def parse_histories_nc(profile):
 
     df = newdf
 
-    if nhist > 0:
-        # this group of changes is here because I have reviewed all our QC codes in the historic databases and I know
-        # there are some that are not correct. This is a one off change to correct them. Could be done more elegantly probably.
+    # this group of changes is here because I have reviewed all our QC codes in the historic databases and I know
+    # there are some that are not correct. This is a one off change to correct them. Could be done more elegantly probably.
 
-        # change ERA to PLA with flag 3 to reduce duplication of flags
-        df.loc[
-            (df['HISTORY_QC_CODE'].str.contains('ERA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'PLA', 3
+    # change ERA to PLA with flag 3 to reduce duplication of flags
+    df.loc[
+        (df['HISTORY_QC_CODE'].str.contains('ERA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'PLA', 3
 
-        # change any REA or RER flags to REA and flag 0 to match new format
-        df.loc[(df['HISTORY_QC_CODE'].str.contains('RE')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'REA', 0
+    # change any REA or RER flags to REA and flag 0 to match new format
+    df.loc[(df['HISTORY_QC_CODE'].str.contains('RE')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'REA', 0
 
-        # change any NGA flags to NGR and flag 4
-        df.loc[
-            (df['HISTORY_QC_CODE'].str.contains('NGA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NGR', 4
+    # change any NGA flags to NGR and flag 4
+    df.loc[
+        (df['HISTORY_QC_CODE'].str.contains('NGA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NGR', 4
 
-        # change any NTA flags to NTR and flag 4
-        df.loc[
-            (df['HISTORY_QC_CODE'].str.contains('NTA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NTR', 4
+    # change any NTA flags to NTR and flag 4
+    df.loc[
+        (df['HISTORY_QC_CODE'].str.contains('NTA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NTR', 4
 
-        # change any TPA flags to TPR and flag 4
-        df.loc[
-            (df['HISTORY_QC_CODE'].str.contains('TPA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'TPR', 4
+    # change any TPA flags to TPR and flag 4
+    df.loc[
+        (df['HISTORY_QC_CODE'].str.contains('TPA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'TPR', 4
 
-        # change any WBA flags to WBR and flag 4
-        df.loc[
-            (df['HISTORY_QC_CODE'].str.contains('WBA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'WBR', 4
+    # change any WBA flags to WBR and flag 4
+    df.loc[
+        (df['HISTORY_QC_CODE'].str.contains('WBA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'WBR', 4
 
-        # change URA for BDA and flag 2
-        df.loc[
-            (df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'BDA', 2
-        # all BDA flags should be set to 2, historically have been 1, but as low res, make them 2
-        df.loc[(df['HISTORY_QC_CODE'].str.contains('BDA')), 'HISTORY_TEMP_QC_CODE_VALUE'] = 2
+    # change URA for BDA and flag 2
+    df.loc[
+        (df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'BDA', 2
+    # all BDA flags should be set to 2, historically have been 1, but as low res, make them 2
+    df.loc[(df['HISTORY_QC_CODE'].str.contains('BDA')), 'HISTORY_TEMP_QC_CODE_VALUE'] = 2
 
-        # set the software value to 2.1 for CS and PE, RE flags
-        df.loc[
-            df.HISTORY_QC_CODE.isin(['CSR', 'PEA', 'PER', 'REA']), ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
+    # set the software value to 2.1 for CS and PE, RE flags
+    df.loc[
+        df.HISTORY_QC_CODE.isin(['CSR', 'PEA', 'PER', 'REA']), ['HISTORY_SOFTWARE_RELEASE', 'HISTORY_SOFTWARE']] = '2.1', 'CSCBv2'
 
-        # update software names to be more descriptive
-        names = {'CSCB': 'CSIRO Quality control cookbook for XBT data v1.1',
-                 'CSCBv2': 'Australian XBT Quality Control Cookbook Version 2.1'}
-        df['HISTORY_SOFTWARE'] = df['HISTORY_SOFTWARE'].map(names, na_action='ignore')
+    # update software names to be more descriptive
+    names = {'CSCB': 'CSIRO Quality control cookbook for XBT data v1.1',
+             'CSCBv2': 'Australian XBT Quality Control Cookbook Version 2.1'}
+    df['HISTORY_SOFTWARE'] = df['HISTORY_SOFTWARE'].map(names, na_action='ignore')
 
-        # change CSA to CSR and the flag to 3 to match new format
-        df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
-        ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'CSR', 3
+    # change CSA to CSR and the flag to 3 to match new format
+    df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
+    ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'CSR', 3
 
-        # Change the PEA flag to LA or LO and ensure the TEMP_QC_CODE_VALUE is set to 2, not 5
-        df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
-                (df['HISTORY_PARAMETER'].str.contains('LATITUDE'))),
-        ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LAA', 2
-        df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
-                (df['HISTORY_PARAMETER'].str.contains('LONGITUDE'))),
-        ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LOA', 2
+    # Change the PEA flag to LA or LO and ensure the TEMP_QC_CODE_VALUE is set to 2, not 5
+    df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
+            (df['HISTORY_PARAMETER'].str.contains('LATITUDE'))),
+    ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LAA', 2
+    df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
+            (df['HISTORY_PARAMETER'].str.contains('LONGITUDE'))),
+    ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LOA', 2
 
-        # Combine duplicated TEA flags to a single TEA for TIME variable TEMP_QC_CODE_VALUE is set to 2, not 5
-        # Also change just DATE TEA flags to TIME
-        dfTEA = df[df['HISTORY_QC_CODE'] == 'TEA'].copy()
-        if len(dfTEA) > 0:
-            # get the date value from the TIME variable
-            dtt = profile.data['TIME'].strftime('%Y%m%d')
-            # get the TIME value from the TIME variable
-            ti = profile.data['TIME'].strftime('%H%M%S')
+    # Combine duplicated TEA flags to a single TEA for TIME variable TEMP_QC_CODE_VALUE is set to 2, not 5
+    # Also change just DATE TEA flags to TIME
+    dfTEA = df[df['HISTORY_QC_CODE'] == 'TEA'].copy()
+    if len(dfTEA) > 0:
+        # get the date value from the TIME variable
+        dtt = profile.data['TIME'].strftime('%Y%m%d')
+        # get the TIME value from the TIME variable
+        ti = profile.data['TIME'].strftime('%H%M%S')
 
-            # is there a 'TIME' parameter in the TEA flags?
-            timerows = dfTEA[dfTEA['HISTORY_PARAMETER'] == 'TIME'].copy()
-            # include the date information
-            timerows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = timerows['HISTORY_PREVIOUS_VALUE'].apply(
-                lambda x: dtt + str(int(x)) + '00').astype(float)
+        # is there a 'TIME' parameter in the TEA flags?
+        timerows = dfTEA[dfTEA['HISTORY_PARAMETER'] == 'TIME'].copy()
+        # include the date information
+        timerows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = timerows['HISTORY_PREVIOUS_VALUE'].apply(
+            lambda x: dtt + str(int(x)) + '00').astype(float)
 
-            # now check for any 'DATE' parameter in the TEA flags
-            daterows = dfTEA[dfTEA['HISTORY_PARAMETER'] == 'DATE'].copy()
-            try:
-                daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
-                    lambda x: datetime.strptime(str(int(x)), '%Y%m%d').strftime('%Y%m%d') + ti).astype(float)
-            except:
-                daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
-                    lambda x: datetime.strptime(str(int(x)), '%d%m%Y').strftime('%Y%m%d') + ti).astype(float)
+        # now check for any 'DATE' parameter in the TEA flags
+        daterows = dfTEA[dfTEA['HISTORY_PARAMETER'] == 'DATE'].copy()
+        try:
+            daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
+                lambda x: datetime.strptime(str(int(x)), '%Y%m%d').strftime('%Y%m%d') + ti).astype(float)
+        except:
+            daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
+                lambda x: datetime.strptime(str(int(x)), '%d%m%Y').strftime('%Y%m%d') + ti).astype(float)
 
-            # update the df with the new values
-            df.update(timerows)
-            df.update(daterows)
+        # update the df with the new values
+        df.update(timerows)
+        df.update(daterows)
 
-            # change the 'DATE' label to TIME  and update the TEA PREVIOUS_VALUE to the new datetime value
-            df.loc[((df['HISTORY_PARAMETER'].str.contains('DATE') | df['HISTORY_PARAMETER'].str.contains('TIME')) &
-                    (df['HISTORY_QC_CODE'].str.contains('TEA'))), ['HISTORY_PARAMETER']] = 'TIME'
+        # change the 'DATE' label to TIME  and update the TEA PREVIOUS_VALUE to the new datetime value
+        df.loc[((df['HISTORY_PARAMETER'].str.contains('DATE') | df['HISTORY_PARAMETER'].str.contains('TIME')) &
+                (df['HISTORY_QC_CODE'].str.contains('TEA'))), ['HISTORY_PARAMETER']] = 'TIME'
 
-        # add the QC description information
-        df["HISTORY_QC_CODE_DESCRIPTION"] = [''] * nhist
-        # map the qc_df['code'] to the df['HISTORY_QC_CODE'] and add the description to the df['HISTORY_QC_CODE_DESCRIPTION']
+    # add the QC description information
+    df["HISTORY_QC_CODE_DESCRIPTION"] = [''] * nhist
+    # map the qc_df['code'] to the df['HISTORY_QC_CODE'] and add the description to the df['HISTORY_QC_CODE_DESCRIPTION']
 
-        # Create a dictionary from qc_df for mapping
-        qc_code_to_description = qc_df.set_index('code')['label'].to_dict()
+    # Create a dictionary from qc_df for mapping
+    qc_code_to_description = qc_df.set_index('code')['label'].to_dict()
 
-        # Map the 'HISTORY_QC_CODE' to the descriptions and add to 'HISTORY_QC_CODE_DESCRIPTION'
-        df['HISTORY_QC_CODE_DESCRIPTION'] = df['HISTORY_QC_CODE'].map(qc_code_to_description)
+    # Map the 'HISTORY_QC_CODE' to the descriptions and add to 'HISTORY_QC_CODE_DESCRIPTION'
+    df['HISTORY_QC_CODE_DESCRIPTION'] = df['HISTORY_QC_CODE'].map(qc_code_to_description)
 
-        if any(df['HISTORY_QC_CODE_DESCRIPTION'].eq('')):
-            missing = df.loc[df['HISTORY_QC_CODE_DESCRIPTION'] == '', 'HISTORY_QC_CODE']
-            if missing.any():
-                LOGGER.warning("HISTORY_QC_CODE \"%s\" is not defined. Please edit xbt_config file. %s"
-                               % (missing, profile.XBT_input_filename))
+    if any(df['HISTORY_QC_CODE_DESCRIPTION'].eq('')):
+        missing = df.loc[df['HISTORY_QC_CODE_DESCRIPTION'] == '', 'HISTORY_QC_CODE']
+        if missing.any():
+            LOGGER.warning("HISTORY_QC_CODE \"%s\" is not defined. Please edit xbt_config file. %s"
+                           % (missing, profile.XBT_input_filename))
 
-        # remove any duplicated lines for any code
-        df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_PREVIOUS_VALUE', 'HISTORY_START_DEPTH']))]
-        # remove duplicated codes where one previous value is > 99 and parameter is TEMP
-        df = df[~((df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_START_DEPTH'])) &
-                    (df['HISTORY_PREVIOUS_VALUE'] > 99) & (df['HISTORY_PARAMETER'] == 'TEMP'))]
+    # remove any duplicated lines for any code
+    df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_PREVIOUS_VALUE', 'HISTORY_START_DEPTH']))]
+    # remove duplicated codes where one previous value is > 99 and parameter is TEMP
+    df = df[~((df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_START_DEPTH'])) &
+                (df['HISTORY_PREVIOUS_VALUE'] > 99) & (df['HISTORY_PARAMETER'] == 'TEMP'))]
 
-        # sort the flags by depth order to help with finding STOP_DEPTH
-        # TODO: will keep the stop depth for now. Consider re-writing to loop over each of the lists of act_code types
-        df = df.sort_values('HISTORY_START_DEPTH')
-        dfdat = profile.data['data']
-        for idx, row in df.iterrows():
-            # Ensure start depth is the same as the value in the depth array
-            # Find the closest value to the start depth in the histories
-            ii = (dfdat['DEPTH'] - row['HISTORY_START_DEPTH']).abs().idxmin()
-            df.at[idx, 'HISTORY_START_DEPTH'] = dfdat.at[ii, 'DEPTH']
-            # QC,RE, TE, PE and EF etc flag applies to entire profile, stop_depth is deepest depth
-            res = row['HISTORY_QC_CODE'] in qc_df.loc[
-                qc_df['group_label'].str.contains('ACT_CODES_FULL_PROFILE'), 'code'].values
-            if res:
-                df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
+    # sort the flags by depth order to help with finding STOP_DEPTH
+    # TODO: will keep the stop depth for now. Consider re-writing to loop over each of the lists of act_code types
+    df = df.sort_values('HISTORY_START_DEPTH')
+    dfdat = profile.data['data']
+    for idx, row in df.iterrows():
+        # Ensure start depth is the same as the value in the depth array
+        # Find the closest value to the start depth in the histories
+        ii = (dfdat['DEPTH'] - row['HISTORY_START_DEPTH']).abs().idxmin()
+        df.at[idx, 'HISTORY_START_DEPTH'] = dfdat.at[ii, 'DEPTH']
+        # QC,RE, TE, PE and EF etc flag applies to entire profile, stop_depth is deepest depth
+        res = row['HISTORY_QC_CODE'] in qc_df.loc[
+            qc_df['group_label'].str.contains('ACT_CODES_FULL_PROFILE'), 'code'].values
+        if res:
+            df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
 
-            # if the flag is in act_code_single_point list, then stop depth is same as start
-            res = row['HISTORY_QC_CODE'] in qc_df.loc[
-                qc_df['group_label'].str.contains('ACT_CODES_SINGLE_POINT'), 'code'].values
-            if res:
-                df.at[idx, "HISTORY_STOP_DEPTH"] = df.at[idx, 'HISTORY_START_DEPTH']
+        # if the flag is in act_code_single_point list, then stop depth is same as start
+        res = row['HISTORY_QC_CODE'] in qc_df.loc[
+            qc_df['group_label'].str.contains('ACT_CODES_SINGLE_POINT'), 'code'].values
+        if res:
+            df.at[idx, "HISTORY_STOP_DEPTH"] = df.at[idx, 'HISTORY_START_DEPTH']
 
-            # TODO: surface flags in the act_code_next_flag category need to ignore the CS flags
-            # if the flag is in act_code_next_flag, then stop depth is the next depth or bottom
-            # find next deepest flag depth
-            res = row['HISTORY_QC_CODE'] in qc_df.loc[
-                qc_df['group_label'].str.contains('ACT_CODES_TO_NEXT_FLAG'), 'code'].values
-            stop_idx = df['HISTORY_START_DEPTH'] > row['HISTORY_START_DEPTH']
-            stop_depth = df['HISTORY_START_DEPTH'][stop_idx]
-            if any(stop_idx) & res:
-                ii = (np.abs(dfdat['DEPTH'] - stop_depth.values[0])).argmin()
-                df.at[idx, "HISTORY_STOP_DEPTH"] = dfdat['DEPTH'][ii]
-            elif res:  # if there isn't a deeper flag, use deepest depth
-                df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
+        # TODO: surface flags in the act_code_next_flag category need to ignore the CS flags
+        # if the flag is in act_code_next_flag, then stop depth is the next depth or bottom
+        # find next deepest flag depth
+        res = row['HISTORY_QC_CODE'] in qc_df.loc[
+            qc_df['group_label'].str.contains('ACT_CODES_TO_NEXT_FLAG'), 'code'].values
+        stop_idx = df['HISTORY_START_DEPTH'] > row['HISTORY_START_DEPTH']
+        stop_depth = df['HISTORY_START_DEPTH'][stop_idx]
+        if any(stop_idx) & res:
+            ii = (np.abs(dfdat['DEPTH'] - stop_depth.values[0])).argmin()
+            df.at[idx, "HISTORY_STOP_DEPTH"] = dfdat['DEPTH'][ii]
+        elif res:  # if there isn't a deeper flag, use deepest depth
+            df.at[idx, "HISTORY_STOP_DEPTH"] = profile.global_atts['geospatial_vertical_max']
 
     # assign the dataframe back to profile at this stage
     profile.histories = df.reset_index(drop=True)
