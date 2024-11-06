@@ -1093,12 +1093,16 @@ def parse_histories_nc(profile):
 
         # is there a 'TIME' parameter in the TEA flags?
         timerows = dfTEA[dfTEA['HISTORY_PARAMETER'] == 'TIME'].copy()
+        # if any of timerows['HISTORY_PREVIOUS_VALUE'] is greater than 99, then replace with 0000
+        timerows.loc[timerows['HISTORY_PREVIOUS_VALUE'] > 9999, 'HISTORY_PREVIOUS_VALUE'] = 0
         # include the date information
         timerows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = timerows['HISTORY_PREVIOUS_VALUE'].apply(
             lambda x: dtt + str(int(x)) + '00').astype(float)
 
         # now check for any 'DATE' parameter in the TEA flags
         daterows = dfTEA[dfTEA['HISTORY_PARAMETER'] == 'DATE'].copy()
+        # if any of daterows['HISTORY_PREVIOUS_VALUE'] is greater than 99, then replace with 0000
+        daterows.loc[daterows['HISTORY_PREVIOUS_VALUE'] > 9999, 'HISTORY_PREVIOUS_VALUE'] = 0
         try:
             daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
                 lambda x: datetime.strptime(str(int(x)), '%Y%m%d').strftime('%Y%m%d') + ti).astype(float)
