@@ -1092,23 +1092,28 @@ def parse_histories_nc(profile):
         ti = profile.data['TIME'].strftime('%H%M%S')
 
         # is there a 'TIME' parameter in the TEA flags?
-        timerows = dfTEA[dfTEA['HISTORY_PARAMETER'] == 'TIME'].copy()
-        # if any of timerows['HISTORY_PREVIOUS_VALUE'] is greater than 99, then replace with 0000
+        timerows = df[df['HISTORY_PARAMETER'] == 'TIME'].copy()
+        # if any of timerows['HISTORY_PREVIOUS_VALUE'] is greater than 9999, then replace with 0
         timerows.loc[timerows['HISTORY_PREVIOUS_VALUE'] > 9999, 'HISTORY_PREVIOUS_VALUE'] = 0
         # include the date information
         timerows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = timerows['HISTORY_PREVIOUS_VALUE'].apply(
             lambda x: dtt + str(int(x)) + '00').astype(float)
 
         # now check for any 'DATE' parameter in the TEA flags
-        daterows = dfTEA[dfTEA['HISTORY_PARAMETER'] == 'DATE'].copy()
-        # if any of daterows['HISTORY_PREVIOUS_VALUE'] is greater than 99, then replace with 0000
-        daterows.loc[daterows['HISTORY_PREVIOUS_VALUE'] > 9999, 'HISTORY_PREVIOUS_VALUE'] = 0
-        try:
-            daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
-                lambda x: datetime.strptime(str(int(x)), '%Y%m%d').strftime('%Y%m%d') + ti).astype(float)
-        except:
-            daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
-                lambda x: datetime.strptime(str(int(x)), '%d%m%Y').strftime('%Y%m%d') + ti).astype(float)
+        daterows = df[df['HISTORY_PARAMETER'] == 'DATE']
+        # if any of daterows['HISTORY_PREVIOUS_VALUE'] is greater than 9999, then replace with NanT
+        if any(daterows['HISTORY_PREVIOUS_VALUE'] > 9999):
+            LOGGER.warning('DATE values greater than 9999 found in %s' % profile.XBT_input_filename)
+            daterows.loc[daterows['HISTORY_PREVIOUS_VALUE'] > 9999, 'HISTORY_PREVIOUS_VALUE'] = np.nan
+            nan_mask = daterows.isna()
+            df[nan_mask] = np.nan
+        else:
+            try:
+                daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
+                    lambda x: datetime.strptime(str(int(x)), '%Y%m%d').strftime('%Y%m%d') + ti).astype(float)
+            except:
+                daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
+                    lambda x: datetime.strptime(str(int(x)), '%d%m%Y').strftime('%Y%m%d') + ti).astype(float)
 
         # update the df with the new values
         df.update(timerows)
@@ -1246,14 +1251,17 @@ def combine_histories(profile_qc, profile_noqc):
                         non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'].values[0]
             elif vv in ['TIME']:
                 # TIME_RAW is in datetime format and HISTORY_PREVIOUS_VALUE is in float format
-                # convert the HISTORY_PREVIOUS_VALUE to a datetime object
-                prevval = datetime.strptime(str(int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
-                    'HISTORY_PREVIOUS_VALUE'].values[0])), '%Y%m%d%H%M%S')
-                # check the previous value is the same as the TIME_RAW value
-                if not prevval == profile_qc.data[var]:
-                    LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
-                                   % (vv, profile_qc.XBT_input_filename))
-                    profile_qc.data[var] = prevval
+                # if the HISTORY_PREVIOUS_VALUE is not NaN, then it is a valid date
+                if not pd.isna(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+                    'HISTORY_PREVIOUS_VALUE'].values[0]):
+                    # convert the HISTORY_PREVIOUS_VALUE to a datetime object
+                    prevval = datetime.strptime(str(int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+                        'HISTORY_PREVIOUS_VALUE'].values[0])), '%Y%m%d%H%M%S')
+                    # check the previous value is the same as the TIME_RAW value
+                    if not prevval == profile_qc.data[var]:
+                        LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
+                                       % (vv, profile_qc.XBT_input_filename))
+                        profile_qc.data[var] = prevval
 
         # Filter the rows where HISTORY_PARAMETER is TEMP
         temp_codes = combined_histories[combined_histories['HISTORY_PARAMETER'] == 'TEMP']
