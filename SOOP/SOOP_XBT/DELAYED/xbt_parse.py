@@ -146,17 +146,15 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     # let's check if there are histories to parse and then handle
     profile_qc = parse_histories_nc(profile_qc)
     if int(profile_noqc.netcdf_file_obj['Num_Hists'][0].data) == 0:
-        profile_noqc.histories = []
+        # if there are no histories in the noqc file, apply an empty dataframe with the same columns as profile_qc.histories
+        profile_noqc.histories = pd.DataFrame(columns=profile_qc.histories.columns)
     else:
         # we need to carry the depths information into the history parsing, so copy the data array into profile_noqc
         profile_noqc.data['data']['DEPTH'] = profile_qc.data['data']['DEPTH_RAW']
         profile_noqc.data['data']['TEMP_quality_control'] = profile_qc.data['data']['TEMP_RAW_quality_control']
         profile_noqc = parse_histories_nc(profile_noqc)
-        # check for histories in the noqc file and reconcile:
-        if len(profile_noqc.histories) > 0:
-            # TODO: figure out a handling here if there are extra histories in the RAW file or ones that aren't in ED file
-            # reconcile histories where they exist in the noqc profile
-            profile_qc = combine_histories(profile_qc, profile_noqc)
+    # check for histories in the noqc file and reconcile:
+    profile_qc = combine_histories(profile_qc, profile_noqc)
 
     # make our accept and reject code variables
     profile_qc = create_flag_feature(profile_qc)
