@@ -1187,94 +1187,132 @@ def combine_histories(profile_qc, profile_noqc):
     # check for global attributes in the noqc file and update the global atts as required
     # handle the longitude change where data was imported from dataset with a negative longitude where it should
     # have been positive. The *raw.nc previous value and *ed.nc previous value should be the same, update the LONG_RAW.
-    if len(profile_noqc.histories) > 0:
-        #first merge all the histories
-        combined_histories = pd.merge(profile_qc.histories, profile_noqc.histories, how='left')
-        # check for duplicated history codes at the same depth so we don't duplicate the QC code in the fft variable
-        # this will keep the first value recorded in HISTORY_DATE.
-        non_temp_codes = combined_histories[combined_histories['HISTORY_PARAMETER'] != 'TEMP']
-        # loop over the unique values in the HISTORY_PARAMETER column
-        for vv in non_temp_codes['HISTORY_PARAMETER'].unique():
-            var = vv + '_RAW'
-            # get the index of duplicated rows for vv in non_temp_codes
-            dup_idx = non_temp_codes[non_temp_codes['HISTORY_PARAMETER'] == vv].duplicated(
-                subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)
-            if dup_idx.any():
-                # TODO: if DEPTH is duplicated, check the previous value is the same as the DEPTH_RAW value, will need indexing
-                dup_idx = dup_idx.reindex(non_temp_codes.index, fill_value=False)
-                if vv not in ['LONGITUDE', 'TIME', 'LATITUDE']:
-                    if vv in ['DEPTH']:
-                        print('HISTORY: Duplicate %s flags found, need to troubleshoot. %s' % (vv, profile_qc.XBT_input_filename))
-                        exit(1)
-                    # will be 'LATITUDE, LONGITUDE' or 'DATE, TIME'
-                    # find the first flag looking at HISTORY_DATE
-                    idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
-                        'HISTORY_DATE'].idxmin()
-                    if len(idx) > 0:
-                        LOGGER.warning('PREVIOUS_VALUE is not the same as the %s value, removed from the dataset %s'
-                                       % (var, profile_qc.XBT_input_filename))
-                        non_temp_codes = non_temp_codes.drop(idx)
-                # else it is TEA
-                elif vv == 'TIME':
-                    # check the previous value is the same as the TIME_RAW value
-                    # convert the previous value to a datetime object
-                    prevval = pd.to_datetime(non_temp_codes[dup_idx]['HISTORY_PREVIOUS_VALUE'], format='%Y%m%d%H%M%S')
-                    # identify the rows where the previous value is not the same as the TIME_RAW value and remove them
-                    idx = non_temp_codes[dup_idx][~(prevval == profile_qc.data['TIME_RAW'])].index
-                    if len(idx) > 0:
-                        LOGGER.warning('Duplicated PREVIOUS_VALUE is not the same as the TIME_RAW value, removed %s'
-                                       % profile_qc.XBT_input_filename)
-                        non_temp_codes = non_temp_codes.drop(idx)
-                else:
-                    # handle any duplicated position flags here
-                    # keep the earliest LATITUDE or LONGITUDE flag and remove the others
-                    LOGGER.warning(
-                        'HISTORY: Multiple %s flags found in histories and duplicates removed. %s' % (vv, profile_noqc.XBT_input_filename))
-                    # find the first flag looking at HISTORY_DATE
-                    idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'] == vv, 'HISTORY_DATE'].idxmin()
-                    # remove the other LOA flags
-                    non_temp_codes = non_temp_codes.drop(
-                        non_temp_codes.loc[
-                            non_temp_codes['HISTORY_PARAMETER'].values == vv].index.difference(
-                            [idx]))
+    #first merge all the histories
+    combined_histories = pd.merge(profile_qc.histories, profile_noqc.histories, how='left')
+    # check for TER where the date has been corrected and therefore should be a TEA, happens in some badly recorded flags in old files
+    if any(combined_histories['HISTORY_QC_CODE'].str.contains('TER')):
+        # does the HISTORY_PREVIOUS_VALUE match the TIME_RAW value?
+        if not combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('TER'),
+            'HISTORY_PREVIOUS_VALUE'].values == profile_qc.data['TIME_RAW'].timestamp():
+            # does the previous value contain 9's?
+            if any(combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('TER'),
+                'HISTORY_PREVIOUS_VALUE'].astype(str).str.contains('9{1,5}')):
+                LOGGER.warning('HISTORY: Previous value does not match TIME_RAW value. %s' % profile_qc.XBT_input_filename)
+                # use the TIME_RAW value and update previous value
+                combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('TER'),
+                    'HISTORY_PREVIOUS_VALUE'] = int(profile_qc.data['TIME_RAW'].strftime('%Y%m%d%H%M%S'))
+                # now are the TIME and TIME_RAW values the same?
+                if profile_qc.data['TIME'] != profile_qc.data['TIME_RAW']:
+                    # update TER to TEA and change the flag to 2
+                    combined_histories.loc[
+                        combined_histories['HISTORY_QC_CODE'].str.contains('TER'), ['HISTORY_QC_CODE',
+                                    'HISTORY_TEMP_QC_CODE_VALUE']] = ['TEA', 2]
+    # find rows in combined_histories where the HISTORY_QC_CODE contains PER and HISTORY_PARAMETER is not 'LATITUDE, LONGITUDE':
+    if combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('PER') \
+                    & ~combined_histories['HISTORY_PARAMETER'].str.contains('LATITUDE, LONGITUDE')].shape[0] > 0:
+        # in this case, the PER has to be changed to LAA if 'HISTORY_PARAMETER' is 'LATITUDE' and LOA if 'HISTORY_PARAMETER' is 'LONGITUDE'
+        # find the rows where the HISTORY_QC_CODE contains PER and HISTORY_PARAMETER is 'LATITUDE'
+        if combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('PER') \
+                    & combined_histories['HISTORY_PARAMETER'].str.contains('LATITUDE')].shape[0] > 0:
+            # update PER to LAA and change the flag to 2
+            combined_histories.loc[
+                combined_histories['HISTORY_QC_CODE'].str.contains('PER') & combined_histories['HISTORY_PARAMETER'].str.contains('LATITUDE'),
+                ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = ['LAA', 2]
+        # find the rows where the HISTORY_QC_CODE contains PER and HISTORY_PARAMETER is 'LONGITUDE'
+        if combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('PER') \
+                    & combined_histories['HISTORY_PARAMETER'].str.contains('LONGITUDE')].shape[0] > 0:
+            # update PER to LOA and change the flag to 2
+            combined_histories.loc[
+                combined_histories['HISTORY_QC_CODE'].str.contains('PER') & combined_histories['HISTORY_PARAMETER'].str.contains('LONGITUDE'),
+                ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = ['LOA', 2]
 
-            # copy this information to the PARAMETER_RAW value if it isn't the same, check only where the parameter exactly matches vv
-            if vv in ['LATITUDE', 'LONGITUDE']:
-                if np.round(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
-                'HISTORY_PREVIOUS_VALUE'].values, 6) != np.round(
-                    profile_qc.data[var], 6):
+
+    # check for duplicated history codes at the same depth so we don't duplicate the QC code in the fft variable
+    # this will keep the first value recorded in HISTORY_DATE.
+    non_temp_codes = combined_histories[combined_histories['HISTORY_PARAMETER'] != 'TEMP']
+    # loop over the unique values in the HISTORY_PARAMETER column
+    for vv in non_temp_codes['HISTORY_PARAMETER'].unique():
+        var = vv + '_RAW'
+        # get the index of duplicated rows for vv in non_temp_codes
+        dup_idx = non_temp_codes[non_temp_codes['HISTORY_PARAMETER'] == vv].duplicated(
+            subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)
+        if dup_idx.any():
+            # TODO: if DEPTH is duplicated, check the previous value is the same as the DEPTH_RAW value, will need indexing
+            dup_idx = dup_idx.reindex(non_temp_codes.index, fill_value=False)
+            if vv not in ['LONGITUDE', 'TIME', 'LATITUDE']:
+                if vv in ['DEPTH']:
+                    print('HISTORY: Duplicate %s flags found, need to troubleshoot. %s' % (vv, profile_qc.XBT_input_filename))
+                    exit(1)
+                # will be 'LATITUDE, LONGITUDE' or 'DATE, TIME'
+                # find the first flag looking at HISTORY_DATE
+                idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+                    'HISTORY_DATE'].idxmin()
+                if len(idx) > 0:
+                    LOGGER.warning('PREVIOUS_VALUE is not the same as the %s value, removed from the dataset %s'
+                                   % (var, profile_qc.XBT_input_filename))
+                    non_temp_codes = non_temp_codes.drop(idx)
+            # else it is TEA
+            elif vv == 'TIME':
+                # check the previous value is the same as the TIME_RAW value
+                # convert the previous value to a datetime object
+                prevval = pd.to_datetime(non_temp_codes[dup_idx]['HISTORY_PREVIOUS_VALUE'], format='%Y%m%d%H%M%S')
+                # identify the rows where the previous value is not the same as the TIME_RAW value and remove them
+                idx = non_temp_codes[dup_idx][~(prevval == profile_qc.data['TIME_RAW'])].index
+                if len(idx) > 0:
+                    LOGGER.warning('Duplicated PREVIOUS_VALUE is not the same as the TIME_RAW value, removed %s'
+                                   % profile_qc.XBT_input_filename)
+                    non_temp_codes = non_temp_codes.drop(idx)
+            else:
+                # handle any duplicated position flags here
+                # keep the earliest LATITUDE or LONGITUDE flag and remove the others
+                LOGGER.warning(
+                    'HISTORY: Multiple %s flags found in histories and duplicates removed. %s' % (vv, profile_noqc.XBT_input_filename))
+                # find the first flag looking at HISTORY_DATE
+                idx = non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'] == vv, 'HISTORY_DATE'].idxmin()
+                # remove the other LOA flags
+                non_temp_codes = non_temp_codes.drop(
+                    non_temp_codes.loc[
+                        non_temp_codes['HISTORY_PARAMETER'].values == vv].index.difference(
+                        [idx]))
+
+        # copy this information to the PARAMETER_RAW value if it isn't the same, check only where the parameter exactly matches vv
+        if vv in ['LATITUDE', 'LONGITUDE']:
+            if np.round(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+            'HISTORY_PREVIOUS_VALUE'].values, 6) != np.round(
+                profile_qc.data[var], 6):
+                LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
+                               % (vv, profile_qc.XBT_input_filename))
+                profile_qc.data[var] = non_temp_codes.loc[
+                    non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'].values[0]
+        elif vv in ['TIME']:
+            # TIME_RAW is in datetime format and HISTORY_PREVIOUS_VALUE is in float format
+            # if the HISTORY_PREVIOUS_VALUE is not NaN, then it is a valid date
+            if not pd.isna(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+                'HISTORY_PREVIOUS_VALUE'].values[0]):
+                # convert the HISTORY_PREVIOUS_VALUE to a datetime object
+                prevval = datetime.strptime(str(int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+                    'HISTORY_PREVIOUS_VALUE'].values[0])), '%Y%m%d%H%M%S')
+                # check the previous value is the same as the TIME_RAW value
+                if not prevval == profile_qc.data[var]:
                     LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
                                    % (vv, profile_qc.XBT_input_filename))
-                    profile_qc.data[var] = non_temp_codes.loc[
-                        non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'].values[0]
-            elif vv in ['TIME']:
-                # TIME_RAW is in datetime format and HISTORY_PREVIOUS_VALUE is in float format
-                # if the HISTORY_PREVIOUS_VALUE is not NaN, then it is a valid date
-                if not pd.isna(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
-                    'HISTORY_PREVIOUS_VALUE'].values[0]):
-                    # convert the HISTORY_PREVIOUS_VALUE to a datetime object
-                    prevval = datetime.strptime(str(int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
-                        'HISTORY_PREVIOUS_VALUE'].values[0])), '%Y%m%d%H%M%S')
-                    # check the previous value is the same as the TIME_RAW value
-                    if not prevval == profile_qc.data[var]:
-                        LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
-                                       % (vv, profile_qc.XBT_input_filename))
-                        profile_qc.data[var] = prevval
+                    # for time, keep TIME_RAW as the previous value
+                    non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'] = int(profile_qc.data['TIME_RAW'].strftime('%Y%m%d%H%M%S'))
 
-        # Filter the rows where HISTORY_PARAMETER is TEMP
-        temp_codes = combined_histories[combined_histories['HISTORY_PARAMETER'] == 'TEMP']
-        # get the index of the rows to drop for TEMP variables only
-        idx = temp_codes[(temp_codes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)) &
-                            (temp_codes['HISTORY_PREVIOUS_VALUE'] > 90)].index
-        if len(idx) > 0:
-            LOGGER.warning(
-                'HISTORY: Duplicate QC code encountered and removed in create_flag_feature: %s. Please review. %s'
-                % (temp_codes.loc[idx, 'HISTORY_QC_CODE'].unique(), profile_qc.XBT_input_filename))
-            temp_codes = temp_codes.drop(idx)
-        # Concatenate the non-TEMP rows back with the sorted TEMP rows
-        combined_histories = pd.concat([non_temp_codes, temp_codes])
+    # Filter the rows where HISTORY_PARAMETER is TEMP
+    temp_codes = combined_histories[combined_histories['HISTORY_PARAMETER'] == 'TEMP']
+    # get the index of the rows to drop for TEMP variables only
+    idx = temp_codes[(temp_codes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)) &
+                        (temp_codes['HISTORY_PREVIOUS_VALUE'] > 90)].index
+    if len(idx) > 0:
+        LOGGER.warning(
+            'HISTORY: Duplicate QC code encountered and removed in create_flag_feature: %s. Please review. %s'
+            % (temp_codes.loc[idx, 'HISTORY_QC_CODE'].unique(), profile_qc.XBT_input_filename))
+        temp_codes = temp_codes.drop(idx)
+    # Concatenate the non-TEMP rows back with the sorted TEMP rows
+    combined_histories = pd.concat([non_temp_codes, temp_codes])
 
-        profile_qc.histories = combined_histories
+    profile_qc.histories = combined_histories
     # check for any duplicated flags that aren't exact matches but occur at the same depth with same previous value and remove them
     profile_qc.histories = profile_qc.histories[~(profile_qc.histories.duplicated(['HISTORY_PARAMETER',
                                                 'HISTORY_QC_CODE', 'HISTORY_PREVIOUS_VALUE', 'HISTORY_START_DEPTH']))]
@@ -1761,7 +1799,7 @@ if __name__ == '__main__':
     globsall = pd.DataFrame()
 
     for f in keys.data['station_number']:
-        # if f != 88127762:
+        # if f != 61024487:
         #     continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)
