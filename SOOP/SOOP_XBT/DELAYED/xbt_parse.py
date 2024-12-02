@@ -983,6 +983,8 @@ def parse_histories_nc(profile):
             # reset nhist to the new length
             nhist = len(df)
 
+        # fill any blanks in df['HISTORY_DATE'] strings with '0'
+        df['HISTORY_DATE'] = df['HISTORY_DATE'].str.replace(' ', '0')
         # allow for history dates to be YYYYMMDD or DDMMYYYY
         date1 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%Y%m%d')
         date2 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%d%m%Y')
@@ -1079,6 +1081,11 @@ def parse_histories_nc(profile):
     # Also change just DATE TEA flags to TIME
     dfTEA = df[df['HISTORY_QC_CODE'] == 'TEA'].copy()
     if len(dfTEA) > 0:
+        # test here for both TIME and DATE in the TEA flags
+        if any(dfTEA['HISTORY_PARAMETER'].str.contains('TIME')) & any(dfTEA['HISTORY_PARAMETER'].str.contains('DATE')):
+            LOGGER.error('TEA flags contain both TIME and DATE. Please review %s' % profile.XBT_input_filename)
+            exit(1)
+
         # get the date value from the TIME variable
         dtt = profile.data['TIME'].strftime('%Y%m%d')
         # get the TIME value from the TIME variable
@@ -1095,19 +1102,16 @@ def parse_histories_nc(profile):
 
         # now check for any 'DATE' parameter in the TEA flags
         daterows = df[df['HISTORY_PARAMETER'] == 'DATE']
-        # if any of daterows['HISTORY_PREVIOUS_VALUE'] is greater than 9999, then replace with NanT
-        if any(daterows['HISTORY_PREVIOUS_VALUE'] > 9999):
-            LOGGER.warning('DATE values greater than 9999 found in %s' % profile.XBT_input_filename)
-            daterows.loc[daterows['HISTORY_PREVIOUS_VALUE'] > 9999, 'HISTORY_PREVIOUS_VALUE'] = np.nan
-            nan_mask = daterows.isna()
-            df[nan_mask] = np.nan
-        else:
-            try:
-                daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
-                    lambda x: datetime.strptime(str(int(x)), '%Y%m%d').strftime('%Y%m%d') + ti).astype(float)
-            except:
-                daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = daterows['HISTORY_PREVIOUS_VALUE'].apply(
-                    lambda x: datetime.strptime(str(int(x)), '%d%m%Y').strftime('%Y%m%d') + ti).astype(float)
+        # if any of daterows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
+        pattern = re.compile(r'^9{1,5}$')
+        daterows.loc[daterows['HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern), 'HISTORY_PREVIOUS_VALUE'] = 0
+        # allow for dates to be YYYYMMDD or DDMMYYYY
+        date1 = pd.to_datetime(daterows['HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), errors='coerce', format='%Y%m%d')
+        date2 = pd.to_datetime(daterows['HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), errors='coerce', format='%d%m%Y')
+        daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = date1.fillna(date2)
+
+        # convert the date to a float
+        daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = (daterows['HISTORY_PREVIOUS_VALUE'].dt.strftime('%Y%m%d') + ti).astype(float)
 
         # update the df with the new values
         df.update(timerows)
@@ -1329,9 +1333,8 @@ def restore_temp_val(profile):
             df.loc[ind, 'TEMP_RAW'] = temps
             df.loc[ind, 'TEMP'] = temps
         else:
-            LOGGER.error('TEMP_RAW values and HISTORY_PREVIOUS_VALUE values are both > 99 for CS flags %s'
+            LOGGER.error('TEMP_RAW values and HISTORY_PREVIOUS_VALUE values are both > 99 for CS flags. Please review. %s'
                          % profile.XBT_input_filename)
-            exit(1)
     else:
         # are all the TEMP_quality_control values >2? If not, log error
         if not (df['TEMP_quality_control'][:] > 2).all():
