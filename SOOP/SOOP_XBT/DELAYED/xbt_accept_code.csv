@@ -36,4 +36,4 @@ protecho_systems_leakage_fault,PFA,8589934592,2,ACT_CODES_FULL_PROFILE
 sippicanMK9_sticking_bit_19_point_filtered,SBA,17179869184,2,ACT_CODES_TO_NEXT_FLAG
 depth_corrected_multiplied_by_10,DEA,34359738368,1,ACT_CODES_FULL_PROFILE
 depth_corrected_update_fall_rate_equation,DPA,68719476736,0,ACT_CODES_FULL_PROFILE
-bathy_data_low_resolution,BDA,137438953472,1,ACT_CODES_FULL_PROFILE
+bathy_data_low_resolution,BDA,1.37439E+11,2,ACT_CODES_FULL_PROFILE

@@ -1029,37 +1029,25 @@ def parse_histories_nc(profile):
 
     df = newdf
 
-    # this group of changes is here because I have reviewed all our QC codes in the historic databases and I know
-    # there are some that are not correct. This is a one off change to correct them. Could be done more elegantly probably.
+    # get a list of qc_df['code'] values where qc_df['code_short'] only appears once in the dataframe
+    # Get the value counts of 'code_short'
+    code_short_counts = qc_df['code_short'].value_counts()
+    # Filter 'qc_df' to get rows where 'code_short' appears only once
+    single_code_short_df = qc_df[qc_df['code_short'].isin(code_short_counts[code_short_counts == 1].index)]
 
+    # if any of the single_qc_codes are in the HISTORY_QC_CODE, change the HISTORY_TEMP_QC_CODE_VALUE to match the single_qc_code_short_df['tempqc'] value
+    for idx, row in single_code_short_df.iterrows():
+        mask = df['HISTORY_QC_CODE'].str.contains(row['code_short'])
+        if any(mask):
+            df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = [row['code'] ,row['tempqc']]
+    # this group of changes is here because I have reviewed all our QC codes in the historic databases and I know
+    # there are some that are not correct.
     # change ERA to PLA with flag 3 to reduce duplication of flags
     df.loc[
         (df['HISTORY_QC_CODE'].str.contains('ERA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'PLA', 3
-
-    # change any REA or RER flags to REA and flag 0 to match new format
-    df.loc[(df['HISTORY_QC_CODE'].str.contains('RE')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'REA', 0
-
-    # change any NGA flags to NGR and flag 4
-    df.loc[
-        (df['HISTORY_QC_CODE'].str.contains('NGA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NGR', 4
-
-    # change any NTA flags to NTR and flag 4
-    df.loc[
-        (df['HISTORY_QC_CODE'].str.contains('NTA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'NTR', 4
-
-    # change any TPA flags to TPR and flag 4
-    df.loc[
-        (df['HISTORY_QC_CODE'].str.contains('TPA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'TPR', 4
-
-    # change any WBA flags to WBR and flag 4
-    df.loc[
-        (df['HISTORY_QC_CODE'].str.contains('WBA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'WBR', 4
-
     # change URA for BDA and flag 2
     df.loc[
         (df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'BDA', 2
-    # all BDA flags should be set to 2, historically have been 1, but as low res, make them 2
-    df.loc[(df['HISTORY_QC_CODE'].str.contains('BDA')), 'HISTORY_TEMP_QC_CODE_VALUE'] = 2
 
     # set the software value to 2.1 for CS and PE, RE flags
     df.loc[
@@ -1092,9 +1080,10 @@ def parse_histories_nc(profile):
         ti = profile.data['TIME'].strftime('%H%M%S')
 
         # is there a 'TIME' parameter in the TEA flags?
-        timerows = df[df['HISTORY_PARAMETER'] == 'TIME'].copy()
-        # if any of timerows['HISTORY_PREVIOUS_VALUE'] is greater than 9999, then replace with 0
-        timerows.loc[timerows['HISTORY_PREVIOUS_VALUE'] > 9999, 'HISTORY_PREVIOUS_VALUE'] = 0
+        timerows = df[df['HISTORY_PARAMETER'] == 'TIME']
+        # if any of timerows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
+        pattern = re.compile(r'^9{1,5}\.\d{2,4}$')
+        timerows.loc[timerows['HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern), 'HISTORY_PREVIOUS_VALUE'] = 0
         # include the date information
         timerows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = timerows['HISTORY_PREVIOUS_VALUE'].apply(
             lambda x: dtt + str(int(x)) + '00').astype(float)
