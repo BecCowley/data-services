@@ -1092,7 +1092,7 @@ def parse_histories_nc(profile):
         ti = profile.data['TIME'].strftime('%H%M%S')
 
         # is there a 'TIME' parameter in the TEA flags?
-        timerows = df[df['HISTORY_PARAMETER'] == 'TIME']
+        timerows = df.loc[df['HISTORY_PARAMETER'] == 'TIME']
         # if any of timerows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
         pattern = re.compile(r'^9{1,5}\.\d{2,4}$')
         timerows.loc[timerows['HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern), 'HISTORY_PREVIOUS_VALUE'] = 0
@@ -1101,7 +1101,7 @@ def parse_histories_nc(profile):
             lambda x: dtt + str(int(x)) + '00').astype(float)
 
         # now check for any 'DATE' parameter in the TEA flags
-        daterows = df[df['HISTORY_PARAMETER'] == 'DATE']
+        daterows = df.loc[df['HISTORY_PARAMETER'] == 'DATE']
         # if any of daterows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
         pattern = re.compile(r'^9{1,5}$')
         daterows.loc[daterows['HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern), 'HISTORY_PREVIOUS_VALUE'] = 0
