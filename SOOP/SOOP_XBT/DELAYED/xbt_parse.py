@@ -1044,7 +1044,7 @@ def parse_histories_nc(profile):
 
     # if any of the single_qc_codes are in the HISTORY_QC_CODE, change the HISTORY_TEMP_QC_CODE_VALUE to match the single_qc_code_short_df['tempqc'] value
     for idx, row in single_code_short_df.iterrows():
-        mask = df['HISTORY_QC_CODE'].str.contains(row['code_short'])
+        mask = df['HISTORY_QC_CODE'].str[:2] == row['code_short']
         if any(mask):
             df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = [row['code'] ,row['tempqc']]
     # this group of changes is here because I have reviewed all our QC codes in the historic databases and I know
