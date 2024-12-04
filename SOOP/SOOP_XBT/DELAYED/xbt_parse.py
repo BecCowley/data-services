@@ -1436,9 +1436,22 @@ def restore_temp_val(profile):
 
     # are there any TEMP values that are still > 99?
     if (df['TEMP'] > 99).any():
-        LOGGER.warning('TEMP values are still > 99. Please review. %s' % profile.XBT_input_filename)
-        # assign TEMP_quality_control values of 9 to these values
-        df.loc[df['TEMP'] > 99, 'TEMP_quality_control'] = 9
+        # see if any of the histories have a valid TEMP value for these depths
+        idx = df['TEMP'] > 99
+        depths = df.loc[idx, 'DEPTH']
+        idx2 = (np.isclose(profile.histories['HISTORY_START_DEPTH'], (depths), atol=1e-6) &
+                (profile.histories['HISTORY_PARAMETER'].str.contains('TEMP') &
+                 (profile.histories['HISTORY_PREVIOUS_VALUE'] < 99)))
+        if idx2.any():
+            LOGGER.info('Restoring TEMP values for depths where TEMP > 99. %s' % profile.XBT_input_filename)
+            # assign the previous_value at idx2 to the TEMP values at idx
+            df.loc[idx, 'TEMP'] = profile.histories.loc[idx2, 'HISTORY_PREVIOUS_VALUE'].values
+            # assign to TEMP_RAW as well
+            if (df['TEMP_RAW'][idx] > 99).any():
+                df.loc[idx, 'TEMP_RAW'] = profile.histories.loc[idx2, 'HISTORY_PREVIOUS_VALUE'].values
+            # check again if there are any TEMP values that are still > 99
+            if (df['TEMP'] > 99).any():
+                LOGGER.warning('TEMP values are still > 99 after restoration. %s' % profile.XBT_input_filename)
 
     # update profile data
     profile.data['data'] = df
