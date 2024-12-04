@@ -1434,6 +1434,11 @@ def restore_temp_val(profile):
                         # reset the index
                         profile.histories = profile.histories.reset_index(drop=True)
 
+    # are there any TEMP values that are still > 99?
+    if (df['TEMP'] > 99).any():
+        LOGGER.warning('TEMP values are still > 99. Please review. %s' % profile.XBT_input_filename)
+        # assign TEMP_quality_control values of 9 to these values
+        df.loc[df['TEMP'] > 99, 'TEMP_quality_control'] = 9
 
     # update profile data
     profile.data['data'] = df
