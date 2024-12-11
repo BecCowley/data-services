@@ -212,7 +212,7 @@ def get_recorder_type(profile):
             item_val = '99'
             return item_val, rct_list[item_val].split(',')[0]
     else:
-        _error('XBT_recorder_type missing from {input_nc_path}'.format(input_nc_path=profile.XBT_input_filename))
+        LOGGER.error('XBT_recorder_type missing from {input_nc_path}'.format(input_nc_path=profile.XBT_input_filename))
 
 
 def parse_globalatts_nc(profile):
@@ -1089,31 +1089,25 @@ def parse_histories_nc(profile):
         # get the TIME value from the TIME variable
         ti = profile.data['TIME'].strftime('%H%M%S')
 
-        # is there a 'TIME' parameter in the TEA flags?
-        timerows = df.loc[df['HISTORY_PARAMETER'] == 'TIME'].copy()
         # if any of timerows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
-        pattern = re.compile(r'^9{1,5}\.\d{2,4}$')
-        timerows.loc[timerows['HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern), 'HISTORY_PREVIOUS_VALUE'] = 0
-        # include the date information
-        timerows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = timerows['HISTORY_PREVIOUS_VALUE'].apply(
-            lambda x: dtt + str(int(x)) + '00').astype(float)
+        pattern = re.compile(r'^9{1,5}(\.\d+)?$')
+        timeidx = df['HISTORY_PARAMETER'] == 'TIME'
+        if timeidx.any():
+            if df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern).any():
+                df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'] = 0
+            # include the date information
+            df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'] = df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'].apply(
+                lambda x: dtt + str(int(x)) + '00').astype(float)
 
         # now check for any 'DATE' parameter in the TEA flags
-        daterows = df.loc[df['HISTORY_PARAMETER'] == 'DATE'].copy()
-        # if any of daterows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
-        pattern = re.compile(r'^9{1,5}$')
-        daterows.loc[daterows['HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern), 'HISTORY_PREVIOUS_VALUE'] = 0
-        # allow for dates to be YYYYMMDD or DDMMYYYY
-        date1 = pd.to_datetime(daterows['HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), errors='coerce', format='%Y%m%d')
-        date2 = pd.to_datetime(daterows['HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), errors='coerce', format='%d%m%Y')
-        daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = date1.fillna(date2)
-
-        # convert the date to a float
-        daterows.loc[:, 'HISTORY_PREVIOUS_VALUE'] = (daterows['HISTORY_PREVIOUS_VALUE'].dt.strftime('%Y%m%d') + ti).astype(float)
-
-        # update the df with the new values
-        df.update(timerows)
-        df.update(daterows)
+        dateidx = df['HISTORY_PARAMETER'] == 'DATE'
+        if dateidx.any():
+            if df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern).any():
+                df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'] = 0
+            # allow for dates to be YYYYMMDD or DDMMYYYY
+            date1 = pd.to_datetime(df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), errors='coerce', format='%Y%m%d').dt.strftime('%Y%m%d').astype(float)
+            date2 = pd.to_datetime(df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), errors='coerce', format='%d%m%Y').dt.strftime('%Y%m%d').astype(float)
+            df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'] = date1.fillna(date2)
 
         # change the 'DATE' label to TIME  and update the TEA PREVIOUS_VALUE to the new datetime value
         df.loc[((df['HISTORY_PARAMETER'].str.contains('DATE') | df['HISTORY_PARAMETER'].str.contains('TIME')) &
