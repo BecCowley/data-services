@@ -14,11 +14,9 @@ import difflib
 from imos_logging import IMOSLogging
 from ship_callsign import ship_callsign_list
 from xbt_line_vocab import xbt_line_info
-from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
-from configparser import ConfigParser
 
 # from local directory
-from xbt_utils import _error, invalid_to_ma_array, decode_bytearray, temp_prof_info, remove_control_chars,read_qc_config
+from xbt_utils import *
 
 
 class XbtProfile(object):
