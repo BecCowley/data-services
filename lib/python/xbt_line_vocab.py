@@ -40,6 +40,7 @@ def xbt_line_info():
         if 'Description' in item.tag:
             xbt_line_code = None
             xbt_line_pref_label = None
+            xbt_line_alt_label = ""
 
             for val in item:
                 platform_element_sublabels = val.tag
@@ -49,11 +50,13 @@ def xbt_line_info():
                         xbt_line_pref_label = val.text
                     if 'code' in platform_element_sublabels:
                         xbt_line_code = val.text
+                    else:
+                        xbt_line_code = xbt_line_pref_label
+                    if 'altLabel' in platform_element_sublabels:
+                        xbt_line_alt_label += val.text if xbt_line_alt_label == "" else ", " + val.text
 
-            if xbt_line_pref_label and xbt_line_code:
-                xbt_dict[xbt_line_pref_label] = xbt_line_code
-            elif xbt_line_pref_label and not xbt_line_code:
-                xbt_dict[xbt_line_pref_label] = None
+            if xbt_line_pref_label:
+                xbt_dict[xbt_line_pref_label] = (xbt_line_code, xbt_line_alt_label)
 
     response.close()
     return xbt_dict

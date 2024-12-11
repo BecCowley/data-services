@@ -392,31 +392,31 @@ def parse_globalatts_nc(profile):
             LOGGER.warning('HTL$, xbt launch height attribute seems to be very high. Please review: %s meters %s' %
                            (profile.global_atts[att_name], profile.XBT_input_filename))
 
-    # get xbt line information from config file
-    xbt_config = _call_parser('xbt_config')
     # some files don't have line information
     isline = profile.global_atts.get('XBT_line')
     if not isline:
         profile.global_atts['XBT_line'] = 'NOLINE'
-        # TODO: need to allow the user to assign a line to this cruise ID. Need to retain this information and apply to
-        # all the profiles with this cruise ID.
 
-    xbt_line_conf_section = [s for s in xbt_config.sections() if profile.global_atts['XBT_line'] in s]
-    xbt_alt_codes = [s for s in list(XBT_LINE_INFO.keys()) if
-                     XBT_LINE_INFO[s] is not None]  # alternative IMOS codes taken from vocabulary
-    if xbt_line_conf_section:
-        xbt_line_att = dict(xbt_config.items(xbt_line_conf_section[0]))
-        profile.global_atts.update(xbt_line_att)
-    elif profile.global_atts['XBT_line'] in xbt_alt_codes:
-        xbt_line_conf_section = [s for s in xbt_config.sections()
-                                 if XBT_LINE_INFO[profile.global_atts['XBT_line']] == s]
-        xbt_line_att = dict(xbt_config.items(xbt_line_conf_section[0]))
-        profile.global_atts.update(xbt_line_att)
+    xbt_line_codes = [s for s in list(XBT_LINE_INFO.keys())]  # IMOS codes taken from vocabulary
+    if profile.global_atts['XBT_line'] in xbt_line_codes:
+        xbt_line_att = XBT_LINE_INFO[profile.global_atts['XBT_line']]
+        profile.global_atts['title'] = "Upper ocean temperature data collected on the transect %s (%s) using XBT (expendable bathythermographs)" % (
+            xbt_line_att[0], xbt_line_att[1])
+        profile.global_atts['XBT_line_description'] = xbt_line_att[1]
     else:
-        LOGGER.error(
-            'XBT line : "%s" is not defined in xbt_config file (Please review), or an alternative code has to be set up ' %
-            'by AODN in vocabs.ands.org.au(contact AODN) %s' %
-            (profile.global_atts['XBT_line'], profile.XBT_input_filename))
+        if profile.global_atts['XBT_line'] == 'NOLINE':
+            profile.global_atts[
+                'title'] = "Upper ocean temperature data collected using XBT (expendable bathythermographs)"
+            profile.global_atts['XBT_line_description'] = "XBT transect line not defined"
+            LOGGER.warning('XBT line is not recorded, assigning NOLINE %s' %
+                           profile.XBT_input_filename)
+        else:
+            profile.global_atts[
+                'title'] = "Upper ocean temperature data collected using XBT (expendable bathythermographs)"
+            profile.global_atts['XBT_line_description'] = "XBT transect line details unknown to AODN vocabulary"
+            LOGGER.error(
+                'XBT line : "%s" is not defined in AODN vocabs.ands.org.au(contact AODN) %s' %
+                (profile.global_atts['XBT_line'], profile.XBT_input_filename))
 
     return profile
 
@@ -1717,25 +1717,8 @@ def make_dataframe(profile_ed, profile_raw, profile_turo):
     return df, gdf
 
 
-def _call_parser(conf_file):
-    """ parse a config file """
-    parser = ConfigParser()
-    parser.optionxform = str  # to preserve case
-    conf_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), conf_file)
-    parser.read(conf_file_path)
-    return parser
 
 
-def read_section_from_xbt_config(section_name):
-    "return all the elements in the section called section_name from the xbt_config file"
-    xbt_config = _call_parser('xbt_config')
-    if section_name in xbt_config.sections():
-        return dict(xbt_config.items(section_name))
-    elif [index for index, item in enumerate(xbt_config.sections()) if section_name in item]:
-        index = [index for index, item in enumerate(xbt_config.sections()) if section_name in item][0]
-        return dict(xbt_config.items(xbt_config.sections()[index]))
-    else:
-        _error('xbt_config file not valid. missing section: {section}'.format(section=section_name))
 
 
 def args():

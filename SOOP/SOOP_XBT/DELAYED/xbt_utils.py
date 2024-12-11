@@ -2,7 +2,8 @@ import numpy as np
 import numpy.ma as ma
 import re, os
 import pandas as pd
-
+from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
+from configparser import ConfigParser
 
 class XbtException(Exception):
     pass
@@ -77,3 +78,24 @@ def temp_prof_info(netcdf_file_obj):
         prof_type[i] = decode_bytearray(netcdf_file_obj['Prof_Type'][i])
 
     return prof_type
+
+def _call_parser(conf_file):
+    """ parse a config file """
+    parser = ConfigParser()
+    parser.optionxform = str  # to preserve case
+    conf_file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), conf_file)
+    parser.read(conf_file_path)
+    return parser
+
+
+def read_section_from_xbt_config(section_name):
+    "return all the elements in the section called section_name from the xbt_config file"
+    xbt_config = _call_parser('xbt_config')
+    if section_name in xbt_config.sections():
+        return dict(xbt_config.items(section_name))
+    elif [index for index, item in enumerate(xbt_config.sections()) if section_name in item]:
+        index = [index for index, item in enumerate(xbt_config.sections()) if section_name in item][0]
+        return dict(xbt_config.items(xbt_config.sections()[index]))
+    else:
+        _error('xbt_config file not valid. missing section: {section}'.format(section=section_name))
+
