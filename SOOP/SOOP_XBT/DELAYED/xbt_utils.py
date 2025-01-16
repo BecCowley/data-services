@@ -87,7 +87,6 @@ def _call_parser(conf_file):
     parser.read(conf_file_path)
     return parser
 
-
 def read_section_from_xbt_config(section_name):
     "return all the elements in the section called section_name from the xbt_config file"
     xbt_config = _call_parser('xbt_config')
@@ -99,3 +98,30 @@ def read_section_from_xbt_config(section_name):
     else:
         _error('xbt_config file not valid. missing section: {section}'.format(section=section_name))
 
+def _find_var_conf(parser):
+    """
+    list NETCDF variable names from conf file
+    """
+
+    variable_list = parser.sections()
+    if 'global_attributes' in variable_list:
+        variable_list.remove('global_attributes')
+
+    return variable_list
+
+
+def generate_table_att(conf_file, conf_file_point_of_truth=False):
+    """
+    main function to generate the attributes of a table for parquet file
+    """
+    parser = _call_parser(conf_file)
+
+    variable_list = _find_var_conf(parser)
+    table_att = dict()
+    for var in variable_list:
+        var_att = dict(parser.items(var))
+        table_att[var] = var_att
+
+
+    # return the dictionary of attributes
+    return table_att

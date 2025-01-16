@@ -14,7 +14,9 @@ import difflib
 from imos_logging import IMOSLogging
 from ship_callsign import ship_callsign_list
 from xbt_line_vocab import xbt_line_info
-
+import json
+import pyarrow as pa
+import pyarrow.parquet as pq
 # from local directory
 from xbt_utils import *
 
@@ -1709,8 +1711,61 @@ def make_dataframe(profile_ed, profile_raw, profile_turo):
     return df, gdf
 
 
+def set_metadata(tbl, tbl_meta):
+    """Store table- and column-level metadata as json-encoded byte strings.
 
+    Table-level metadata is stored in the table's schema.
+    Column-level metadata is stored in the table columns' fields.
 
+    To update the metadata, first new fields are created for all columns.
+    Next a schema is created using the new fields and updated table metadata.
+    Finally a new table is created by replacing the old one's schema, but
+    without copying any data.
+
+    Args:
+        tbl (pandas dataframe): The table to store metadata in
+        col_meta: A json-serializable dictionary with column metadata in the form
+            {
+                'column_1': {'some': 'data', 'value': 1},
+                'column_2': {'more': 'stuff', 'values': [1,2,3]}
+            }
+        tbl_meta: A json-serializable dictionary with table-level metadata.
+    """
+    # Convert the pandas dataframe to a pyarrow table
+    tbl = pa.Table.from_pandas(tbl)
+
+    # Get column metadata
+    col_meta = generate_table_att(os.path.join(os.path.dirname(__file__), 'generate_nc_file_att'))
+    # Create updated column fields with new metadata
+    if col_meta:
+        fields = []
+        for col in tbl.schema.names:
+            if col in col_meta:
+                # Get updated column metadata
+                metadata = tbl.field(col).metadata or {}
+                for k, v in col_meta[col].items():
+                    metadata[k] = json.dumps(v).encode('utf-8')
+                # Update field with updated metadata
+                fields.append(tbl.field(col).with_metadata(metadata))
+            else:
+                fields.append(tbl.field(col))
+
+        # Get updated table metadata
+        tbl_metadata = tbl.schema.metadata or {}
+        for k, v in tbl_meta.items():
+            if type(v) == bytes:
+                tbl_metadata[k] = v
+            else:
+                tbl_metadata[k] = json.dumps(v).encode('utf-8')
+
+        # Create new schema with updated field metadata and updated table metadata
+        schema = pa.schema(fields, metadata=tbl_metadata)
+
+        # With updated schema build new table (shouldn't copy data)
+        # tbl = pa.Table.from_batches(tbl.to_batches(), schema)
+        tbl = tbl.cast(schema)
+
+    return tbl
 
 
 def args():
@@ -1831,9 +1886,11 @@ if __name__ == '__main__':
                 dfhist = pd.concat([dfhist, profile_ed.histories], ignore_index=True)
         else:
             LOGGER.warning('Profile not processed, file %s is in keys file, but does not exist' % f)
+    # add table metadata to the dfall dataframe
+    dfall = set_metadata(dfall, tbl_meta={'Parent file':keys.dbase_name})
     # write the dataframe to a parquet file
     pq_filename = os.path.join(os.path.dirname(keys.dbase_name), os.path.basename(keys.dbase_name) + '.parquet')
-    dfall.to_parquet(pq_filename, index=False)
+    pq.write_table(dfall, pq_filename)
     pq_filename = os.path.join(os.path.dirname(keys.dbase_name),
                                os.path.basename(keys.dbase_name) + '_histories.parquet')
     dfhist.to_parquet(pq_filename, index=False)
