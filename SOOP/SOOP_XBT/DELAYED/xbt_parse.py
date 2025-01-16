@@ -953,14 +953,14 @@ def parse_histories_nc(profile):
         df[var] = vv
     # rename the columns
     df.columns = ['HISTORY_QC_CODE', 'HISTORY_INSTITUTION', 'HISTORY_PARAMETER', 'HISTORY_SOFTWARE',
-                               'HISTORY_DATE', 'HISTORY_START_DEPTH', 'HISTORY_TEMP_QC_CODE_VALUE',
+                               'HISTORY_DATE', 'HISTORY_START_DEPTH', 'HISTORY_QC_CODE_VALUE',
                                'HISTORY_SOFTWARE_RELEASE', 'HISTORY_PREVIOUS_VALUE']
 
     # change HISTORY_START_DEPTH and HISTORY_PREVIOUS_VALUE to float64
     df['HISTORY_START_DEPTH'] = df['HISTORY_START_DEPTH'].astype('float32')
     df['HISTORY_PREVIOUS_VALUE'] = df['HISTORY_PREVIOUS_VALUE'].astype('float32')
-    # change HISTORY_TEMP_QC_CODE_VALUE to int32
-    df['HISTORY_TEMP_QC_CODE_VALUE'] = df['HISTORY_TEMP_QC_CODE_VALUE'].astype('int32')
+    # change HISTORY_QC_CODE_VALUE to int32
+    df['HISTORY_QC_CODE_VALUE'] = df['HISTORY_QC_CODE_VALUE'].astype('int32')
 
     if nhist > 0:
         # check that the history codes exist in our list
@@ -994,7 +994,7 @@ def parse_histories_nc(profile):
 
     # append the 'A' or 'R' to each code
     for idx, row in df.iterrows():
-        if df.at[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
+        if df.at[idx, 'HISTORY_QC_CODE_VALUE'] in [0, 1, 2, 5]:
             df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'A'
         else:
             df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
@@ -1040,19 +1040,19 @@ def parse_histories_nc(profile):
     # Filter 'qc_df' to get rows where 'code_short' appears only once
     single_code_short_df = qc_df[qc_df['code_short'].isin(code_short_counts[code_short_counts == 1].index)]
 
-    # if any of the single_qc_codes are in the HISTORY_QC_CODE, change the HISTORY_TEMP_QC_CODE_VALUE to match the single_qc_code_short_df['tempqc'] value
+    # if any of the single_qc_codes are in the HISTORY_QC_CODE, change the HISTORY_QC_CODE_VALUE to match the single_qc_code_short_df['tempqc'] value
     for idx, row in single_code_short_df.iterrows():
         mask = df['HISTORY_QC_CODE'].str[:2] == row['code_short']
         if any(mask):
-            df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = [row['code'] ,row['tempqc']]
+            df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = [row['code'] ,row['tempqc']]
     # this group of changes is here because I have reviewed all our QC codes in the historic databases and I know
     # there are some that are not correct.
     # change ERA to PLA with flag 3 to reduce duplication of flags
     df.loc[
-        (df['HISTORY_QC_CODE'].str.contains('ERA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'PLA', 3
+        (df['HISTORY_QC_CODE'].str.contains('ERA')), ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'PLA', 3
     # change URA for BDA and flag 2
     df.loc[
-        (df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'BDA', 2
+        (df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'BDA', 2
 
     # set the software value to 2.1 for CS and PE, RE flags
     df.loc[
@@ -1065,15 +1065,15 @@ def parse_histories_nc(profile):
 
     # change CSA to CSR and the flag to 3 to match new format
     df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
-    ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'CSR', 3
+    ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'CSR', 3
 
     # Change the PEA flag to LA or LO and ensure the TEMP_QC_CODE_VALUE is set to 2, not 5
     df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
             (df['HISTORY_PARAMETER'].str.contains('LATITUDE'))),
-    ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LAA', 2
+    ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'LAA', 2
     df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
             (df['HISTORY_PARAMETER'].str.contains('LONGITUDE'))),
-    ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = 'LOA', 2
+    ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'LOA', 2
 
     # Combine duplicated TEA flags to a single TEA for TIME variable TEMP_QC_CODE_VALUE is set to 2, not 5
     # Also change just DATE TEA flags to TIME
@@ -1198,7 +1198,7 @@ def combine_histories(profile_qc, profile_noqc):
                     # update TER to TEA and change the flag to 2
                     combined_histories.loc[
                         combined_histories['HISTORY_QC_CODE'].str.contains('TER'), ['HISTORY_QC_CODE',
-                                    'HISTORY_TEMP_QC_CODE_VALUE']] = ['TEA', 2]
+                                    'HISTORY_QC_CODE_VALUE']] = ['TEA', 2]
     # find rows in combined_histories where the HISTORY_QC_CODE contains PER and HISTORY_PARAMETER is not 'LATITUDE, LONGITUDE':
     if combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('PER') \
                     & ~combined_histories['HISTORY_PARAMETER'].str.contains('LATITUDE, LONGITUDE')].shape[0] > 0:
@@ -1209,14 +1209,14 @@ def combine_histories(profile_qc, profile_noqc):
             # update PER to LAA and change the flag to 2
             combined_histories.loc[
                 combined_histories['HISTORY_QC_CODE'].str.contains('PER') & combined_histories['HISTORY_PARAMETER'].str.contains('LATITUDE'),
-                ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = ['LAA', 2]
+                ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = ['LAA', 2]
         # find the rows where the HISTORY_QC_CODE contains PER and HISTORY_PARAMETER is 'LONGITUDE'
         if combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('PER') \
                     & combined_histories['HISTORY_PARAMETER'].str.contains('LONGITUDE')].shape[0] > 0:
             # update PER to LOA and change the flag to 2
             combined_histories.loc[
                 combined_histories['HISTORY_QC_CODE'].str.contains('PER') & combined_histories['HISTORY_PARAMETER'].str.contains('LONGITUDE'),
-                ['HISTORY_QC_CODE', 'HISTORY_TEMP_QC_CODE_VALUE']] = ['LOA', 2]
+                ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = ['LOA', 2]
 
 
     # check for duplicated history codes at the same depth so we don't duplicate the QC code in the fft variable
@@ -1408,7 +1408,7 @@ def restore_temp_val(profile):
                     # update the TEMP_QC_CODE to CSR
                     profile.histories.loc[idx2, 'HISTORY_QC_CODE'] = 'CSR'
                     # update the TEMP_QC_CODE_VALUE to 3
-                    profile.histories.loc[idx2, 'HISTORY_TEMP_QC_CODE_VALUE'] = 3
+                    profile.histories.loc[idx2, 'HISTORY_QC_CODE_VALUE'] = 3
                     # if there are any SPA, IPA or HFA flags at the same depth as the CSR flags, remove them
                     # get the location of any SPA, IPA or HFA flags at the same depth as the CSR flags in the profile.histories
                     idx3 = profile.histories['HISTORY_QC_CODE'].str.contains('SPA|IPA|HFA')
@@ -1483,7 +1483,7 @@ def create_flag_feature(profile):
                                'HISTORY_START_DEPTH': df_data['DEPTH'].values[0],
                                'HISTORY_STOP_DEPTH': df_data['DEPTH'].values[-1],
                                'HISTORY_QC_CODE_DESCRIPTION': 'scientific_qc_applied',
-                               'HISTORY_TEMP_QC_CODE_VALUE': 1,
+                               'HISTORY_QC_CODE_VALUE': 1,
                                'HISTORY_SOFTWARE_RELEASE': '',
                                'HISTORY_PREVIOUS_VALUE': 0}, ignore_index=True)
 
@@ -1512,34 +1512,34 @@ def create_flag_feature(profile):
         # special case where CSR was used as a single flag to reject everything below. Let's change this flag to a SPR
         if len(depths) == 1 and df_data.loc[ideps, 'TEMP_quality_control'].values[0] == 3:
             codes.loc[idx_csr, 'HISTORY_QC_CODE'] = 'SPR'
-            codes.loc[idx_csr, 'HISTORY_TEMP_QC_CODE_VALUE'] = 4
+            codes.loc[idx_csr, 'HISTORY_QC_CODE_VALUE'] = 4
 
-    # check the TEMP_quality_control values are the same as the HISTORY_TEMP_QC_CODE_VALUE values
+    # check the TEMP_quality_control values are the same as the HISTORY_QC_CODE_VALUE values
     for idx, row in codes.iterrows():
         # check here that the TEMP_quality_control value is the same as the tempqc value
         # skip the CSR and position flags as they are handled specifically
         if row['HISTORY_QC_CODE'] not in ['REA','TEA','LAA','LOA','PER','TER','CSR']:
-            if row['tempqc'] != row['HISTORY_TEMP_QC_CODE_VALUE']:
+            if row['tempqc'] != row['HISTORY_QC_CODE_VALUE']:
                 # get the df['tempqc'] value for the two-character code
                 tempqc = df.loc[df['code_short'].str.contains(row['HISTORY_QC_CODE'][:2]), 'tempqc'].values
                 # check if the two character code appears more than once in the df['code_short'] column
                 if np.size(tempqc) > 1:
                     # if so, then we need to check that the TEMP_quality_control value is in the same category as the tempqc value
                     # where the categories are 1,2,5 and 3,4
-                    if ((row['HISTORY_TEMP_QC_CODE_VALUE'] in [1, 2, 5] and row['tempqc'] in [3 ,4]) or
-                            (row['HISTORY_TEMP_QC_CODE_VALUE'] in [3, 4] and row['tempqc'] in [1, 2, 5])):
-                        # update the HISTORY_TEMP_QC_CODE_VALUE to the tempqc value as the TEMP_quality_control value is in the wrong category
+                    if ((row['HISTORY_QC_CODE_VALUE'] in [1, 2, 5] and row['tempqc'] in [3 ,4]) or
+                            (row['HISTORY_QC_CODE_VALUE'] in [3, 4] and row['tempqc'] in [1, 2, 5])):
+                        # update the HISTORY_QC_CODE_VALUE to the tempqc value as the TEMP_quality_control value is in the wrong category
                         if row['tempqc'] in [1, 2, 5]:
-                            codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = tempqc[0]
+                            codes.loc[idx, 'HISTORY_QC_CODE_VALUE'] = tempqc[0]
                             # also change the HISTORY_QC_CODE to A
                             codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
                         else:
-                            codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = tempqc[1]
+                            codes.loc[idx, 'HISTORY_QC_CODE_VALUE'] = tempqc[1]
                             # also change the HISTORY_QC_CODE to R
                             codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'R'
                 else:
                     # if the two character code only appears once, then update the tempqc value in the codes table
-                    codes.loc[idx, 'HISTORY_TEMP_QC_CODE_VALUE'] = tempqc
+                    codes.loc[idx, 'HISTORY_QC_CODE_VALUE'] = tempqc
                     if tempqc in [0, 1, 2, 5]:
                         # also change the HISTORY_QC_CODE to A
                         codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
@@ -1628,7 +1628,7 @@ def create_flag_feature(profile):
         # Get depth index
         ii = (np.abs(df_data['DEPTH'] - row['HISTORY_START_DEPTH'])).argmin()
         # if this is an accept code (QC_Flag = 1, 2, 3, 5) then add it to the accept code array
-        if row['HISTORY_TEMP_QC_CODE_VALUE'] in [0, 1, 2, 5]:
+        if row['HISTORY_QC_CODE_VALUE'] in [0, 1, 2, 5]:
             # adding them together - is there a more correct way to do this?
             # Add byte values (masks) for accept codes
             df_data.loc[ii, 'XBT_accept_code'] = df_data.loc[ii, 'XBT_accept_code'] + np.float64(row['byte_value'])
@@ -1637,7 +1637,7 @@ def create_flag_feature(profile):
             df_data.loc[ii, 'XBT_reject_code'] = df_data.loc[ii, 'XBT_reject_code'] + np.float64(row['byte_value'])
 
     # update the histories with the correct tempqc values from mapcodes
-    mapcodes['HISTORY_TEMP_QC_CODE_VALUE'] = mapcodes['tempqc']
+    mapcodes['HISTORY_QC_CODE_VALUE'] = mapcodes['tempqc']
     # drop unwanted columns
     mapcodes = mapcodes.drop(columns=['tempqc', 'byte_value', 'label', 'code'])
     df_data = df_data.drop(columns=['tempqc'])
