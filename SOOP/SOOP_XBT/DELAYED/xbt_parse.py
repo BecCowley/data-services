@@ -538,6 +538,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
         ndeps = s.netcdf_file_obj.variables['No_Depths'][:][0]
         # cycle through the variables identified in the file, for XBT files, this should only be TEMP:
         data_vars = temp_prof_info(s.netcdf_file_obj)
+        # assign the data_vars to the profile object
+        s.prof_type = list(data_vars.values())
+
         if len(data_vars) > 1:
             LOGGER.error('Profile contains %s variables and is not an XBT %s' % (data_vars, s.XBT_input_filename))
             exit(1)
@@ -680,7 +683,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     df = df.rename(columns={'DEPTH_QC': 'DEPTH', 'DEPTH_quality_control_RAW': 'DEPTH_RAW_quality_control',
                             'TEMP_QC': 'TEMP', 'TEMP_quality_control_RAW': 'TEMP_RAW_quality_control',
                             'DEPTH_quality_control_QC': 'DEPTH_quality_control',
-                            'TEMP_quality_control_QC': 'TEMP_quality_control'})
+                            'TEMP_quality_control_QC': 'TEMP_quality_control',
+                            'PSAL_QC': 'PSAL', 'PSAL_quality_control_RAW': 'PSAL_RAW_quality_control',
+                            'PSAL_quality_control_QC': 'PSAL_quality_control'})
 
     # drop rows where all NaN values which does happen in these old files sometimes
     df = df.dropna(subset=['TEMP', 'DEPTH', 'TEMP_RAW', 'DEPTH_RAW'], how='all')
@@ -690,9 +695,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
         LOGGER.warning('Duplicated DEPTH found in %s' % profile_qc.XBT_input_filename)
 
     # how many parameters do we have, not including DEPTH?
-    profile_qc.nprof = len([col for col in df.columns if ('_quality_control' not in col and 'RAW'
-                                                          not in col and 'DEPTH' not in col)])
-    profile_noqc.nprof = profile_qc.nprof
+    profile_qc.nprof = len(profile_qc.prof_type)
+    profile_noqc.nprof = len(profile_noqc.prof_type)
 
     profile_qc.prof_type = decode_bytearray(profile_qc.netcdf_file_obj.variables['Prof_Type'][:]).strip()
     profile_noqc.prof_type = profile_qc.prof_type
@@ -1001,30 +1005,6 @@ def parse_histories_nc(profile):
         else:
             df.at[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'] + 'R'
 
-    # update variable names to match what is in the file
-    newdf = df.copy()
-    newdf['HISTORY_PARAMETER'] = df['HISTORY_PARAMETER'].map(parm_names, na_action='ignore')
-    if any(newdf['HISTORY_PARAMETER'].isna()):
-        # list the parameters that are not defined
-        missing = newdf.loc[newdf['HISTORY_PARAMETER'].isna(), 'HISTORY_PARAMETER']
-        LOGGER.error("HISTORY_PARAMETER values %s are not defined. Please review output for this file %s" % (
-            missing, profile.XBT_input_filename))
-        exit(1)
-    # fix any variable names that are incorrect, only PEA, PER, TEA, TER should have something that is not TEMP
-    mask = newdf['HISTORY_QC_CODE'].str.contains('PEA|PER|TEA|TER')
-    newdf.loc[~mask, 'HISTORY_PARAMETER'] = 'TEMP'
-    # fix PER to be LATITUDE, LONGITUDE
-    mask = newdf['HISTORY_QC_CODE'].str.contains('PER') & newdf['HISTORY_PARAMETER'].str.contains('TEMP')
-    newdf.loc[mask, 'HISTORY_PARAMETER'] = 'LATITUDE, LONGITUDE'
-    # fix TEA, TER to be TIME
-    mask = newdf['HISTORY_QC_CODE'].str.contains('TEA|TER') & newdf['HISTORY_PARAMETER'].str.contains('TEMP')
-    newdf.loc[mask, 'HISTORY_PARAMETER'] = 'TIME'
-    # finally, PEA should be LATITUDE or LONGITUDE
-    mask = newdf['HISTORY_QC_CODE'].str.contains('PEA') & newdf['HISTORY_PARAMETER'].str.contains('TEMP')
-    # we don't know which one, so warn if there are any
-    if any(mask):
-        LOGGER.warning('PEA flag with TEMP in HISTORY_PARAMETER. Please review %s' % profile.XBT_input_filename)
-
     # update institute names to be more descriptive
     names = read_section_from_xbt_config('INSTITUTE')
     newdf['HISTORY_INSTITUTION'] = newdf['HISTORY_INSTITUTION'].map(lambda x: names[x].split(',')[0] if x in names else x)
@@ -1046,7 +1026,7 @@ def parse_histories_nc(profile):
     for idx, row in single_code_short_df.iterrows():
         mask = df['HISTORY_QC_CODE'].str[:2] == row['code_short']
         if any(mask):
-            df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = [row['code'] ,row['tempqc']]
+            df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['code'] ,row['tempqc'], row['parameter']]
     # this group of changes is here because I have reviewed all our QC codes in the historic databases and I know
     # there are some that are not correct.
     # change ERA to PLA with flag 3 to reduce duplication of flags

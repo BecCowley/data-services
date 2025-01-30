@@ -1,69 +1,69 @@
-﻿name,historic_extra_code,old_code,code,full_code,depth,condition,rule_direction,XBT_reject_code,XBT_accept_code,TIME_quality_control,LATITUDE_quality_control,LONGITUDE_quality_control,PROBE_TYPE_quality control,TEMP_quality_control,DEPTH_quality_control
-scientific_qc_applied,0,,QC,QCA,0,,down,,1,1,1,1,1,1,1
-wire_stretch,0,,WS,WSA,,,down,,2,,,,,2,1
-leakage,0,,LE,LEA,,,down,,4,,,,,2,1
-electrical_interference_interpolated,0,"SP, IP",EI,EIA,,,selected,,8,,,,,5,1
-electrical_interference_interpolated,0,,EI,EIA,,,down,,8,,,,,2,1
-high_frequency_noise_filtered,0,,HF,HFA,,,selected,,16,,,,,5,1
-high_frequency_noise_filtered,0,,HF,HFA,,,down,,16,,,,,2,1
-repeat_profile,0,,RE,REA,0,,down,,32,,,,,0,0
-temperature_inversion_confirmed,0,,IV,IVA,,,down,,64,,,,,1,1
-temperature_inversion_unconfirmed,0,,PI,PIA,,,down,,128,,,,,2,1
-temperature_offset,0,"TO, TD, SA, SO",TO,TOA,,,down,,256,,,,,2,1
-temperature_eddy_or_front,0,,EF,EFA,0,,down,,512,,,,,1,1
-temperature_steps_or_structure_confirmed,0,FS,ST,STA,0,,down,,1024,,,,,1,1
-temperature_steps_or_structure_unconfirmed,0,,PS,PSA,0,,down,,2048,,,,,2,1
-depth_offset,0,"DO, PL",DO,DOA,0,,down,,4096,,,,,5,1
-constant_temperature,0,,CT,CTA,,,down,,8192,,,,,2,1
-time_error_corrected,0,,TE,TEA,0,,down,,16384,5,,,,2,1
-latitude_error_corrected,0,PE,LA,LAA,0,,down,,32768,,5,,,2,1
-longitude_error_corrected,0,PE,LO,LOA,0,,down,,65536,,,5,,2,1
-probe_type_changed,0,,PR,PRA,0,,down,,131072,,,,5,5,5
-spike_interpolated,1,,SP,SPA,,,selected,,262144,,,,,5,1
-spike_interpolated,1,,SP,SPA,,,down,,262144,,,,,2,1
-fine_structure,1,,FS,FSA,0,,down,,524288,,,,,2,1
-insulation_penetration_interpolated,1,,IP,IPA,,,selected,,1048576,,,,,5,1
-insulation_penetration_interpolated,1,,IP,IPA,,,down,,1048576,,,,,2,1
-nub_inversion,1,,NU,NUA,0,,down,,2097152,,,,,1,1
-hit_bottom,1,,HB,HBA,,,down,,4194304,,,,,2,1
-premature_launch,1,,PL,PLA,0,,down,,8388608,,,,,2,1
-surface_temperature_anomaly,1,,SA,SAA,0,,down,,16777216,,,,,2,1
-surface_offset,1,,SO,SOA,0,,down,,33554432,,,,,2,1
-temperature_anomaly,1,,TA,TAA,,,down,,67108864,,,,,2,1
-temperature_difference_at_depth,1,,TD,TDA,,,down,,134217728,,,,,2,1
-unique_id_changed,1,,ID,IDA,0,,down,,268435456,,,,,1,1
-bowing_BathySystems,1,,BO,BOA,0,,down,,536870912,,,,,2,1
-cusping_BathySystems_leakage,1,,CU,CUA,,,down,,1073741824,,,,,2,1
-sippicanMK_ timing_delay_driver_error,1,,DR,DRA,0,,down,,2147483648,,,,,2,1
-BathySystem_software_fault_modulo_10_spikes_filtered,1,,MO,MOA,,,down,,4294967296,,,,,2,1
-protecho_systems_leakage_fault,1,,PF,PFA,0,,down,,8589934592,,,,,2,1
-sippicanMK9_sticking_bit_19_point_filtered,1,,SB,SBA,,,down,,17179869184,,,,,2,1
-depth_corrected_multiplied_by_10,1,,DE,DEA,0,,down,,34359738368,,,,,1,1
-depth_corrected_update_fall_rate_equation,1,,DP,DPA,0,,down,,68719476736,,,,,0,0
-bathy_data_low_resolution,1,,BD,BDA,0,,down,,1.37E+11,,,,,2,1
-surface_transient,0,,CS,CSR,3.6,,up,1,,,,,,3,1
-wire_break,0,,WB,WBR,,,down,2,,,,,,4,1
-wire_stretch,0,,WS,WSR,,,down,4,,,,,,3,1
-hit_bottom,0,,HB,HBR,,,down,8,,,,,,3,3
-leakage,0,,LE,LER,,,down,16,,,,,,3,1
-electrical_interference,0,"SP, IP",EI,EIR,,,down,32,,,,,,4,1
-high_frequency_noise,0,,HF,HFR,,,down,64,,,,,,4,1
-no_good,0,,NG,NGR,,,down,128,,,,,,4,1
-temperature_offset,0,"TO, TD, SA, SO",TO,TOR,,,down,256,,,,,,3,1
-depth_offset,0,"DO, PL",DO,DOR,0,,down,512,,,,,,3,3
-constant_temperature,0,,CT,CTR,,,down,1024,,,,,,3,3
-time_error,0,,TE,TER,0,,down,2048,,3,,,,3,1
-position_error,0,,PE,PER,0,,down,4096,,,3,3,,3,1
-duplicate_profile,0,,DU,DUR,0,,down,8192,,,,,,4,1
-test_probe,0,,TP,TPR,0,,down,16384,,,4,4,,4,4
-probe_type,0,,PR,PRR,0,,down,32768,,,,,3,3,3
-spike,1,,SP,SPR,,,down,65536,,,,,,4,1
-insulation_penetration,1,,IP,IPR,,,down,131072,,,,,,3,1
-surface_temperature_anomaly,1,,SA,SAR,0,,down,262144,,,,,,3,1
-surface_offset,1,,SO,SOR,0,,down,524288,,,,,,3,1
-no_trace,1,,NT,NTR,0,,down,1048576,,,,,,4,1
-bowing_BathySystems,1,,BO,BOR,0,,down,2097152,,,,,,3,1
-sippicanMK_ timing_delay_driver_error,1,,DR,DRR,,,down,4194304,,,,,,3,1
-protecho_systems_leakage_fault,1,,PF,PFR,0,,down,8388608,,,,,,3,1
-contact_lost_with_probe,1,,CL,CLR,,,down,16777216,,,,,,3,1
-bathy_data_low_resolution,1,,BD,BDR,0,,down,33554432,,,,,,3,1
+﻿name,historic_extra_code,old_code,code,full_code,depth,condition,rule_direction,XBT_reject_code,XBT_accept_code,TIME_quality_control,LATITUDE_quality_control,LONGITUDE_quality_control,PROBE_TYPE_quality control,TEMP_quality_control,DEPTH_quality_control,Parameter
+scientific_qc_applied,0,,QC,QCA,0,,down,,1,1,1,1,1,1,1,TEMP
+wire_stretch,0,,WS,WSA,,,down,,2,,,,,2,1,TEMP
+leakage,0,,LE,LEA,,,down,,4,,,,,2,1,TEMP
+electrical_interference_interpolated,0,"SP, IP",EI,EIA,,,selected,,8,,,,,5,1,TEMP
+electrical_interference_interpolated,0,,EI,EIA,,,down,,8,,,,,2,1,TEMP
+high_frequency_noise_filtered,0,,HF,HFA,,,selected,,16,,,,,5,1,TEMP
+high_frequency_noise_filtered,0,,HF,HFA,,,down,,16,,,,,2,1,TEMP
+repeat_profile,0,,RE,REA,0,,down,,32,,,,,0,0,TEMP
+temperature_inversion_confirmed,0,,IV,IVA,,,down,,64,,,,,1,1,TEMP
+temperature_inversion_unconfirmed,0,,PI,PIA,,,down,,128,,,,,2,1,TEMP
+temperature_offset,0,"TO, TD, SA, SO",TO,TOA,,,down,,256,,,,,2,1,TEMP
+temperature_eddy_or_front,0,,EF,EFA,0,,down,,512,,,,,1,1,TEMP
+temperature_steps_or_structure_confirmed,0,FS,ST,STA,0,,down,,1024,,,,,1,1,TEMP
+temperature_steps_or_structure_unconfirmed,0,,PS,PSA,0,,down,,2048,,,,,2,1,TEMP
+depth_offset,0,"DO, PL",DO,DOA,0,,down,,4096,,,,,5,1,TEMP
+constant_temperature,0,,CT,CTA,,,down,,8192,,,,,2,1,TEMP
+time_error_corrected,0,,TE,TEA,0,,down,,16384,5,,,,2,1,TIME
+latitude_error_corrected,0,PE,LA,LAA,0,,down,,32768,,5,,,2,1,LATITUDE
+longitude_error_corrected,0,PE,LO,LOA,0,,down,,65536,,,5,,2,1,LONGITUDE
+probe_type_changed,0,,PR,PRA,0,,down,,131072,,,,5,5,5,TEMP
+spike_interpolated,1,,SP,SPA,,,selected,,262144,,,,,5,1,TEMP
+spike_interpolated,1,,SP,SPA,,,down,,262144,,,,,2,1,TEMP
+fine_structure,1,,FS,FSA,0,,down,,524288,,,,,2,1,TEMP
+insulation_penetration_interpolated,1,,IP,IPA,,,selected,,1048576,,,,,5,1,TEMP
+insulation_penetration_interpolated,1,,IP,IPA,,,down,,1048576,,,,,2,1,TEMP
+nub_inversion,1,,NU,NUA,0,,down,,2097152,,,,,1,1,TEMP
+hit_bottom,1,,HB,HBA,,,down,,4194304,,,,,2,1,TEMP
+premature_launch,1,,PL,PLA,0,,down,,8388608,,,,,2,1,TEMP
+surface_temperature_anomaly,1,,SA,SAA,0,,down,,16777216,,,,,2,1,TEMP
+surface_offset,1,,SO,SOA,0,,down,,33554432,,,,,2,1,TEMP
+temperature_anomaly,1,,TA,TAA,,,down,,67108864,,,,,2,1,TEMP
+temperature_difference_at_depth,1,,TD,TDA,,,down,,134217728,,,,,2,1,TEMP
+unique_id_changed,1,,ID,IDA,0,,down,,268435456,,,,,1,1,TEMP
+bowing_BathySystems,1,,BO,BOA,0,,down,,536870912,,,,,2,1,TEMP
+cusping_BathySystems_leakage,1,,CU,CUA,,,down,,1073741824,,,,,2,1,TEMP
+sippicanMK_ timing_delay_driver_error,1,,DR,DRA,0,,down,,2147483648,,,,,2,1,TEMP
+BathySystem_software_fault_modulo_10_spikes_filtered,1,,MO,MOA,,,down,,4294967296,,,,,2,1,TEMP
+protecho_systems_leakage_fault,1,,PF,PFA,0,,down,,8589934592,,,,,2,1,TEMP
+sippicanMK9_sticking_bit_19_point_filtered,1,,SB,SBA,,,down,,17179869184,,,,,2,1,TEMP
+depth_corrected_multiplied_by_10,1,,DE,DEA,0,,down,,34359738368,,,,,1,1,TEMP
+depth_corrected_update_fall_rate_equation,1,,DP,DPA,0,,down,,68719476736,,,,,0,0,TEMP
+bathy_data_low_resolution,1,,BD,BDA,0,,down,,1.37E+11,,,,,2,1,TEMP
+surface_transient,0,,CS,CSR,3.6,,up,1,,,,,,3,1,TEMP
+wire_break,0,,WB,WBR,,,down,2,,,,,,4,1,TEMP
+wire_stretch,0,,WS,WSR,,,down,4,,,,,,3,1,TEMP
+hit_bottom,0,,HB,HBR,,,down,8,,,,,,3,3,TEMP
+leakage,0,,LE,LER,,,down,16,,,,,,3,1,TEMP
+electrical_interference,0,"SP, IP",EI,EIR,,,down,32,,,,,,4,1,TEMP
+high_frequency_noise,0,,HF,HFR,,,down,64,,,,,,4,1,TEMP
+no_good,0,,NG,NGR,,,down,128,,,,,,4,1,TEMP
+temperature_offset,0,"TO, TD, SA, SO",TO,TOR,,,down,256,,,,,,3,1,TEMP
+depth_offset,0,"DO, PL",DO,DOR,0,,down,512,,,,,,3,3,TEMP
+constant_temperature,0,,CT,CTR,,,down,1024,,,,,,3,3,TEMP
+time_error,0,,TE,TER,0,,down,2048,,3,,,,3,1,TIME
+position_error,0,,PE,PER,0,,down,4096,,,3,3,,3,1,LATITUDE LONGITUDE
+duplicate_profile,0,,DU,DUR,0,,down,8192,,,,,,4,1,TEMP
+test_probe,0,,TP,TPR,0,,down,16384,,,4,4,,4,4,TEMP
+probe_type,0,,PR,PRR,0,,down,32768,,,,,3,3,3,TEMP
+spike,1,,SP,SPR,,,down,65536,,,,,,4,1,TEMP
+insulation_penetration,1,,IP,IPR,,,down,131072,,,,,,3,1,TEMP
+surface_temperature_anomaly,1,,SA,SAR,0,,down,262144,,,,,,3,1,TEMP
+surface_offset,1,,SO,SOR,0,,down,524288,,,,,,3,1,TEMP
+no_trace,1,,NT,NTR,0,,down,1048576,,,,,,4,1,TEMP
+bowing_BathySystems,1,,BO,BOR,0,,down,2097152,,,,,,3,1,TEMP
+sippicanMK_ timing_delay_driver_error,1,,DR,DRR,,,down,4194304,,,,,,3,1,TEMP
+protecho_systems_leakage_fault,1,,PF,PFR,0,,down,8388608,,,,,,3,1,TEMP
+contact_lost_with_probe,1,,CL,CLR,,,down,16777216,,,,,,3,1,TEMP
+bathy_data_low_resolution,1,,BD,BDR,0,,down,33554432,,,,,,3,1,TEMP
