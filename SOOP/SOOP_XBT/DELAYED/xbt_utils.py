@@ -2,7 +2,7 @@ import numpy as np
 import numpy.ma as ma
 import re, os
 import pandas as pd
-from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
+from datetime import datetime
 from configparser import ConfigParser
 
 class XbtException(Exception):
@@ -12,6 +12,27 @@ class XbtException(Exception):
 def _error(message):
     """ Raise an exception with the given message."""
     raise XbtException('{message}'.format(message=message))
+
+
+def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
+    """
+    convert a time string to a datetime object
+    """
+    try:
+        if isinstance(time_string, pd.Series):
+            dt = time_string.apply(lambda x: x.replace(' ', '0') if isinstance(x, str) else x)
+        else:
+            dt = time_string.replace(' ', '0')
+        dt = pd.to_datetime(dt, errors='coerce', format=format)
+        if output == 'datetime':
+            return dt
+        elif output == 'string':
+            return dt.strftime(format)
+        else:
+            return dt
+    except:
+        _error('Time string not in a valid format')
+
 
 def read_qc_config():
     # set up a dataframe of the codes and their values

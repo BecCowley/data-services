@@ -493,33 +493,27 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     rpad = str(woce_time).ljust(6, '0')
     lpad = str(woce_time).zfill(6)
 
-    try:
-        # insert zeros into dates with spaces
-        xbt_date = '%sT%s' % (woce_date, rpad)
-        str1 = [x.replace(' ', '0') for x in xbt_date]
-        xbt_date = ''.join(str1)
-        xbt_date = datetime.strptime(xbt_date, '%Y%m%dT%H%M%S')
-    except:
-        xbt_date = '%sT%s' % (woce_date, lpad)
-        str1 = [x.replace(' ', '0') for x in xbt_date]
-        xbt_date = ''.join(str1)
-        xbt_date = datetime.strptime(xbt_date, '%Y%m%dT%H%M%S')
+    # get the right date format
+    xbt_date = '%sT%s' % (woce_date, rpad)
+    xbt_date = convert_time_string(xbt_date, '%Y%m%dT%H%M%S')
+    xbt_date2 = '%sT%s' % (woce_date, lpad)
+    xbt_date2 = convert_time_string(xbt_date2, '%Y%m%dT%H%M%S')
+    # replace NaT with the other date
+    if pd.isnull(xbt_date):
+        xbt_date = xbt_date2
 
     # Raw date
     rpad = str(woce_time_raw).ljust(6, '0')
     lpad = str(woce_time_raw).zfill(6)
 
-    try:
-        # insert zeros into dates with spaces
-        xbt_date_raw = '%sT%s' % (woce_date_raw, rpad)
-        str1 = [x.replace(' ', '0') for x in xbt_date_raw]
-        xbt_date_raw = ''.join(str1)
-        xbt_date_raw = datetime.strptime(xbt_date_raw, '%Y%m%dT%H%M%S')
-    except:
-        xbt_date_raw = '%sT%s' % (woce_date_raw, lpad)
-        str1 = [x.replace(' ', '0') for x in xbt_date_raw]
-        xbt_date_raw = ''.join(str1)
-        xbt_date_raw = datetime.strptime(xbt_date_raw, '%Y%m%dT%H%M%S')
+    # get the right date format
+    xbt_date_raw = '%sT%s' % (woce_date_raw, rpad)
+    xbt_date_raw = convert_time_string(xbt_date_raw, '%Y%m%dT%H%M%S')
+    xbt_date_raw2 = '%sT%s' % (woce_date_raw, lpad)
+    xbt_date_raw2 = convert_time_string(xbt_date_raw2, '%Y%m%dT%H%M%S')
+    # replace NaT with the other date
+    if pd.isnull(xbt_date_raw):
+        xbt_date_raw = xbt_date_raw2
 
     # AW - TIME_RAW is original date-time - set it too
     profile_qc.data['TIME'] = xbt_date
@@ -785,7 +779,7 @@ def adjust_time_qc_flags(profile):
 
         profile.data['data'].loc[profile.data['data']['TEMP_quality_control'] < 2, 'TEMP_quality_control'] = 2
         # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
-        if pd.to_datetime(profile.histories.loc[
+        if convert_time_string(profile.histories.loc[
                               profile.histories['HISTORY_QC_CODE'].str.contains(
                                   'TEA'), 'HISTORY_PREVIOUS_VALUE'].values, format='%Y%m%d%H%M%S') != \
                 profile.data['TIME_RAW']:
@@ -987,11 +981,9 @@ def parse_histories_nc(profile):
             # reset nhist to the new length
             nhist = len(df)
 
-        # fill any blanks in df['HISTORY_DATE'] strings with '0'
-        df['HISTORY_DATE'] = df['HISTORY_DATE'].str.replace(' ', '0')
         # allow for history dates to be YYYYMMDD or DDMMYYYY
-        date1 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%Y%m%d')
-        date2 = pd.to_datetime(df['HISTORY_DATE'], errors='coerce', format='%d%m%Y')
+        date1 = convert_time_string(df['HISTORY_DATE'], '%Y%m%d')
+        date2 = convert_time_string(df['HISTORY_DATE'],'%d%m%Y')
         df['HISTORY_DATE'] = date1.fillna(date2)
     else:
         # no history records
@@ -1087,8 +1079,8 @@ def parse_histories_nc(profile):
             if df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern).any():
                 df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'] = 0
             # allow for dates to be YYYYMMDD or DDMMYYYY
-            date1 = pd.to_datetime(df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), errors='coerce', format='%Y%m%d').dt.strftime('%Y%m%d').astype(float)
-            date2 = pd.to_datetime(df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), errors='coerce', format='%d%m%Y').dt.strftime('%Y%m%d').astype(float)
+            date1 = convert_time_string(df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), '%Y%m%d', 'string').astype(float)
+            date2 = convert_time_string(df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), '%d%m%Y', 'string').astype(float)
             df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'] = date1.fillna(date2)
 
         # change the 'DATE' label to TIME  and update the TEA PREVIOUS_VALUE to the new datetime value
@@ -1229,7 +1221,7 @@ def combine_histories(profile_qc, profile_noqc):
             elif vv == 'TIME':
                 # check the previous value is the same as the TIME_RAW value
                 # convert the previous value to a datetime object
-                prevval = pd.to_datetime(non_temp_codes[dup_idx]['HISTORY_PREVIOUS_VALUE'], format='%Y%m%d%H%M%S')
+                prevval = convert_time_string(non_temp_codes[dup_idx]['HISTORY_PREVIOUS_VALUE'], format='%Y%m%d%H%M%S')
                 # identify the rows where the previous value is not the same as the TIME_RAW value and remove them
                 idx = non_temp_codes[dup_idx][~(prevval == profile_qc.data['TIME_RAW'])].index
                 if len(idx) > 0:
@@ -1264,8 +1256,8 @@ def combine_histories(profile_qc, profile_noqc):
             if not pd.isna(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
                 'HISTORY_PREVIOUS_VALUE'].values[0]):
                 # convert the HISTORY_PREVIOUS_VALUE to a datetime object
-                prevval = datetime.strptime(str(int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
-                    'HISTORY_PREVIOUS_VALUE'].values[0])), '%Y%m%d%H%M%S')
+                prevval = convert_time_string(str(int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+                    'HISTORY_PREVIOUS_VALUE'].values[0])), '%Y%m%d%H%M%S', 'string')
                 # check the previous value is the same as the TIME_RAW value
                 if not prevval == profile_qc.data[var]:
                     LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
