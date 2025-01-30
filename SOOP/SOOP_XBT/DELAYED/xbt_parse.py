@@ -250,21 +250,21 @@ def parse_globalatts_nc(profile):
     for count in range(profile.nprof):
         vv = decode_bytearray(profile.netcdf_file_obj['Digit_Code'][count])
         if not vv or len(vv) == 0:
-            profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = ''
-            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = ''
+            profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count]] = ''
+            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count]] = ''
         else:
             # remove control characters from the digit_code
             vv = remove_control_chars(vv).strip()
-            profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count:]] = vv
+            profile.global_atts['gtspp_digitisation_method_code_' + profile.prof_type[count]] = vv
 
         # now the same for the precision code
         vv = decode_bytearray(profile.netcdf_file_obj['Standard'][count])
         if not vv or len(vv) == 0:
-            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = ''
+            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count]] = ''
         else:
             # remove control characters from the standard
             vv = remove_control_chars(vv).strip()
-            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count:]] = vv
+            profile.global_atts['gtspp_precision_code_' + profile.prof_type[count]] = vv
 
     # get predrop and postdrop comments
     if 'PreDropComments' in profile.netcdf_file_obj.variables:
@@ -571,21 +571,29 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                     qc = qc[:ndeps]
 
             prof = np.round(s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0], 4)
-            # resize the data if it has 99.99 or nan in it
+            # resize the arrays to eliminate empty values
+            prof = np.ma.masked_array(prof.compressed())
+            # Is there a mismatch in DEPTH and TEMP lengths?
             if ndeps < len(prof):
                 # check the extra length contains valid data
                 prof_rem = prof[ndeps:]
-                if np.isnan(prof_rem).all() or np.isclose(prof_rem, 99.99).all() or prof_rem.mask.all():
+                if np.isnan(prof_rem).all() or np.all(prof_rem > 99) or prof_rem.mask.all():
                     # keep the valid data
                     prof = prof[:ndeps]
+                    print('Check this bit of code!! %s' % s.XBT_input_filename)
+                    exit(1)
                 else:
                     LOGGER.error('Profile %s has %s depths but %s values for %s' % (s.XBT_input_filename, ndeps, len(prof), var))
                     exit(1)
+            # if the size of the variable isn't equal to the number of depths, exit
+            if (len(prof) != ndeps):
+                LOGGER.error('Profile %s has %s depths but %s values for %s' % (s.XBT_input_filename, ndeps, len(prof), var))
+                exit(1)
 
-            # resize the arrays to eliminate empty values
-            prof = np.ma.masked_array(prof.compressed())
-            # mask the 99.99 from CSA flagging of TEMP
-            prof = np.ma.masked_where(prof == 99.99, prof)
+            # make any values >99 equal to 99.99. Some profiles have different values for invalid data
+            if 'TEMP' in var:
+                prof[prof > 99] = 99.99
+            # TODO: consider other variables that might have different invalid values
             prof = np.ma.masked_invalid(prof)  # mask nan and inf values
             prof.set_fill_value(999999)
 
@@ -594,10 +602,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             prof_flag = np.ma.masked_array(prof_flag.compressed())
             prof_flag = np.ma.masked_array(
                 invalid_to_ma_array(prof_flag, fillvalue=99))  # replace masked values for IMOS IODE flags
-            # if the size of the TEMP isn't equal to the number of depths, exit
-            if (len(prof) != ndeps):
-                LOGGER.error('Profile %s has %s depths but %s values for %s' % (s.XBT_input_filename, ndeps, len(prof), var))
-                exit(1)
+
             if len(prof_flag) != ndeps:
                 if len(prof_flag) < ndeps:
                     LOGGER.warning(
@@ -685,15 +690,18 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     df = df.dropna(subset=['TEMP', 'DEPTH', 'TEMP_RAW', 'DEPTH_RAW'], how='all')
 
     # check for duplicated depths and log if found
-    if df['DEPTH'].duplicated().any():
-        LOGGER.warning('Duplicated DEPTH found in %s' % profile_qc.XBT_input_filename)
+    if df['DEPTH'].duplicated().any() or df['DEPTH_RAW'].duplicated().any():
+        LOGGER.error('Duplicated DEPTH or DEPTH_RAW found in %s' % profile_qc.XBT_input_filename)
 
     # how many parameters do we have, not including DEPTH?
     profile_qc.nprof = len(profile_qc.prof_type)
     profile_noqc.nprof = len(profile_noqc.prof_type)
 
-    profile_qc.prof_type = decode_bytearray(profile_qc.netcdf_file_obj.variables['Prof_Type'][:]).strip()
-    profile_noqc.prof_type = profile_qc.prof_type
+    # check here that the DEPTH and DEPTH_RAW columns are the same or DEPTH_RAW is 1.0336 * DEPTH
+    if not np.isclose(df['DEPTH_RAW'].values, df['DEPTH'].values, atol=1e-6).all() and \
+            not np.isclose(df['DEPTH_RAW'].values *1.0336, df['DEPTH'].values, atol=1e-6).all():
+        LOGGER.error('DEPTH_RAW and DEPTH values do not match in %s' % profile_qc.XBT_input_filename)
+        exit(1)
 
     # save the dataframe of DEPTH dimensioned data to the profile object
     profile_qc.data['data'] = df
@@ -999,14 +1007,12 @@ def parse_histories_nc(profile):
 
     # update institute names to be more descriptive
     names = read_section_from_xbt_config('INSTITUTE')
-    newdf['HISTORY_INSTITUTION'] = newdf['HISTORY_INSTITUTION'].map(lambda x: names[x].split(',')[0] if x in names else x)
-    if any(newdf['HISTORY_INSTITUTION'].isna()):
+    df['HISTORY_INSTITUTION'] = df['HISTORY_INSTITUTION'].map(lambda x: names[x].split(',')[0] if x in names else x)
+    if any(df['HISTORY_INSTITUTION'].isna()):
         # list the institutes that are not defined
-        missing = newdf.loc[newdf['HISTORY_INSTITUTION'].isna(), 'HISTORY_INSTITUTION']
+        missing = df.loc[df['HISTORY_INSTITUTION'].isna(), 'HISTORY_INSTITUTION']
         LOGGER.warning("HISTORY_INSTITUTION values %s are not defined. Please review output for this file %s"
                      % (missing, profile.XBT_input_filename))
-
-    df = newdf
 
     # get a list of qc_df['code'] values where qc_df['code_short'] only appears once in the dataframe
     # Get the value counts of 'code_short'
@@ -1037,6 +1043,9 @@ def parse_histories_nc(profile):
              'CSCBv2': 'Australian XBT Quality Control Cookbook Version 2.1'}
     df['HISTORY_SOFTWARE'] = df['HISTORY_SOFTWARE'].map(names, na_action='ignore')
 
+    # fix any 9999 etc values in HISTORY_PREVIOUS_VALUE where HISTORY_PARAMETER is TEMP to be 99.99 to match the data
+    df.loc[(df['HISTORY_PARAMETER'] == 'TEMP') & (df['HISTORY_PREVIOUS_VALUE'] > 99), 'HISTORY_PREVIOUS_VALUE'] = 99.99
+
     # change CSA to CSR and the flag to 3 to match new format
     df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
     ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'CSR', 3
@@ -1064,7 +1073,6 @@ def parse_histories_nc(profile):
         ti = profile.data['TIME'].strftime('%H%M%S')
 
         # if any of timerows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
-        pattern = re.compile(r'^9{1,5}(\.\d+)?$')
         timeidx = df['HISTORY_PARAMETER'] == 'TIME'
         if timeidx.any():
             if df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern).any():
