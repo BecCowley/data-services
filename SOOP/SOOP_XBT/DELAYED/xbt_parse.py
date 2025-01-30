@@ -167,15 +167,15 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
         # adjust date and time QC flags if required
         profile_qc = adjust_time_qc_flags(profile_qc)
 
-        # perform a check of the qc vs noqc global attributes and histories. Do any of these need reconciling?
-        if len(profile_qc.global_atts.keys() - profile_noqc.global_atts):
-            # if the difference in the global attributes is just the qc_completed key, continue
-            if len(profile_qc.global_atts.keys() - profile_noqc.global_atts) == 1:
-                if 'qc_completed' in profile_qc.global_atts.keys() - profile_noqc.global_atts:
-                    pass
-                else:
-                    LOGGER.error('%s GLOBAL attributes in RAW and ED files are not consistent. Please review.'
-                                 % profile_qc.XBT_input_filename)
+    # perform a check of the qc vs noqc global attributes and histories. Do any of these need reconciling?
+    if len(profile_qc.global_atts.keys() - profile_noqc.global_atts):
+        # if the difference in the global attributes is just the qc_completed key, continue
+        if len(profile_qc.global_atts.keys() - profile_noqc.global_atts) == 1:
+            if 'qc_completed' in profile_qc.global_atts.keys() - profile_noqc.global_atts:
+                pass
+            else:
+                LOGGER.error('%s GLOBAL attributes in RAW and ED files are not consistent. Please review.'
+                             % profile_qc.XBT_input_filename)
 
     # Probe type goes into a variable with coefficients as attributes, and assign QC to probe types
     profile_qc = get_fallrate_eq_coef(profile_qc, profile_noqc)
@@ -1113,9 +1113,15 @@ def parse_histories_nc(profile):
 
     # remove any duplicated lines for any code
     df = df[~(df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_PREVIOUS_VALUE', 'HISTORY_START_DEPTH']))]
-    # remove duplicated codes where one previous value is > 99 and parameter is TEMP
-    df = df[~((df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_START_DEPTH'])) &
-                (df['HISTORY_PREVIOUS_VALUE'] > 99) & (df['HISTORY_PARAMETER'] == 'TEMP'))]
+    # find duplicated codes where one previous value is nan and parameter is TEMP. Remove the nan value
+    mask = df.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_START_DEPTH'])
+    mask2 = df['HISTORY_PARAMETER'].str.contains('TEMP')
+    mask3 = df['HISTORY_PREVIOUS_VALUE'].isna()
+    mask4 = mask & mask2 & mask3
+    if any(mask4):
+        print('Check this is working %s' % profile.XBT_input_filename)
+        exit(1)
+        df = df[~mask4]
 
     # sort the flags by depth order to help with finding STOP_DEPTH
     # TODO: will keep the stop depth for now. Consider re-writing to loop over each of the lists of act_code types
@@ -1347,11 +1353,12 @@ def restore_temp_val(profile):
         else:
             LOGGER.error('TEMP_RAW values and HISTORY_PREVIOUS_VALUE values are both > 99 for CS flags. Please review. %s'
                          % profile.XBT_input_filename)
+    elif len(depths) == 0:
+        LOGGER.warning('No CS flags found in the histories. %s' % profile.XBT_input_filename)
     else:
-        # are all the TEMP_quality_control values >2? If not, log error
-        if not (df['TEMP_quality_control'][:] > 2).all():
-            LOGGER.info('No CSR flags or surface depths do not match in the profile data. Please review. %s'
-                        % profile.XBT_input_filename)
+        # the number of CS flags in the profile data does not match the number of missing temps in the data
+        LOGGER.warning('Number of CS flags in the profile data does not match the number of missing temps in the data. %s'
+                     % profile.XBT_input_filename)
 
     # find any depths with 99.99 values that are flagged with SPA or IPA or HFA
     idx = (df['TEMP'] > 99)
