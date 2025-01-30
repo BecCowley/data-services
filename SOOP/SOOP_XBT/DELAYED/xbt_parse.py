@@ -1074,6 +1074,7 @@ def parse_histories_nc(profile):
 
         # if any of timerows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
         timeidx = df['HISTORY_PARAMETER'] == 'TIME'
+        pattern = re.compile(r'^9{1,5}(\.\d+)?$')
         if timeidx.any():
             if df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern).any():
                 df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'] = 0
