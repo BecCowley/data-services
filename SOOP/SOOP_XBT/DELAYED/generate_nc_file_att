@@ -22,6 +22,7 @@ quality_control_set          = 1.0
 references                   = https://doi.org/10.25919/3tm5-zn80, https://www.aoml.noaa.gov/phod/goos/xbtscience/index.php
 source                       = Expendable Bathythermograph (XBT)
 standard_name_vocabulary     = NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table 27
+title                        = Upper ocean temperature data collected on the transect in variable XBT_line using XBT (expendable bathythermographs) on the vessel named in the ship_name variable
 
 [TIME]
 calendar            = gregorian
@@ -83,12 +84,23 @@ valid_max 		= 180
 
 [PROBE_TYPE]
 reference_datum 	= WMO code table 1770 
-ancillary_variables 	= PROBE_TYPE_quality_control 
+ancillary_variables 	= PROBE_TYPE_quality_control, PROBE_TYPE_code, FRE_coefficent_a, FRE_coefficent_b
 long_name 		= XBT probe type
 
 [PROBE_TYPE_RAW]
 reference_datum 	= WMO code table 1770
+ancillary_variables 	= PROBE_TYPE_RAW_code, FRE_coefficent_a_RAW, FRE_coefficent_b_RAW
 long_name 		=  XBT probe type uncorrected
+
+[PROBE_TYPE_code]
+reference_datum 	= WMO code table 1770
+ancillary_variables 	= PROBE_TYPE, FRE_coefficent_a, FRE_coefficent_b
+long_name 		= XBT probe type code
+
+[PROBE_TYPE_RAW_code]
+reference_datum 	= WMO code table 1770
+ancillary_variables 	= PROBE_TYPE_RAW, FRE_coefficent_a_RAW, FRE_coefficent_b_RAW
+long_name 		=  XBT probe type uncorrected code
 
 [PROBE_TYPE_quality_control]
 long_name 			= quality flags for probe type
@@ -98,6 +110,78 @@ valid_min 			= 0
 valid_max 			= 9
 flag_values 			= 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 flag_meanings 			= No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value 
+
+[FRE_coefficent_a]
+reference_datum 	= WMO code table 1770
+ancillary_variables 	= FRE_coefficent_b, PROBE_TYPE, PROBE_TYPE_code
+long_name 		= PROBE_TYPE Fall Rate Equation coefficient a
+
+[FRE_coefficent_b]
+reference_datum 	= WMO code table 1770
+ancillary_variables 	= FRE_coefficent_a, PROBE_TYPE, PROBE_TYPE_code
+long_name 		= PROBE_TYPE Fall Rate Equation coefficient b
+
+[FRE_coefficent_a_RAW]
+reference_datum 	= WMO code table 1770
+ancillary_variables 	= FRE_coefficent_b_RAW, PROBE_TYPE_RAW, PROBE_TYPE_RAW_code
+long_name 		= PROBE_TYPE_RAW Fall Rate Equation coefficient a
+
+[FRE_coefficent_b_RAW]
+reference_datum 	= WMO code table 1770
+ancillary_variables 	=  FRE_coefficent_a_RAW, PROBE_TYPE_RAW, PROBE_TYPE_RAW_code
+long_name 		= PROBE_TYPE_RAW Fall Rate Equation coefficient b
+
+[XBT_uniqueid]
+long_name 		= XBT unique identifier
+
+[XBT_input_filename]
+long_name 		= XBT input filename
+
+[XBT_recorder_type]
+long_name 		= XBT recorder type code
+reference_datum 	= WMO code table 4770
+
+[XBT_recorder_type_name]
+long_name 		= XBT recorder type name
+reference_datum 	= WMO code table 4770
+
+[XBT_calibration_OFFSET]
+long_name 		= XBT calibration offset for temperature from the probe
+
+[XBT_calibration_SCALE]
+long_name 		= XBT calibration scale for temperature from the probe
+
+[XBT_probe_serialnumber]
+long_name 		= XBT instrument serial number
+
+[XBT_manufacturer_date]
+long_name 		= XBT manufacturer date
+
+[XBT_height_launch_above_water]
+long_name 		= XBT height of launch above water
+units 			= m
+positive 		= up
+
+[XBT_cyclic_redundancy_code]
+long_name 		= XBT cyclic redundancy code
+
+[XBT_line]
+long_name 		= XBT line identifier
+
+[XBT_line_description]
+long_name 		= XBT line description
+
+[Ship_name]
+long_name 		= Deployment vessel name
+
+[Callsign]
+long_name 		= Deployment vessel callsign
+
+[Platform_code]
+long_name 		= Deployment vessel platform code
+
+[Ship_IMO]
+long_name 		= Deployment vessel IMO number
 
 [DEPTH]
 reference_datum     = sea surface

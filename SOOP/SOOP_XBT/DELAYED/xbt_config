@@ -1,22 +1,33 @@
+# variable names mapping from original file to output file
+# Original_variable_name=Output_variable_name,Output_variable_type
+[VARIABLES]
+Cruise_ID=XBT_cruise_ID,str
+Digit_Code=gtspp_digitisation_method_code,int
+Standard=gtspp_precision_code,int
+PreDropComments=XBT_predrop_comments,str
+PostDropComments=XBT_postdrop_comments,str
+Source_ID=XBT_gts_insertion_node,str
+Stream_Ident=institution,str
+
 # SRFC CODES defined in https://www.nodc.noaa.gov/GTSPP/document/codetbls/gtsppcode.html
 # defined as
-# CODE_IN_ORIGINAL_FILE=GATT_IN_OUTPUT_NC,TYPE_OF_GATT
+# CODE_IN_ORIGINAL_FILE=Output_variable_name,Output_variable_type
 [SRFC_CODES]
 GCLL=Platform_code,str
 CSID=XBT_uniqueid,int
 SER#=XBT_probe_serialnumber,str
-PEQ$=XBT_probetype_fallrate_equation,str
-PTYP=XBT_probetype_fallrate_equation,str
-PRT$=XBT_probetype_fallrate_equation,str
+PEQ$=PROBE_TYPE,str
+PTYP=PROBE_TYPE,str
+PRT$=PROBE_TYPE,str
 RCT$=XBT_recorder_type,str
 SYST=XBT_system_type,str
 OFFS=XBT_calibration_OFFSET,float
 SCAL=XBT_calibration_SCALE,float
 CRC$=XBT_cyclic_redundancy_code,str
 TWI#=XBT_line,str
-SHP#=ship_name,str
-MFD#=XBT_manufacturer_date_yyyymmdd,str
-HTL$=XBT_height_launch_above_water_in_meters,float
+SHP#=Ship_name,str
+MFD#=XBT_manufacturer_date,date
+HTL$=XBT_height_launch_above_water,float
 SSPS=Sea_Surface_Practical_Salinity_(PSU),str
 VERS=Recorder_software_version,str
 FVRS=Recorder_firmware_version,str

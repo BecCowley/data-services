@@ -145,4 +145,4 @@ def generate_table_att(conf_file, conf_file_point_of_truth=False):
 
 
     # return the dictionary of attributes
-    return table_att
+    return table_att, variable_list
