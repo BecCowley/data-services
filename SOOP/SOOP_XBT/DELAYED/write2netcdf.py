@@ -11,16 +11,16 @@ from netCDF4 import Dataset, date2num
 from generate_netcdf_att import get_imos_parameter_info, generate_netcdf_att
 from xbt_parse import read_section_from_xbt_config
 
-def create_filename_output(prof, hist, global_atts):
+def create_filename_output(prof, hist):
     filename = 'XBT_T_%s_%s_FV01_ID-%s' % (
-        prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), global_atts['XBT_line'].values[0],
-        global_atts['XBT_uniqueid'].values[0])
+        prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), prof['XBT_line'],
+        prof['XBT_uniqueid'])
 
     # decide what prefix is required
     names = read_section_from_xbt_config('VARIOUS')
     str = names['FILENAME']
     if str == 'Cruise_ID':
-        str = global_atts['XBT_cruise_ID']
+        str = prof['XBT_cruise_ID']
         filename = '{}-{}'.format(str, filename)
     else:
         if prof['TIME'] > datetime(2008, 0o1, 0o1):
@@ -37,8 +37,10 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
     """output the data to the IMOS format netcdf version"""
 
     # now begin write out to new format
-    netcdf_filepath = os.path.join(output_folder, "%s.nc" % create_filename_output(profile.iloc[0], history, global_atts))
+    netcdf_filepath = os.path.join(output_folder, "%s.nc" % create_filename_output(profile.iloc[0], history))
     print('Creating output %s' % netcdf_filepath)
+
+    # TODO: create groups in the netcdf file. Group of data, group of histories and group of variables that were previously in the global attributes
 
     with Dataset(netcdf_filepath, "w", format="NETCDF4") as output_netcdf_obj:
         # Create the dimensions
@@ -46,61 +48,40 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
         output_netcdf_obj.createDimension('N_HISTORY', 0) #make this unlimited
 
         # Create the variables, no dimensions:
-        varslist = ["TIME", "LATITUDE", "LONGITUDE"]
+        # varslist = ["TIME", "LATITUDE", "LONGITUDE", "PROBE_TYPE"]
+        varslist = [key for key in profile.keys()]
         for vv in varslist:
-            output_netcdf_obj.createVariable(vv, datatype=get_imos_parameter_info(vv, '__data_type'),
-                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
-            # and associated QC variables:
-            output_netcdf_obj.createVariable(vv + "_quality_control", "b", fill_value=99)
-            # and the *_RAW variables:
-            output_netcdf_obj.createVariable(vv + "_RAW", datatype=get_imos_parameter_info(vv, '__data_type'),
-                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
-
-        # Create the dimensioned variables:
-        varslist = [key for key in profile.keys() if ('_quality_control' not in key and 'RAW' not in key
-                                                           and 'TUDE' not in key and 'XBT' not in key
-                                                           and 'TIME' not in key and 'uncertainty' not in key
-                                                           and 'PROBE' not in key and 'station_number' not in key)]
-        for vv in varslist:
-            output_netcdf_obj.createVariable(vv, datatype=get_imos_parameter_info(vv, '__data_type'),
-                                             dimensions=('DEPTH',),
-                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
-            # and associated QC variables:
-            output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
-            # and uncertainty values for DEPTH and TEMP
-            output_netcdf_obj.createVariable(vv + "_uncertainty", "f", dimensions=('DEPTH',), fill_value=999999.0)
-            # and the *_RAW variables:
-            output_netcdf_obj.createVariable(vv + "_RAW", datatype=get_imos_parameter_info(vv, '__data_type'),
-                                             dimensions=('DEPTH',),
-                                             fill_value=get_imos_parameter_info(vv, '_FillValue'))
-            # create a QC variable for the _RAW data if there are flags included
-            # (some files are converted from QC'd datasets and therefore have flags associated with the 'raw' data
-            if profile[vv + '_RAW_quality_control'].any() > 0:
-                print("QC values have been written to file for \"%s\"_RAW variable. Review." % vv)
-                output_netcdf_obj.createVariable(vv + "_RAW_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
-
-            if vv == 'TEMP' and profile_raw is not None:
-                # add the recording system variable:
-                output_netcdf_obj.createVariable(vv + "_RECORDING_SYSTEM", "f", dimensions=('DEPTH',),
-                                                 fill_value=999999.0)
-                # and associated QC variables:
-                output_netcdf_obj.createVariable(vv + "_RECORDING_SYSTEM_quality_control", "b", dimensions=('DEPTH',),
-                                                 fill_value=-51)
-
-        # Create the last variables that are non-standard:
-        output_netcdf_obj.createVariable("PROBE_TYPE", 'S3')
-        output_netcdf_obj.createVariable("PROBE_TYPE_quality_control", "b", fill_value=99)
-        output_netcdf_obj.createVariable("PROBE_TYPE_RAW", 'S3')
-
-        accept_codes = output_netcdf_obj.createVariable("XBT_accept_code", "u8", dimensions=('DEPTH',),
-                                                  fill_value=0)
-        reject_codes = output_netcdf_obj.createVariable("XBT_reject_code", "u8", dimensions=('DEPTH',),
-                                                    fill_value=0)
-
-        # # If the turo profile is handed in:
-        # if profile_raw is not None:
-        #     output_netcdf_obj.createVariable("RESISTANCE", "f", dimensions=('DEPTH',), fill_value=float("nan"))
-        #     output_netcdf_obj.createVariable("SAMPLE_TIME", "f", dimensions=('DEPTH',), fill_value=float("nan"))
+            # first check if this variable is in the imosParameters.txt file
+            dt = get_imos_parameter_info(vv, '__data_type')
+            fillvalue = get_imos_parameter_info(vv, '_FillValue')
+            if fillvalue == '':
+                fillvalue = None
+            if dt:
+                if vv in ['TIME', 'LATITUDE', 'LONGITUDE', 'PROBE_TYPE']:
+                    output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue)
+                    # and associated QC variables:
+                    output_netcdf_obj.createVariable(vv + "_quality_control", "b", fill_value=99)
+                    # and the *_RAW variables:
+                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dt, fill_value=fillvalue)
+                # create dimensioned variables:
+                if vv in ['XBT_accept_code', 'XBT_reject_code']:
+                    output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=('DEPTH',), fill_value=fillvalue)
+                if vv in ['DEPTH', 'TEMP', 'PSAL', 'COND', 'RESISTANCE', 'SAMPLE_TIME']:
+                    output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=('DEPTH',), fill_value=fillvalue)
+                    # and associated QC variables:
+                    output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
+                    # and the *_RAW variables:
+                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dt,
+                                                 dimensions=('DEPTH',), fill_value=fillvalue)
+                    if vv in ['TEMP', 'DEPTH', 'PSAL']:
+                        # add the uncertainty variable
+                        output_netcdf_obj.createVariable(vv + "_uncertainty", datatype=dt, dimensions=('DEPTH',),
+                                                        fill_value=fillvalue)
+                # test if the output_netCDF_obj already has the variable created
+                if vv not in output_netcdf_obj.variables:
+                    output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue)
+            elif vv not in output_netcdf_obj.variables:
+                print("Variable skipped: \"%s\". Please check!!" % vv)
 
         # create HISTORY variable set associated
         output_netcdf_obj.createVariable("HISTORY_INSTITUTION", "str", 'N_HISTORY')
@@ -113,7 +94,7 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
         output_netcdf_obj.createVariable("HISTORY_STOP_DEPTH", "f", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_QC_CODE", "str", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_QC_CODE_DESCRIPTION", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_TEMP_QC_CODE_VALUE", "f", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_QC_CODE_VALUE", "f", 'N_HISTORY')
 
         # write attributes from the generate_nc_file_att file, now that we have added the variables:
         conf_file = os.path.join(os.path.dirname(__file__), 'generate_nc_file_att')
@@ -130,27 +111,21 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
         dfr = pd.read_csv(r_file_path)
 
         # add the accept and reject code attributes:
-        setattr(accept_codes, 'valid_max', int(dfa['byte_value'].values.sum()))
-        setattr(accept_codes, 'flag_masks', dfa['byte_value'].values.astype(np.uint64))
-        setattr(accept_codes, 'flag_meanings', ' '.join(dfa['label'].values))
-        setattr(accept_codes, 'flag_codes', ' '.join(dfa['code'].values))
-        setattr(reject_codes, 'valid_max', int(dfr['byte_value'].values.sum()))
-        setattr(reject_codes, 'flag_masks', dfr['byte_value'].values.astype(np.uint64))
-        setattr(reject_codes, 'flag_meanings', ' '.join(dfr['label'].values))
-        setattr(reject_codes, 'flag_codes', ' '.join(dfr['code'].values))
+        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'valid_max', int(dfa['byte_value'].values.sum()))
+        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_masks', dfa['byte_value'].values.astype(np.uint64))
+        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_meanings', ' '.join(dfa['label'].values))
+        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_codes', ' '.join(dfa['code'].values))
+        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'valid_max', int(dfr['byte_value'].values.sum()))
+        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_masks', dfr['byte_value'].values.astype(np.uint64))
+        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_meanings', ' '.join(dfr['label'].values))
+        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_codes', ' '.join(dfr['code'].values))
 
-        # write coefficients out to the attributes. In the PROBE_TYPE, PROBE_TYPE_RAW, DEPTH, DEPTH_RAW
-        varnames = ['PROBE_TYPE', 'DEPTH']
-        for v in varnames:
-            setattr(output_netcdf_obj.variables[v], 'XBT_fallrate_coefficients',
-                    global_atts['XBT_fallrate_equation_coefficients'].values[0])
-            setattr(output_netcdf_obj.variables[v], 'probe_type_name', global_atts['PROBE_TYPE_name'].values[0])
-
-        varnames = ['PROBE_TYPE_RAW', 'DEPTH_RAW']
-        for v in varnames:
-            setattr(output_netcdf_obj.variables[v], 'fallrate_coefficients',
-                    global_atts['XBT_fallrate_equation_coefficients_RAW'].values[0])
-            setattr(output_netcdf_obj.variables[v], 'probe_type_name', global_atts['PROBE_TYPE_RAW_name'].values[0])
+        # if SAMPLE_TIME is in the output_netcdf_obj, add the units
+        if 'SAMPLE_TIME' in output_netcdf_obj.variables:
+            year_value = profile['TIME'].dt.year.astype(int).values[0]
+            dt = datetime.datetime(year_value, 1, 1, 0, 0, 0)
+            setattr(output_netcdf_obj.variables['SAMPLE_TIME'], 'units', 'milliseconds since ' +
+                    dt.strftime("%Y-%m-%d %H:%M:%S UTC"))
 
         # append the data to the file
         # qc'd
@@ -158,15 +133,7 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
             if v not in list(profile) and v not in list(history) and v not in list(global_atts):
                 print("Variable not written: \"%s\". Please check!!" % v)
                 continue
-            if v == 'TIME' or v == 'TIME_RAW':
-                # AW DEBUG
-                '''
-                for attr in output_netcdf_obj[v].ncattrs():
-                    print("attr",attr)
-                print("var name, var",v,profile.data[v])
-                print("units",output_netcdf_obj[v].units)
-                print("calendar",output_netcdf_obj[v].calendar)
-                '''
+            if v in ['TIME', 'TIME_RAW','XBT_manufacturer_date', 'SAMPLE_TIME']:
                 time_val_dateobj = date2num(pd.to_datetime(profile[v].values[0]), output_netcdf_obj[v].units,
                                             output_netcdf_obj[v].calendar)
                 output_netcdf_obj[v][:] = time_val_dateobj
@@ -179,7 +146,7 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
                         output_netcdf_obj[v][:] = profile[v]
                 else:
                     if isinstance(output_netcdf_obj[v][:], str):
-                        output_netcdf_obj[v][len(profile[v])] = profile[v].values[0]
+                        output_netcdf_obj[v][len(profile[v])] = str(profile[v].values[0])
                     else:
                         output_netcdf_obj[v][:] = profile[v].values[0]
             else:

@@ -14,11 +14,15 @@ Stream_Ident=institution,str
 # CODE_IN_ORIGINAL_FILE=Output_variable_name,Output_variable_type
 [SRFC_CODES]
 GCLL=Platform_code,str
+PLAT=Platform_code,str
+DPC$=Depth_correction_code,str
 CSID=XBT_uniqueid,int
+DBID=XBT_uniqueid_originator,int
 SER#=XBT_probe_serialnumber,str
 PEQ$=PROBE_TYPE,str
 PTYP=PROBE_TYPE,str
 PRT$=PROBE_TYPE,str
+FRA$=XBT_fall_rate_correction_factor,float
 RCT$=XBT_recorder_type,str
 SYST=XBT_system_type,str
 OFFS=XBT_calibration_OFFSET,float
@@ -261,6 +265,14 @@ IP=Insulation penetration
 743=3.43898,-0.31
 744=5.07598,-0.72
 745=3.68081,-0.47
+
+[DPC$]
+#codes from WOD depth correction table
+01=Known probe type, needs correction,
+02=Known probe type, no need to correct
+03=Unknown probe type, not enough information to make changes
+04=Known XBT probe type, correction was made
+05=Unknown probe type, correction was made
 
 #Recorder types from WMO table 4770
 [RCT$]
