@@ -84,23 +84,23 @@ valid_max 		= 180
 
 [PROBE_TYPE]
 reference_datum 	= WMO code table 1770 
-ancillary_variables 	= PROBE_TYPE_quality_control, PROBE_TYPE_code, FRE_coefficent_a, FRE_coefficent_b
+ancillary_variables 	= PROBE_TYPE_quality_control, PROBE_TYPE_name, PROBE_TYPE_coef_a, PROBE_TYPE_coef_b
 long_name 		= XBT probe type
 
 [PROBE_TYPE_RAW]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= PROBE_TYPE_RAW_code, FRE_coefficent_a_RAW, FRE_coefficent_b_RAW
+ancillary_variables 	= PROBE_TYPE_RAW_name, PROBE_TYPE_RAW_coef_a, PROBE_TYPE_RAW_coef_b
 long_name 		=  XBT probe type uncorrected
 
-[PROBE_TYPE_code]
+[PROBE_TYPE_name]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= PROBE_TYPE, FRE_coefficent_a, FRE_coefficent_b
-long_name 		= XBT probe type code
+ancillary_variables 	= PROBE_TYPE, PROBE_TYPE_coef_a, PROBE_TYPE_coef_b
+long_name 		= XBT probe type name
 
-[PROBE_TYPE_RAW_code]
+[PROBE_TYPE_RAW_name]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= PROBE_TYPE_RAW, FRE_coefficent_a_RAW, FRE_coefficent_b_RAW
-long_name 		=  XBT probe type uncorrected code
+ancillary_variables 	= PROBE_TYPE_RAW, PROBE_TYPE_RAW_coef_a, PROBE_TYPE_RAW_coef_b
+long_name 		=  XBT probe type uncorrected name
 
 [PROBE_TYPE_quality_control]
 long_name 			= quality flags for probe type
@@ -111,28 +111,34 @@ valid_max 			= 9
 flag_values 			= 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 flag_meanings 			= No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value 
 
-[FRE_coefficent_a]
+[PROBE_TYPE_coef_a]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= FRE_coefficent_b, PROBE_TYPE, PROBE_TYPE_code
+ancillary_variables 	= PROBE_TYPE_coef_b, PROBE_TYPE, PROBE_TYPE_name
 long_name 		= PROBE_TYPE Fall Rate Equation coefficient a
 
-[FRE_coefficent_b]
+[PROBE_TYPE_coef_b]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= FRE_coefficent_a, PROBE_TYPE, PROBE_TYPE_code
+ancillary_variables 	= PROBE_TYPE_coef_a, PROBE_TYPE, PROBE_TYPE_name
 long_name 		= PROBE_TYPE Fall Rate Equation coefficient b
 
-[FRE_coefficent_a_RAW]
+[PROBE_TYPE_RAW_coef_a]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= FRE_coefficent_b_RAW, PROBE_TYPE_RAW, PROBE_TYPE_RAW_code
+ancillary_variables 	= PROBE_TYPE_RAW_coef_b, PROBE_TYPE_RAW, PROBE_TYPE_RAW_name
 long_name 		= PROBE_TYPE_RAW Fall Rate Equation coefficient a
 
-[FRE_coefficent_b_RAW]
+[PROBE_TYPE_RAW_coef_b]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	=  FRE_coefficent_a_RAW, PROBE_TYPE_RAW, PROBE_TYPE_RAW_code
+ancillary_variables 	=  PROBE_TYPE_RAW_coef_a, PROBE_TYPE_RAW, PROBE_TYPE_RAW_name
 long_name 		= PROBE_TYPE_RAW Fall Rate Equation coefficient b
+
+[XBT_fall_rate_correction_factor]
+long_name 		= XBT fall rate correction factor applied to DEPTH
 
 [XBT_uniqueid]
 long_name 		= XBT unique identifier
+
+[XBT_uniqueid_originator]
+long_name 		= XBT unique identifier from data originator
 
 [XBT_input_filename]
 long_name 		= XBT input filename
@@ -156,6 +162,7 @@ long_name 		= XBT instrument serial number
 
 [XBT_manufacturer_date]
 long_name 		= XBT manufacturer date
+calendar            = gregorian
 
 [XBT_height_launch_above_water]
 long_name 		= XBT height of launch above water
@@ -275,11 +282,16 @@ units 			= ohms
 
 [SAMPLE_TIME]
 coordinates 		= TIME LATITUDE LONGITUDE DEPTH
+calendar            = gregorian
 long_name 		= recorder sample time
 axis 			= Z
 
-[XBT_fault_and_feature_type]
-long_name 		= XBT fault and feature type codes
+[XBT_accept_code]
+long_name 		= XBT accept code
+valid_min 		= 0
+
+[XBT_reject_code]
+long_name 		= XBT reject code
 valid_min 		= 0
 
 [HISTORY_INSTITUTION]
