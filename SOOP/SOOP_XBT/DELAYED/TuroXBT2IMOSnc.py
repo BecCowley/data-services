@@ -297,7 +297,7 @@ def netCDFout(nco, n, crid, callsign, xbtline):
         output_netcdf_obj.createVariable("HISTORY_STOP_DEPTH", "f", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_QC_CODE", "str", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_QC_CODE_DESCRIPTION", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_TEMP_QC_CODE_VALUE", "f", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_QC_CODE_VALUE", "f", 'N_HISTORY')
 
         # write attributes from the generate_nc_file_att file, now that we have added the variables:
         conf_file = os.path.join(os.path.dirname(__file__), 'generate_nc_file_att')
