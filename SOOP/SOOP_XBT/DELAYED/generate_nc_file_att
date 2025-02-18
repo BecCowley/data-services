@@ -178,6 +178,18 @@ long_name 		= XBT line identifier
 [XBT_line_description]
 long_name 		= XBT line description
 
+[XBT_cruise_ID]
+long_name 		= XBT cruise identifier
+
+[XBT_box_number]
+long_name 		= XBT probe box number from manufacturer
+
+[Institute_code]
+long_name 		= GTS Institute code
+
+[SOT_ID]
+long_name 		= Ship Operations Team ID from oceanops.org
+
 [Ship_name]
 long_name 		= Deployment vessel name
 

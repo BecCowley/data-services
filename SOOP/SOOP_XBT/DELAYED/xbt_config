@@ -41,7 +41,7 @@ UVRS=Recorder_Graphical_User_Interface_version,str
 WAIT=Recorder_system_wait_time_seconds_used_with_FREQ_to_calculate_depth,float
 FREQ=Recorder_system_frequency_Hz_used_with_WAIT_to_calculate_depth,float
 
-[Turo_codes]
+[Turo_globals]
 TestCanister=TestCanister
 HardwareSerialNo=Recorder_hardware_serial_number
 HardwareVersion=Recorder_hardware_version
@@ -50,13 +50,35 @@ UIVersion=Recorder_Graphical_User_Interface_version
 ReleaseVersion=Recorder_software_version
 FirmwareVersion=Recorder_firmware_version
 TemperatureCoefficients=Temperature_coefficients
+
+[Turo_variables]
+time=TIME
+latitude=LATITUDE
+longitude=LONGITUDE
+Voyage=XBT_cruise_ID
+LineNo=XBT_line
+Code=PROBE_TYPE
+BatchDate=XBT_manufacturer_date
 Scale=XBT_calibration_SCALE
 Offset=XBT_calibration_OFFSET
 SerialNo=XBT_probe_serialnumber
+InterfaceCode=XBT_recorder_type
 PreDropComments=XBT_predrop_comments
 PostDropComments=XBT_postdrop_comments
 CRC=XBT_cyclic_redundancy_code
 Agency=Institute_code
+Ship=Ship_name
+CallSign=Callsign
+SOTID=SOT_ID
+IMO=Ship_IMO
+CaseNo=XBT_box_number
+DropHeight=XBT_height_launch_above_water
+depth=DEPTH
+temperature=TEMP
+procTemperature=TEMP_RECORDING_SYSTEM
+sampleQC=TEMP_RECORDING_SYSTEM_quality_control
+resistance=RESISTANCE
+sampleTime=SAMPLE_TIME
 
 #QC codes whose flags apply to the entire profile
 [ACT_CODES_FULL_PROFILE]
