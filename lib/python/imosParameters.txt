@@ -207,16 +207,22 @@ XBT_recorder_type,   0, XBT_recorder_type,                                      
 XBT_recorder_type_name, 0, XBT_recorder_type_name,                                                              ,                                      ,          , ,        ,         str
 XBT_probe_serialnumber,   0, XBT_probe_serial_number,                                                           ,                                      ,          , ,        ,         str
 XBT_manufacturer_date,0, XBT_manufacturer_date,                                                                 days since 1950-01-01 00:00:00 UTC,    , 999999.0, 0.0,     90000.0,  double
+XBT_box_number,      0, XBT_box_number,                                                                         ,                                      ,          , ,        ,         str
 XBT_calibration_OFFSET, 0, XBT_calibration_offset_for_temperature_from_the_probe,                               ,                                      , 999999.0, ,        ,         float
 XBT_calibration_SCALE, 0, XBT_calibration_scale_for_temperature_from_the_probe,                                 ,                                      , 999999.0, ,        ,         float
 XBT_height_launch_above_water, 0, XBT_height_of_launch_above_water,                                             ,                                      , 999999.0, ,        ,         float
 XBT_cyclic_redundancy_code, 0, XBT_cyclic_redundancy_code,                                                      ,                                      ,          , ,        ,         str
 XBT_line,             0, XBT_line_identifier,                                                                   ,                                      ,          , ,        ,         str
 XBT_line_description, 0, XBT_line_description,                                                                  ,                                      ,          , ,        ,         str
+XBT_cruise_ID,       0, XBT_cruise_identifier,                                                                  ,                                      ,          , ,        ,         str
+XBT_predrop_comments, 0, XBT_pre-drop_comments,                                                                  ,                                      ,          , ,        ,         str
+XBT_postdrop_comments, 0, XBT_post-drop_comments,                                                                ,                                      ,          , ,        ,         str
 Ship_name,           0, Deployment_vessel_name,                                                                 ,                                      ,          , ,        ,         str
 Ship_IMO,            0, Deployment_vessel_IMO_number,                                                           ,                                      ,          , ,        ,         str
 Callsign,            0, Deployment_vessel_callsign,                                                             ,                                      ,          , ,        ,         str
 Platform_code,       0, Deployment_vessel_platform_code,                                                        ,                                      ,          , ,        ,         str
+SOT_ID,              0, Deployment_vessel_SOT_ID,                                                               ,                                      ,          , ,        ,         str
+Institute_code,      0, GTS_institute_code,                                                              ,                                      ,          , ,        ,         int64
 TEMP_RECORDING_SYSTEM, 1, sea_water_temperature,                                                                Celsius,                              T, 999999.0, -2.5,    40.0,     float
 RESISTANCE,         0, XBT_thermistor_resistance,                                                               Ohms,                                 T, 999999.0, ,        ,         float
 SAMPLE_TIME,        0, XBT_recorder_sample_time,                                                                ,                                      ,          , ,        ,         double
