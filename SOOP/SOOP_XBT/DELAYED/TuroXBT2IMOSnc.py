@@ -255,6 +255,10 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                         output_netcdf_obj.createVariable(vv + "_coef_b", "f", fill_value=fillvalue)
                         output_netcdf_obj.createVariable(vv + "_RAW_coef_a", "f", fill_value=fillvalue)
                         output_netcdf_obj.createVariable(vv + "_RAW_coef_b", "f", fill_value=fillvalue)
+                if vv == 'Institute_code':
+                    output_netcdf_obj.createVariable(vv, "str", fill_value=fillvalue)
+                    # create a variable for the institute name
+                    output_netcdf_obj.createVariable('Institute_name', "str", fill_value=fillvalue)
                 # create dimensioned variables:
                 if vv in ['XBT_accept_code', 'XBT_reject_code']:
                     output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=('DEPTH',), fill_value=fillvalue)
@@ -262,13 +266,13 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                     output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=('DEPTH',), fill_value=fillvalue)
                     # and associated QC variables:
                     output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
-                    # and the *_RAW variables:
-                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dt,
-                                                     dimensions=('DEPTH',), fill_value=fillvalue)
                     if vv in ['TEMP', 'DEPTH', 'PSAL']:
                         # add the uncertainty variable
                         output_netcdf_obj.createVariable(vv + "_uncertainty", datatype=dt, dimensions=('DEPTH',),
                                                          fill_value=fillvalue)
+                    # and the *_RAW variables:
+                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dt,
+                                                     dimensions=('DEPTH',), fill_value=fillvalue)
                 if vv in ['COND', 'RESISTANCE', 'SAMPLE_TIME', 'TEMP_RECORDING_SYSTEM']:
                     output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=('DEPTH',), fill_value=fillvalue)
                     if vv in ['TEMP_RECORDING_SYSTEM']:
@@ -353,8 +357,12 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             elif v == 'InterfaceCode':
                 # get the recorder type information
                 rct = get_recorder_type(nco)
-                output_netcdf_obj.variables['XBT_recorder_type_name'][len(rct[1])] = str(rct[1])
                 output_netcdf_obj.variables['XBT_recorder_type'][len(rct[0])] = str(rct[0])
+                output_netcdf_obj.variables['XBT_recorder_type_name'][len(rct[1])] = str(rct[1])
+                continue
+            elif vname == 'XBT_recorder_software_version':
+                # remove 'Version:' and any trailing spaces from the string
+                output_netcdf_obj.variables[vname][len(data)] = str(data).split('Version:')[1].strip()
                 continue
             elif vname == 'PROBE_TYPE':
                 # do for both the PROBE_TYPE and the PROBE_TYPE_RAW
@@ -401,7 +409,7 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         output_netcdf_obj.variables['XBT_input_filename'] = raw_netCDF_file
         output_netcdf_obj.variables['XBT_cruise_ID'] = crid
         # Profile Id
-        output_netcdf_obj.variables['XBT_uniqueid'] = unique_id
+        output_netcdf_obj.variables['XBT_uniqueid'][0] = unique_id
 
         # read from the controlled list of global attributes in the config file
         globals_list = read_section_from_xbt_config('Turo_globals')
@@ -423,12 +431,12 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         # match the institute code to the second value in the list and derive the agency code
         for institute in institute_list:
             if institute_list[institute].split(',')[1] == institute_code:
-                setattr(output_netcdf_obj, 'institution', institute_list[institute].split(',')[0])
+                output_netcdf_obj.variables['Institute_name'][0] = institute_list[institute].split(',')[0]
             else:
                 continue
-        if not hasattr(output_netcdf_obj, 'institution'):
+        if not isinstance(output_netcdf_obj.variables['Institute_name'][0], str):
             LOGGER.warning('Institute code %s is not defined in xbt_config file. Please edit xbt_config' % institute)
-            setattr(output_netcdf_obj, 'institution', 'unknown')
+            output_netcdf_obj.variables['Institute_name'][0] = 'Unknown'
 
         # ship name, IMO and callsign
         output_netcdf_obj.variables['ship_name'] = ship_name
@@ -490,6 +498,7 @@ if __name__ == '__main__':
     # Filter out files that match the '*.n.nc' format using regular expression
     pattern = re.compile(r'.*\.\d+\.nc$')
     files = [file for file in files if not pattern.search(file)]
+    first = True # to handle the test* files which also start at 1
 
     for file in files:  # read/write loop
         nco = xr.open_dataset(file)
@@ -507,7 +516,8 @@ if __name__ == '__main__':
         callsign = nco.CallSign
         xbtline = nco.LineNo
         # for the first file only, ask the user to confirm the cruise id and ship name
-        if n == 1:
+        if n == 1 and first:
+            first = False
             # ask the user to confirm the cruise id and ship name
             user_input = input("Is %s the correct cruise id [Y/N]: " % crid)
             if user_input == 'N':

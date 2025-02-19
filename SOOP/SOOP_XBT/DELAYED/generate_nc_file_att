@@ -94,12 +94,10 @@ long_name 		=  XBT probe type uncorrected
 
 [PROBE_TYPE_name]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= PROBE_TYPE, PROBE_TYPE_coef_a, PROBE_TYPE_coef_b
 long_name 		= XBT probe type name
 
 [PROBE_TYPE_RAW_name]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= PROBE_TYPE_RAW, PROBE_TYPE_RAW_coef_a, PROBE_TYPE_RAW_coef_b
 long_name 		=  XBT probe type uncorrected name
 
 [PROBE_TYPE_quality_control]
@@ -113,22 +111,18 @@ flag_meanings 			= No_QC_performed Good_data Probably_good_data Bad_data_that_ar
 
 [PROBE_TYPE_coef_a]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= PROBE_TYPE_coef_b, PROBE_TYPE, PROBE_TYPE_name
 long_name 		= PROBE_TYPE Fall Rate Equation coefficient a
 
 [PROBE_TYPE_coef_b]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= PROBE_TYPE_coef_a, PROBE_TYPE, PROBE_TYPE_name
 long_name 		= PROBE_TYPE Fall Rate Equation coefficient b
 
 [PROBE_TYPE_RAW_coef_a]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= PROBE_TYPE_RAW_coef_b, PROBE_TYPE_RAW, PROBE_TYPE_RAW_name
 long_name 		= PROBE_TYPE_RAW Fall Rate Equation coefficient a
 
 [PROBE_TYPE_RAW_coef_b]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	=  PROBE_TYPE_RAW_coef_a, PROBE_TYPE_RAW, PROBE_TYPE_RAW_name
 long_name 		= PROBE_TYPE_RAW Fall Rate Equation coefficient b
 
 [XBT_fall_rate_correction_factor]
@@ -151,6 +145,12 @@ reference_datum 	= WMO code table 4770
 long_name 		= XBT recorder type name
 reference_datum 	= WMO code table 4770
 
+[XBT_recorder_serial_number]
+long_name 		= XBT recorder serial number
+
+[XBT_recorder_software_version]
+long_name 		= XBT recorder software version
+
 [XBT_calibration_OFFSET]
 long_name 		= XBT calibration offset for temperature from the probe
 
@@ -158,25 +158,28 @@ long_name 		= XBT calibration offset for temperature from the probe
 long_name 		= XBT calibration scale for temperature from the probe
 
 [XBT_probe_serialnumber]
-long_name 		= XBT instrument serial number
+long_name 		= XBT probe serial number
 
 [XBT_manufacturer_date]
-long_name 		= XBT manufacturer date
+long_name 		= XBT probe manufacturer date
 calendar            = gregorian
 
 [XBT_height_launch_above_water]
 long_name 		= XBT height of launch above water
+reference_datum 	= sea surface
 units 			= m
 positive 		= up
+valid_min 		= 0
+valid_max 		= 100
 
 [XBT_cyclic_redundancy_code]
 long_name 		= XBT cyclic redundancy code
 
 [XBT_line]
-long_name 		= XBT line identifier
+long_name 		= XBT Ship Of Opportunity (SOOP) line identifier
 
 [XBT_line_description]
-long_name 		= XBT line description
+long_name 		= XBT Ship Of Opportunity (SOOP) line description
 
 [XBT_cruise_ID]
 long_name 		= XBT cruise identifier
@@ -184,8 +187,11 @@ long_name 		= XBT cruise identifier
 [XBT_box_number]
 long_name 		= XBT probe box number from manufacturer
 
+[Institute_name]
+long_name 		= Institute name
+
 [Institute_code]
-long_name 		= GTS Institute code
+long_name 		= Global Telecommunications System (GTS) Institute code
 
 [SOT_ID]
 long_name 		= Ship Operations Team ID from oceanops.org
@@ -307,35 +313,35 @@ long_name 		= XBT reject code
 valid_min 		= 0
 
 [HISTORY_INSTITUTION]
-long_name   = Institution which performed action
-Conventions = GTSPP IDENT_CODE table
+long_name   = Institution which performed quality control action
+Conventions = GTSPP IDENT_CODE (Institute Identity code) table
 
 [HISTORY_SOFTWARE]
-long_name   = Name of software which performed action
+long_name   = Name of software which performed quality control action
 Conventions = Institution dependent
 
 [HISTORY_SOFTWARE_RELEASE]
-long_name  = Version/Release of software which performed action
+long_name  = Version/Release of software which performed quality control action
 Conventions = Institution dependent
 
 [HISTORY_DATE]
-long_name           = Date the history record was created
+long_name           = Date the  quality control history record was created
 calendar            = gregorian
 units               = days since 1950-01-01 00:00:00 UTC
 axis                = T
 
 [HISTORY_PARAMETER]
-long_name   = Parameter that action is performed on
-Conventions = GTSPP PC_PROF table
+long_name   = Parameter that quality control action is performed on
+Conventions = GTSPP PC_PROF (Parameter Code Profile) table
 
 [HISTORY_START_DEPTH]
-long_name   = Start depth action applied to
+long_name   = Shallowest depth quality control action applied to
 units       = m
 axis        = Z
 positive    = down
 
 [HISTORY_STOP_DEPTH]
-long_name   = End depth action applied to
+long_name   = Deepest depth quality control action applied to
 units       = m
 axis        = Z
 positive    = down
@@ -349,7 +355,7 @@ long_name = Description of HISTORY_QC_CODE
 Conventions = Australian XBT Cookbook v1.1 or v2.0, https://doi.org/10.25919/3tm5-zn80
 
 [HISTORY_QC_CODE_VALUE]
-long_name                   = quality applied to variable named in HISTORY_PARAMETER
+long_name                   = quality flag applied to variable named in HISTORY_PARAMETER
 standard_name               = status_flag
 quality_control_conventions = IMOS standard flags
 
@@ -360,7 +366,7 @@ units                     = 1
 valid_min                 = 2
 valid_max                 = 41.
 coordinates               = TIME LATITUDE LONGITUDE DEPTH
-ancillary_variables       = PSAL_quality_control
+ancillary_variables       = PSAL_quality_control PSAL_uncertainty
 axis                      = Z
 positive                  = down
 
@@ -387,7 +393,7 @@ positive                  = down
 [SSPD]
 long_name                 = speed_of_sound_in_sea_water
 standard_name             = speed_of_sound_in_sea_water
-ancillary_variables       = SSPD_quality_control
+ancillary_variables       = SSPD_quality_control SSPD_uncertainty
 units                     = m s-1
 coordinates               = TIME LATITUDE LONGITUDE DEPTH
 axis                      = Z

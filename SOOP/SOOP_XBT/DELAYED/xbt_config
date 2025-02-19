@@ -43,11 +43,9 @@ FREQ=Recorder_system_frequency_Hz_used_with_WAIT_to_calculate_depth,float
 
 [Turo_globals]
 TestCanister=TestCanister
-HardwareSerialNo=Recorder_hardware_serial_number
 HardwareVersion=Recorder_hardware_version
 HardwareCalibration=Recorder_hardware_Calibration
 UIVersion=Recorder_Graphical_User_Interface_version
-ReleaseVersion=Recorder_software_version
 FirmwareVersion=Recorder_firmware_version
 TemperatureCoefficients=Temperature_coefficients
 
@@ -57,12 +55,15 @@ latitude=LATITUDE
 longitude=LONGITUDE
 Voyage=XBT_cruise_ID
 LineNo=XBT_line
+DropNo=XBT_uniqueid
 Code=PROBE_TYPE
 BatchDate=XBT_manufacturer_date
 Scale=XBT_calibration_SCALE
 Offset=XBT_calibration_OFFSET
 SerialNo=XBT_probe_serialnumber
 InterfaceCode=XBT_recorder_type
+HardwareSerialNo= XBT_recorder_serial_number
+ReleaseVersion=XBT_recorder_software_version
 PreDropComments=XBT_predrop_comments
 PostDropComments=XBT_postdrop_comments
 CRC=XBT_cyclic_redundancy_code
