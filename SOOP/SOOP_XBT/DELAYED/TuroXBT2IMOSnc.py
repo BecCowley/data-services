@@ -1,36 +1,17 @@
 # Converts XBT profile recorded by Turo XBT to standardised netCDF format ready for QC with PYQUEST
-# A. Walsh V2 4/10/22
+# Rebecca Cowley, CSIRO, February, 2025
+# Adapted from code by A. Walsh V2 4/10/22
+
 import argparse
 import difflib
-# V3 - adjustments to format for compatibility with MQUEST netCDF and changes to PyQUEST-XBT.py.
-# For compatibility with MQUEST to IMOS netCDF converter change all LAT,LONG,DEPTH,DEPTH_RAW,TEMP,TEMP_RAW from type 'd' (double) to type 'f' (float)
 
 ####Usage####
-# Before running this script:
-# 1) create 2 folders: xbtdata_raw,xbtdata_standardised
-# 2) Copy the raw data files (monthly folder contents from Turo XBT) dropXXX.nc to xbtdata_raw
-# Ensure there are no duplicated raw files; include edited version of drop if any, not original unedited version
-# General command:
-# python TuroXBT2StdNetCDF-V3.py -i xbtdata_raw -o xbtdata_standardised -c YYNNNSS -s "HMAS XXXX"
-
-# Where YYNNNSS = Cruise ID
-# For Turo XBT a 'cruise' is normally a 1 month of data from 1 ship, as Turo auto organises data into monthly folders
-# YY =last 2 digits of the observation year
-# NNN= consecutive number of dataset recived in that year
-# XX = 2 character abbreviation of the shipname e.g. SY=HMAS Sydney
+# python TuroXBT2IMOSnc.py -i xbtdata_raw_folder -o xbtdata_output_folder
 # xbtdata_raw = input folder holding raw files from Turo XBT - dropXXX.nc
-# xbtdata_standardised = output folder to hold standardised files produced by this script
+# xbtdata_output_folder = output folder to hold files produced by this script
 
 # Example:
-# python TuroXBT2StdNetCDF-V3.py -i xbtdata_raw_3 -o xbtdata_standardised_3 -c 21018AN -s "HMAS ANZAC"
-
-
-####Output File names####
-# General format - YYNNNSS-YYYYMMDDThhmmssZ-CCC.nc
-# YYNNNSS = Cruise ID
-# CCC = Consecutive No 000, 001, ...
-# YYYYMMDDThhmmssZ = XBT drop UTC Date-time
-# e.g. 20001SY-20210303T212721Z-000.nc
+# python /path/to/data-services/SOOP/SOOP_XBT/DELAYED/TuroXBT2IMOSnc.py -i RD3203 -o IMOSformatnc
 
 import os
 import re
@@ -43,7 +24,6 @@ import datetime
 from time import localtime, gmtime, strftime
 from netCDF4 import date2num
 import numpy as np
-from optparse import OptionParser
 import glob
 import pandas as pd
 
@@ -52,7 +32,7 @@ from xbt_parse import read_section_from_xbt_config
 from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
 from ship_callsign import ship_callsign_list
 from imos_logging import IMOSLogging
-from xbt_utils import _error, generate_table_att, read_qc_config
+from xbt_utils import read_qc_config
 
 
 def args():
