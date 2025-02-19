@@ -205,6 +205,8 @@ XBT_input_filename,  0, XBT_input_filename,                                     
 XBT_uniqueid,        0, XBT_unique_identifier,                                                                  ,                                      ,          , ,        ,         str
 XBT_recorder_type,   0, XBT_recorder_type,                                                                      ,                                      ,          , ,        ,         S3
 XBT_recorder_type_name, 0, XBT_recorder_type_name,                                                              ,                                      ,          , ,        ,         str
+XBT_recorder_serial_number, 0, XBT_recorder_serial_number,                                                      ,                                      ,          , ,        ,         str
+XBT_recorder_software_version, 0, XBT_recorder_software_version,                                                ,                                      ,          , ,        ,         str
 XBT_probe_serialnumber,   0, XBT_probe_serial_number,                                                           ,                                      ,          , ,        ,         str
 XBT_manufacturer_date,0, XBT_manufacturer_date,                                                                 days since 1950-01-01 00:00:00 UTC,    , 999999.0, 0.0,     90000.0,  double
 XBT_box_number,      0, XBT_box_number,                                                                         ,                                      ,          , ,        ,         str
@@ -222,7 +224,8 @@ Ship_IMO,            0, Deployment_vessel_IMO_number,                           
 Callsign,            0, Deployment_vessel_callsign,                                                             ,                                      ,          , ,        ,         str
 Platform_code,       0, Deployment_vessel_platform_code,                                                        ,                                      ,          , ,        ,         str
 SOT_ID,              0, Deployment_vessel_SOT_ID,                                                               ,                                      ,          , ,        ,         str
-Institute_code,      0, GTS_institute_code,                                                              ,                                      ,          , ,        ,         int64
+Institute_name,      0, Institute_name,                                                                         ,                                      ,          , ,        ,         str
+Institute_code,      0, GTS_institute_code,                                                                     ,                                      ,          , ,        ,         int64
 TEMP_RECORDING_SYSTEM, 1, sea_water_temperature,                                                                Celsius,                              T, 999999.0, -2.5,    40.0,     float
 RESISTANCE,         0, XBT_thermistor_resistance,                                                               Ohms,                                 T, 999999.0, ,        ,         float
 SAMPLE_TIME,        0, XBT_recorder_sample_time,                                                                ,                                      ,          , ,        ,         double

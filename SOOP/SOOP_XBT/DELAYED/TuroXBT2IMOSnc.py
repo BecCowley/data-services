@@ -124,8 +124,8 @@ def create_flag_feature():
     r_file_path = 'xbt_reject_code.csv'
 
     # Read the CSV file and convert it to a DataFrame
-    dfa = pd.read_csv(a_file_path)
-    dfr = pd.read_csv(r_file_path)
+    dfa = pd.read_csv(os.path.join(os.path.dirname(__file__),a_file_path))
+    dfr = pd.read_csv(os.path.join(os.path.dirname(__file__),r_file_path))
 
     # remove nan values
     dfa = dfa.dropna(subset=['byte_value'])
@@ -281,7 +281,9 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                 if vv not in output_netcdf_obj.variables:
                     output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue)
             else:
-                print("Variable skipped: \"%s\". Please check!!" % vv)
+                # if not TEMP_RECORDING_SYSTEM_quality_control, print a warning
+                if vv != 'TEMP_RECORDING_SYSTEM_quality_control':
+                    print("Variable skipped: \"%s\". Please check!!" % vv)
 
         # Add the XBT_accept_code and XBT_reject_code variables and size to same size as TEMP
         output_netcdf_obj.createVariable('XBT_accept_code', "int64", fill_value=99, dimensions=('DEPTH',))
@@ -568,9 +570,6 @@ if __name__ == '__main__':
                 crid = cid
             if callsign != calls:
                 callsign = calls
-        else:
-            # test drop
-            print('test')
 
         # Write function
         netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF_file)
