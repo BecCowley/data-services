@@ -1865,6 +1865,7 @@ if __name__ == '__main__':
 
             # now write it out to the new netcdf format
             if check_nc_to_be_created(profile_ed):
+                print('Processing profile %s' % f)
                 # for example where depths are different, metadata is different etc between the ed and raw files.
                 profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo)
                 if not profile_ed:
@@ -1882,6 +1883,10 @@ if __name__ == '__main__':
                 dfhist = pd.concat([dfhist, profile_ed.histories], ignore_index=True)
         else:
             LOGGER.warning('Profile not processed, file %s is in keys file, but does not exist' % f)
+
+    # Drop columns labelled *_RAW_quality_control if they contain all 0s
+    dfall = dfall.loc[:, ~(dfall.columns.str.contains('_RAW_quality_control') & (dfall == 0).all())]
+
     # add table metadata to the dfall dataframe
     dfall = set_metadata(dfall, tbl_meta={'Parent file':keys.dbase_name})
     # write the dataframe to a parquet file
