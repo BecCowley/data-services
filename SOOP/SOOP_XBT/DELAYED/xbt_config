@@ -7,7 +7,7 @@ Standard=gtspp_precision_code,int
 PreDropComments=XBT_predrop_comments,str
 PostDropComments=XBT_postdrop_comments,str
 Source_ID=XBT_gts_insertion_node,str
-Stream_Ident=institution,str
+Stream_Ident=Institute_name,str
 
 # SRFC CODES defined in https://www.nodc.noaa.gov/GTSPP/document/codetbls/gtsppcode.html
 # defined as
@@ -56,6 +56,7 @@ longitude=LONGITUDE
 Voyage=XBT_cruise_ID
 LineNo=XBT_line
 DropNo=XBT_uniqueid
+Climatology=XBT_input_filename
 Code=PROBE_TYPE
 BatchDate=XBT_manufacturer_date
 Scale=XBT_calibration_SCALE

@@ -290,7 +290,6 @@ valid_max 		= 127
 flag_values 		= -119, -64, 0, 73, 79, 105
 flag_meanings 		= out_of_range no_qc_applied qc_applied_good_data suspect_data_out_of_climatology suspect_surface_data spike_filtered
 
-
 [RESISTANCE]
 coordinates 		= TIME LATITUDE LONGITUDE DEPTH
 #valid_range 		=

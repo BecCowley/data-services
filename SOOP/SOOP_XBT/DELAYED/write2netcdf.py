@@ -3,6 +3,7 @@ import argparse
 import glob
 import os
 from datetime import datetime
+from time import strftime, gmtime
 
 import numpy as np
 import pandas as pd
@@ -137,6 +138,10 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
                 time_val_dateobj = date2num(pd.to_datetime(profile[v].values[0]), output_netcdf_obj[v].units,
                                             output_netcdf_obj[v].calendar)
                 output_netcdf_obj[v][:] = time_val_dateobj
+                if v == 'TIME':
+                    # set the time_coverage_start and time_coverage_end
+                    output_netcdf_obj.time_coverage_start = pd.to_datetime(profile[v].values[0]).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    output_netcdf_obj.time_coverage_end = pd.to_datetime(profile[v].values[0]).strftime("%Y-%m-%dT%H:%M:%SZ")
             elif v in list(profile):
                 # Check the shape of the NetCDF variable
                 var_shape = output_netcdf_obj[v].shape
@@ -146,7 +151,7 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
                         output_netcdf_obj[v][:] = profile[v]
                 else:
                     if isinstance(output_netcdf_obj[v][:], str):
-                        output_netcdf_obj[v][len(profile[v])] = str(profile[v].values[0])
+                        output_netcdf_obj[v][0] = str(profile[v].values[0])
                     else:
                         output_netcdf_obj[v][:] = profile[v].values[0]
             else:
@@ -172,6 +177,9 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
         for key, item in global_atts.items():
             if item.values[0] is not None:
                 setattr(output_netcdf_obj, key, item.values[0])
+        # Add date created
+        utctime = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
+        output_netcdf_obj.date_created = utctime
 
 # main function
 if __name__ == '__main__':

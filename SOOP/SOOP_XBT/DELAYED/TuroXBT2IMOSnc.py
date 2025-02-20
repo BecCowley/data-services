@@ -154,8 +154,8 @@ def add_uncertainties(nco):
     elif 700 <= pt <= 751:
         # XCTDs
         year_value = nco.time.dt.year.astype(int).values[0]
-        dt = datetime.datetime(year_value, 1, 1, 0, 0, 0)
-        if dt < datetime.datetime.strptime('1998-01-01', '%Y-%m-%d'):
+        dti = datetime.datetime(year_value, 1, 1, 0, 0, 0)
+        if dti < datetime.datetime.strptime('1998-01-01', '%Y-%m-%d'):
             tunc = [0.02]
             dunc = [0.04]
         else:
@@ -214,17 +214,17 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         # Create the variables, no dimensions:
         for vv in list(varslist.values()):
             # get the variable attributes from imosParameters.txt
-            dt = get_imos_parameter_info(vv, '__data_type')
+            dttyp = get_imos_parameter_info(vv, '__data_type')
             fillvalue = get_imos_parameter_info(vv, '_FillValue')
             if fillvalue == '':
                 fillvalue = None
-            if dt:
+            if dttyp:
                 if vv in ['TIME', 'LATITUDE', 'LONGITUDE', 'PROBE_TYPE']:
-                    output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue)
+                    output_netcdf_obj.createVariable(vv, datatype=dttyp, fill_value=fillvalue)
                     # and associated QC variables:
                     output_netcdf_obj.createVariable(vv + "_quality_control", "b", fill_value=99)
                     # and the *_RAW variables:
-                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dt, fill_value=fillvalue)
+                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dttyp, fill_value=fillvalue)
                 if vv in ['XBT_recorder_type', 'PROBE_TYPE']:
                     # add the *_name variable
                     output_netcdf_obj.createVariable(vv + "_name", "str", fill_value=fillvalue)
@@ -239,27 +239,31 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                     output_netcdf_obj.createVariable(vv, "str", fill_value=fillvalue)
                     # create a variable for the institute name
                     output_netcdf_obj.createVariable('Institute_name', "str", fill_value=fillvalue)
+                if vv == 'XBT_line':
+                    output_netcdf_obj.createVariable(vv, "str", fill_value=fillvalue)
+                    # create a variable for the line description
+                    output_netcdf_obj.createVariable('XBT_line_description', "str", fill_value=fillvalue)
                 # create dimensioned variables:
                 if vv in ['XBT_accept_code', 'XBT_reject_code']:
-                    output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=('DEPTH',), fill_value=fillvalue)
+                    output_netcdf_obj.createVariable(vv, datatype=dttyp, dimensions=('DEPTH',), fill_value=fillvalue)
                 if vv in ['DEPTH', 'TEMP', 'PSAL']:
-                    output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=('DEPTH',), fill_value=fillvalue)
+                    output_netcdf_obj.createVariable(vv, datatype=dttyp, dimensions=('DEPTH',), fill_value=fillvalue)
                     # and associated QC variables:
                     output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
                     if vv in ['TEMP', 'DEPTH', 'PSAL']:
                         # add the uncertainty variable
-                        output_netcdf_obj.createVariable(vv + "_uncertainty", datatype=dt, dimensions=('DEPTH',),
+                        output_netcdf_obj.createVariable(vv + "_uncertainty", datatype=dttyp, dimensions=('DEPTH',),
                                                          fill_value=fillvalue)
                     # and the *_RAW variables:
-                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dt,
+                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dttyp,
                                                      dimensions=('DEPTH',), fill_value=fillvalue)
                 if vv in ['COND', 'RESISTANCE', 'SAMPLE_TIME', 'TEMP_RECORDING_SYSTEM']:
-                    output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=('DEPTH',), fill_value=fillvalue)
+                    output_netcdf_obj.createVariable(vv, datatype=dttyp, dimensions=('DEPTH',), fill_value=fillvalue)
                     if vv in ['TEMP_RECORDING_SYSTEM']:
                         output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
                 # test if the output_netCDF_obj already has the variable created
                 if vv not in output_netcdf_obj.variables:
-                    output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue)
+                    output_netcdf_obj.createVariable(vv, datatype=dttyp, fill_value=fillvalue)
             else:
                 # if not TEMP_RECORDING_SYSTEM_quality_control, print a warning
                 if vv != 'TEMP_RECORDING_SYSTEM_quality_control':
@@ -271,9 +275,9 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
 
         # set the sample time units
         year_value = nco.time.dt.year.astype(int).values[0]
-        dt = datetime.datetime(year_value, 1, 1, 0, 0, 0)
+        dti = datetime.datetime(year_value, 1, 1, 0, 0, 0)
         setattr(output_netcdf_obj.variables['SAMPLE_TIME'], 'units', 'milliseconds since ' +
-                dt.strftime("%Y-%m-%d %H:%M:%S UTC"))
+                dti.strftime("%Y-%m-%d %H:%M:%S UTC"))
 
         # create HISTORY variable set associated
         output_netcdf_obj.createVariable("HISTORY_INSTITUTION", "str", 'N_HISTORY')
@@ -335,7 +339,11 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                     else:
                         time_val_dateobj = date2num(pd.to_datetime(data), output_netcdf_obj[vname].units,
                                                     output_netcdf_obj[vname].calendar)
-                output_netcdf_obj[vname][:] = time_val_dateobj
+                        if vname == 'TIME':
+                            # set the time_coverage_start and time_coverage_end
+                            output_netcdf_obj.time_coverage_start = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
+                            output_netcdf_obj.time_coverage_end = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
+                output_netcdf_obj.variables[vname][:] = time_val_dateobj
             elif v == 'InterfaceCode':
                 # get the recorder type information
                 rct = get_recorder_type(nco)
@@ -388,8 +396,8 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         output_netcdf_obj.variables['DEPTH_uncertainty'][:] = depth_uncertainty
 
         # add the extra variables
-        output_netcdf_obj.variables['XBT_input_filename'] = raw_netCDF_file
-        output_netcdf_obj.variables['XBT_cruise_ID'] = crid
+        output_netcdf_obj.variables['XBT_input_filename'][0] = raw_netCDF_file
+        output_netcdf_obj.variables['XBT_cruise_ID'][0] = crid
         # Profile Id
         output_netcdf_obj.variables['XBT_uniqueid'][0] = unique_id
 
@@ -435,14 +443,11 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         output_netcdf_obj.geospatial_vertical_max = nco.depth[-1]
 
         # Convert time to a string
-        formatted_date = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-        output_netcdf_obj.time_coverage_start = formatted_date
-        output_netcdf_obj.time_coverage_end = formatted_date
         utctime = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
         output_netcdf_obj.date_created = utctime
 
         # add the line information
-        output_netcdf_obj.variables['XBT_line_description'] = line_info[1]
+        output_netcdf_obj.variables['XBT_line_description'][0] = line_info[1]
 
         # if this is a test canister, add the TP code and associated information to the HISTORIES and update the QC and XBT_reject_code
         if test:

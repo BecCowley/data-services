@@ -234,14 +234,17 @@ def parse_extra_vars(profile_qc, profile_noqc):
                             '"%s = %s" could not be converted to %s(). Please review. %s' % (var_name, data, var_type.upper(),
                                                                                           profile.XBT_input_filename))
                     # if the variable is institution, create a dictionary of the institution codes
-                    if var == 'institution':
+                    if var == 'Stream_Ident':
                         institute_list = read_section_from_xbt_config('INSTITUTE')
+                        # remove the last two characters from the string
+                        data = data[:-2]
                         if data in list(institute_list.keys()):
                             dataf[var_name + ext[ind]] = institute_list[data].split(',')[0]
-                            dataf['Agency_GTS_code' + ext[ind]] = institute_list[data].split(',')[1]
+                            dataf['Institute_code' + ext[ind]] = institute_list[data].split(',')[1]
                         else:
                             LOGGER.warning('Agency_GTS_code code %s is not defined in xbt_config file. Please edit xbt_config %s'
                                            % (data, profile.XBT_input_filename))
+                        continue
                     if var == 'Digit_Code' or var == 'Standard':
                         for count in range(profile.nprof):
                             vv = decode_bytearray(profile.netcdf_file_obj[var][count])
@@ -256,8 +259,6 @@ def parse_extra_vars(profile_qc, profile_noqc):
 
         # split the input filename and remove the _ed.nc or _raw.nc ending
         dataf['XBT_input_filename'] = re.split(r'ed\.nc|raw\.nc', profile.XBT_input_filename)[0]
-        # and date created
-        dataf['date_created'] = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # create global attributes
         profile.global_atts = {'geospatial_vertical_units': 'meters', 'geospatial_vertical_positive': 'down'}
@@ -325,8 +326,8 @@ def parse_extra_vars(profile_qc, profile_noqc):
             LOGGER.warning('PLATFORM_CODE is missing, GCLL has not been read or is missing. %s' % profile.XBT_input_filename)
             # assign unknown to the platform code
             dataf['Platform_code' + ext[ind]] = 'Unknown'
-            dataf['ship_name' + ext[ind]] = 'Unknown'
-            dataf['ship_IMO' + ext[ind]] = 'Unknown'
+            dataf['Ship_name' + ext[ind]] = 'Unknown'
+            dataf['Ship_IMO' + ext[ind]] = 'Unknown'
 
         # get the ship details
         # note that the callsign and ship name are filled from the original file values, but will be replaced here if they exist in the AODN vocabulary
@@ -867,14 +868,14 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
             imatch = difflib.get_close_matches(item_val[0:4], list(ptyp_list.keys()), n=1, cutoff=0.5)
             if imatch:
                 LOGGER.warning('PROBE_TYPE %s not found in WMO1770, using closest match %s %s'
-                               % (item_val, imatch[0], s.XBT_input_filename))
+                               % (item_val, imatch[0], profile_qc.XBT_input_filename))
                 item_val = ptyp_list[imatch[0]]
 
         # use the code we have extracted to get the fall rate equation and name of probe
         if item_val in list(fre_list.keys()):
             probetype = peq_list[item_val]
-            coef_a = fre_list[item_val].split(',')[0]
-            coef_b = fre_list[item_val].split(',')[1]
+            coef_a = float(fre_list[item_val].split(',')[0])
+            coef_b = float(fre_list[item_val].split(',')[1]) * 0.001
 
             profile_qc.data[vv[ind]] = item_val
             profile_qc.data[vv[ind] + '_name'] = probetype
@@ -1469,7 +1470,7 @@ def create_flag_feature(profile):
                        % profile.XBT_input_filename)
         df_data.loc[idx, 'TEMP_quality_control'] = df_data.loc[idx, 'TEMP_RAW_quality_control']
         # add QCA to the history
-        codes = codes._append({'HISTORY_INSTITUTION': profile.global_atts['institution'],
+        codes = codes._append({'HISTORY_INSTITUTION': profile.data['Institute_name'],
                                'HISTORY_QC_CODE': 'QCA',
                                'HISTORY_PARAMETER': 'TEMP',
                                'HISTORY_SOFTWARE': 'Unknown',
