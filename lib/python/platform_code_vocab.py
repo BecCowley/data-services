@@ -16,8 +16,20 @@ author : Besnard, Laurent
 
 import warnings
 import xml.etree.ElementTree as ET
+import os
 
 from six.moves.urllib.request import urlopen
+
+import requests
+
+def is_url_accessible(url):
+    try:
+        response = requests.head(url)
+        if response:
+            return True
+    except requests.RequestException as e:
+        print(f"Error accessing {url}: {e}")
+        return False
 
 
 def platform_type_uris_by_category():
@@ -26,10 +38,23 @@ def platform_type_uris_by_category():
     defines their category
     """
     platform_cat_vocab_url = 'http://content.aodn.org.au/Vocabularies/platform-category/aodn_aodn-platform-category-vocabulary.rdf'
-    response               = urlopen(platform_cat_vocab_url)
-    html                   = response.read()
-    root                   = ET.fromstring(html)
-    platform_cat_list      = {}
+    if is_url_accessible(platform_cat_vocab_url):
+        response               = urlopen(platform_cat_vocab_url)
+        html                   = response.read()
+        root                   = ET.fromstring(html)
+        platform_cat_list      = {}
+        url = True
+    else:
+        try:
+            # look in SOOP/SOOP_XBT/DELAYED directory fo aodn_aodn-platform-vocabulary.rdf
+            rdf_file_path = os.path.join(os.path.dirname(__file__), 'aodn_aodn-platform-category-vocabulary.rdf')
+            tree = ET.parse(rdf_file_path)
+            root = tree.getroot()
+            platform_cat_list = {}
+            url = False
+        except Exception as e:
+            warnings.warn("Platform category vocab url not accessible and failed to load local platform category vocab file. %s" % e)
+            return None
 
     for item in root:
         if 'Description' in item.tag:
@@ -51,7 +76,8 @@ def platform_type_uris_by_category():
             if platform_cat is not None and platform_cat_url_list:
                 platform_cat_list[platform_cat] = platform_cat_url_list
 
-    response.close()
+    if url:
+        response.close()
     return platform_cat_list
 
 
@@ -67,11 +93,26 @@ def platform_altlabels_per_preflabel(category_name=None):
     """
 
     platform_vocab_url = 'http://content.aodn.org.au/Vocabularies/platform/aodn_aodn-platform-vocabulary.rdf'
-    response           = urlopen(platform_vocab_url)
-    html               = response.read()
-    root               = ET.fromstring(html)
-    platform           = {}
-    filter_cat_type    = False
+    # test if the platform vocab url is accessible
+    if is_url_accessible(platform_vocab_url):
+        response           = urlopen(platform_vocab_url)
+        html               = response.read()
+        root               = ET.fromstring(html)
+        platform           = {}
+        filter_cat_type    = False
+        url = True
+    else:
+        try:
+            # look in SOOP/SOOP_XBT/DELAYED directory fo aodn_aodn-platform-vocabulary.rdf
+            rdf_file_path = os.path.join(os.path.dirname(__file__), 'aodn_aodn-platform-vocabulary.rdf')
+            tree = ET.parse(rdf_file_path)
+            root = tree.getroot()
+            platform = {}
+            filter_cat_type = False
+            url = False
+        except Exception as e:
+            warnings.warn("Platform vocab url not accessible and failed to load local platform vocab file. %s" % e)
+            return None
 
     if category_name:
         # a platform category is defined by a list of urls.
@@ -125,5 +166,6 @@ def platform_altlabels_per_preflabel(category_name=None):
                     for platform_code_item in platform_code:
                         platform[platform_code_item] = platform_name, platform_imo
 
-    response.close()
+    if url:
+        response.close()
     return platform

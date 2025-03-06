@@ -21,7 +21,7 @@ import tempfile
 import xarray as xr
 from netCDF4 import Dataset
 import datetime
-from time import localtime, gmtime, strftime
+from time import gmtime, strftime
 from netCDF4 import date2num
 import numpy as np
 import glob
