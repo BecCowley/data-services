@@ -14,6 +14,8 @@ author : Besnard, Laurent
 import urllib.request, urllib.error, urllib.parse
 import xml.etree.ElementTree as ET
 import ssl
+import os
+from platform_code_vocab import is_url_accessible
 
 
 def xbt_line_info():
@@ -22,7 +24,7 @@ def xbt_line_info():
     """
     xbt_line_vocab_url = 'http://content.aodn.org.au/Vocabularies/XBT-line/aodn_aodn-xbt-line-vocabulary.rdf'
 
-    try:
+    if is_url_accessible(xbt_line_vocab_url):
         # certificate handling
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
@@ -31,8 +33,17 @@ def xbt_line_info():
         response               = urllib.request.urlopen(xbt_line_vocab_url, context=ctx)
         html                   = response.read()
         root                   = ET.fromstring(html)
-    except Exception:
-        print(('xbt line vocab url \"%{xbt_url}\" is not accessible. contact info@aodn.org.au'.format(xbt_url=xbt_line_vocab_url)))
+        url = True
+    else:
+        # look for the file in the same directory
+        try:
+            rdf_file_path = os.path.join(os.path.dirname(__file__), 'aodn_aodn-xbt-line-vocabulary.rdf')
+            tree = ET.parse(rdf_file_path)
+            root = tree.getroot()
+            url = False
+        except Exception as e:
+            print(f"XBT line vocab url not accessible and failed to load local XBT line vocab file. {e}")
+            return None
 
     xbt_dict = {}
 
@@ -58,5 +69,6 @@ def xbt_line_info():
             if xbt_line_pref_label:
                 xbt_dict[xbt_line_pref_label] = (xbt_line_code, xbt_line_alt_label)
 
-    response.close()
+    if url:
+        response.close()
     return xbt_dict
