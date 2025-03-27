@@ -270,8 +270,8 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                     print("Variable skipped: \"%s\". Please check!!" % vv)
 
         # Add the XBT_accept_code and XBT_reject_code variables and size to same size as TEMP
-        output_netcdf_obj.createVariable('XBT_accept_code', "int64", fill_value=99, dimensions=('DEPTH',))
-        output_netcdf_obj.createVariable('XBT_reject_code', "int64", fill_value=99, dimensions=('DEPTH',))
+        output_netcdf_obj.createVariable('XBT_accept_code', "int64", fill_value=0, dimensions=('DEPTH',))
+        output_netcdf_obj.createVariable('XBT_reject_code', "int64", fill_value=0, dimensions=('DEPTH',))
 
         # set the sample time units
         year_value = nco.time.dt.year.astype(int).values[0]
