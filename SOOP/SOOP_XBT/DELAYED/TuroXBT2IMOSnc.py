@@ -535,7 +535,7 @@ if __name__ == '__main__':
                 calls = callsmatch
             else:
                 LOGGER.warning('Vessel call sign %s, name %s, is unknown in AODN vocabulary. Please contact '
-                               'info@aodn.org.au' % callsign, nco.Ship)
+                               'info@aodn.org.au' % (callsign, nco.Ship))
                 ship_name = 'Unknown'
                 ship_IMO = 'Unknown'
             # get the line information from AODN vocabularies

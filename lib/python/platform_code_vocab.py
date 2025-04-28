@@ -28,7 +28,7 @@ def is_url_accessible(url):
         if response:
             return True
     except requests.RequestException as e:
-        print(f"Error accessing {url}: {e}")
+        print(f"Error accessing {url}, now reading from local file.")
         return False
 
 
