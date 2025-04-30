@@ -196,6 +196,10 @@ if __name__ == '__main__':
     input_folder = args.input
     output_folder = args.output
 
+    # if output folder doesn't exist, create it
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
     # locate the parquet files in the input folder not including the *histories.parquet and *globals.parquet files
     parquet_data = glob.glob(os.path.join(input_folder, "*.parquet"))
     parquet_data = [f for f in parquet_data if "_globals" not in f]

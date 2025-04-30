@@ -43,7 +43,7 @@ def create_xbtfft():
         for i in range(len(dfr)):
             # write the labels, code and the binary value with a comma in between each
             f.write(f'{convert(2**i, labels)},{full_code[i]},{2**i},{tempqc[i]},{depth[i]},{parameter[i]}\n')
-    return
+    return dfa, dfr
 
 
-create_xbtfft()
+dfa, dfr = create_xbtfft()

@@ -287,8 +287,8 @@ long_name 		= quality flag for seawater temperature from recording system
 comment 		= For the full list of flags/flag meaning from the Turo software refer to this document: Data Quality Control Flags, Lindsay Pender, 2000,  https://www.marine.csiro.au/data/trawler/download.cfm?file_id=4716
 valid_min 		= -128
 valid_max 		= 127
-flag_values 		= -119, -64, 0, 73, 79, 105
-flag_meanings 		= out_of_range no_qc_applied qc_applied_good_data suspect_data_out_of_climatology suspect_surface_data spike_filtered
+flag_values 		= -119, -86, -64, 0, 73, 79, 106
+flag_meanings 		= out_of_range spikes_bad no_qc_applied qc_applied_good_data suspect_data_out_of_climatology suspect_surface_data spike_filtered
 
 [RESISTANCE]
 coordinates 		= TIME LATITUDE LONGITUDE DEPTH

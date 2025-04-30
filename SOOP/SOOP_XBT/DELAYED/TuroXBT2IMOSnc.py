@@ -87,9 +87,9 @@ def create_out_filename(profile, line, crid, n, test):
     uniqueid = crid + '_' + profile.time.dt.strftime('%Y%m%d%H%M%S').values[0] + '_' + str(n).zfill(3)
 
     if test:
-        filename = 'XBTTEST_T_%s_%s_FV01_ID-%s.nc' % (line, profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], uniqueid)
+        filename = 'XBTTEST_T_%s_%s_FV01_ID-%s.nc' % (profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], line, uniqueid)
     else:
-        filename = 'IMOS_SOOP-XBT_T_%s_%s_FV01_ID-%s.nc' % (line, profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], uniqueid)
+        filename = 'IMOS_SOOP-XBT_T_%s_%s_FV01_ID-%s.nc' % (profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], line, uniqueid)
 
     return filename, uniqueid
 
@@ -321,10 +321,15 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                 # data is in the variables section of the original file
                 data = np.squeeze(nco.variables[v].values)
             else:
-                # information is kept in the globals of the original file
-                data = getattr(nco, v)
+                if v in list(nco.attrs.keys()):
+                    # information is kept in the globals of the original file
+                    data = getattr(nco, v)
+                else:
+                    # data not in variables or globals, skip this variable as it will have a fill value
+                    print("Variable not found in original file: \"%s\"." % v)
+                    continue
             # print(vname)
-            if vname in ['TIME', 'TIME_RAW','XBT_manufacturer_date', 'SAMPLE_TIME']:
+            if vname in ['TIME','XBT_manufacturer_date', 'SAMPLE_TIME']:
                 if vname == 'SAMPLE_TIME':
                     # Convert numpy.datetime64 array to a list of datetime objects
                     datetime_list = [pd.to_datetime(d).to_pydatetime() for d in data]
@@ -337,13 +342,21 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                         time_val_dateobj = np.ma.array([output_netcdf_obj[vname]._FillValue],
                                                        mask=True, fill_value=output_netcdf_obj[vname]._FillValue)
                     else:
-                        time_val_dateobj = date2num(pd.to_datetime(data), output_netcdf_obj[vname].units,
-                                                    output_netcdf_obj[vname].calendar)
+                        if type(data) == str or data is None:
+                            # put a fill value in the time_val_dateobj
+                            time_val_dateobj = np.ma.array([output_netcdf_obj[vname]._FillValue],
+                                                              mask=True, fill_value=output_netcdf_obj[vname]._FillValue)
+                        else:
+                            time_val_dateobj = date2num(pd.to_datetime(data), output_netcdf_obj[vname].units,
+                                                        output_netcdf_obj[vname].calendar)
                         if vname == 'TIME':
                             # set the time_coverage_start and time_coverage_end
                             output_netcdf_obj.time_coverage_start = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
                             output_netcdf_obj.time_coverage_end = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
                 output_netcdf_obj.variables[vname][:] = time_val_dateobj
+                # if vname is TIME, output the TIME_RAW variable as it is the same as TIME
+                if vname == 'TIME':
+                    output_netcdf_obj.variables[vname + '_RAW'][:] = time_val_dateobj
             elif v == 'InterfaceCode':
                 # get the recorder type information
                 rct = get_recorder_type(nco)
@@ -380,8 +393,8 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                         output_netcdf_obj.variables[vname][len(data)] = str(data)
                     else:
                         output_netcdf_obj.variables[vname][:] = data
-            # if this vname also has a variable with _RAW, add the data to that variable
-            if vname + '_RAW' in output_netcdf_obj.variables:
+            # if this vname also has a variable with _RAW, and isn't TIME, add the data to that variable
+            if (vname != 'TIME') and (vname + '_RAW' in output_netcdf_obj.variables):
                 if isinstance(data, str):
                     output_netcdf_obj.variables[vname + '_RAW'] = data
                 else:
@@ -415,7 +428,12 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                 LOGGER.warning('Attribute %s not found in the input file' % att_name)
 
         # add institute information, should be in here from the previous section
-        institute_code = nco.Agency
+        # if nco.Agency is an attribute, use the value otherwise warn user we are setting agency to 'AD'
+        if hasattr(nco, 'Agency'):
+            institute_code = nco.Agency
+        else:
+            LOGGER.warning('Agency code not found in the input file, setting to AD')
+            institute_code = 'AD'
         # get the list from the config file
         institute_list = read_section_from_xbt_config('INSTITUTE')
         # match the institute code to the second value in the list and derive the agency code
