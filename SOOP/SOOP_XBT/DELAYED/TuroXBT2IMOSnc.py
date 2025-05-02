@@ -17,7 +17,7 @@ import os
 import re
 import sys
 import tempfile
-
+import shutil
 import xarray as xr
 from netCDF4 import Dataset
 import datetime
@@ -83,15 +83,22 @@ def global_vars(vargs):
     peq_list = read_section_from_xbt_config('PEQ$')
 
 def create_out_filename(profile, line, crid, n, test):
+    # if the profile has 'HardwareSerialNo' is in the profile global attributes, include that in the filename
+    if 'HardwareSerialNo' in profile.attrs:
+        serial_number = profile.attrs['HardwareSerialNo']
+        if serial_number is not None:
+            crid = str(serial_number).strip() + '_' + str(crid).strip()
     # create the unique ID from the crid, time and drop number formatted to three digits
     uniqueid = crid + '_' + profile.time.dt.strftime('%Y%m%d%H%M%S').values[0] + '_' + str(n).zfill(3)
 
     if test:
         filename = 'XBTTEST_T_%s_%s_FV01_ID-%s.nc' % (profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], line, uniqueid)
+        filename_raw = 'XBTTEST_T_%s_%s_FV00_ID-%s.nc' % (profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], line, uniqueid)
     else:
         filename = 'IMOS_SOOP-XBT_T_%s_%s_FV01_ID-%s.nc' % (profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], line, uniqueid)
+        filename_raw = 'IMOS_SOOP-XBT_T_%s_%s_FV00_ID-%s.nc' % (profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], line, uniqueid)
 
-    return filename, uniqueid
+    return filename, filename_raw, uniqueid
 
 
 def create_flag_feature():
@@ -200,8 +207,9 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
     test = False
     if nco.TestCanister == 'yes':
         test = True
-    outfile, unique_id = create_out_filename(nco, line_info[0], crid, n, test)
+    outfile, outfile_raw, unique_id = create_out_filename(nco, line_info[0], crid, n, test)
     outfile = os.path.join(vargs.output_folder, outfile)
+    outfile_raw = os.path.join(vargs.output_folder, 'non_qc', outfile_raw)
 
     # First, get a list of variables mapped between nco and output_netcdf_obj
     varslist = read_section_from_xbt_config('Turo_variables')
@@ -490,6 +498,11 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][0] = df[df['code'] == 'TPR']['tempqc'].values[0]
             output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][0] = df[df['code'] == 'TPR']['label'].values[0]
 
+    # copy the file to the outfile_raw file using shutil.copy
+    if not os.path.exists(os.path.dirname(outfile_raw)):
+        os.makedirs(os.path.dirname(outfile_raw))
+    # copy the file to the outfile_raw file using shutil.copy
+    shutil.copy(outfile, outfile_raw)
 
 
 if __name__ == '__main__':
