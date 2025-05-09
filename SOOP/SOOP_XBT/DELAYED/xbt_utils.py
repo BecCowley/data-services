@@ -14,6 +14,30 @@ def _error(message):
     raise XbtException('{message}'.format(message=message))
 
 
+def read_flag_quality_table(all=False):
+    # Specify the file path
+    # Read the CSV file and convert it to a DataFrame
+    file_path = 'flag_quality_table.csv'
+    df = pd.read_csv(os.path.join(os.path.dirname(__file__),file_path))
+    # drop the rows with 'selected' in the rule_direction column
+    df = df[df['rule_direction'] != 'selected']
+    if ~all:
+        # limit to only the codes that have a 0 in the historic_extra_code column
+        df = (df[df['historic_extra_code'] == 0])
+    df = df.reset_index(drop=True)
+    # remove the historic_extra_code column
+    df = df.drop(columns=['historic_extra_code'])
+    # replace the NaN values with 0 in depth column
+    df['depth'] = df['depth'].fillna(1)
+    # convert the depth and rule_direction columns to match categories in the xbt_config file
+    df['depth'] = df['depth'].map({0: 'ACT_CODES_FULL_PROFILE', 1: 'ACT_CODES_TO_NEXT_FLAG', 3.6: 'ACT_CODES_SINGLE_POINT'})
+    # drop the rows with NaN values in the XBT_accept_code column
+    dfa = df.dropna(subset=['XBT_accept_code'])
+    # drop the rows with NaN values in the XBT_reject_code column
+    dfr = df.dropna(subset=['XBT_reject_code'])
+
+    return dfa, dfr
+
 def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
     """
     convert a time string to a datetime object

@@ -32,7 +32,7 @@ from xbt_parse import read_section_from_xbt_config
 from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
 from ship_callsign import ship_callsign_list
 from imos_logging import IMOSLogging
-from xbt_utils import read_qc_config
+from xbt_utils import read_qc_config, read_flag_quality_table
 
 
 def args():
@@ -106,23 +106,10 @@ def create_flag_feature():
 
     # set up a dataframe of the codes and their values
     # codes from the new cookbook, read from csv file
-    # Specify the file path
-    a_file_path = 'xbt_accept_code.csv'
-    r_file_path = 'xbt_reject_code.csv'
-
-    # Read the CSV file and convert it to a DataFrame
-    dfa = pd.read_csv(os.path.join(os.path.dirname(__file__),a_file_path))
-    dfr = pd.read_csv(os.path.join(os.path.dirname(__file__),r_file_path))
-
-    # remove nan values
-    dfa = dfa.dropna(subset=['byte_value'])
-    # remove the tempqc column
-    dfa = dfa.drop(columns=['tempqc'])
-    # remove nan values
-    dfr = dfr.dropna(subset=['byte_value'])
-    # remove the tempqc column
-    dfr = dfr.drop(columns=['tempqc'])
-
+    dfa, dfr = read_flag_quality_table()
+    # keep some of the columns only: 'name', 'full_code', 'XBT_accept_code', 'XBT_reject_code'
+    dfa = dfa[['name', 'full_code', 'XBT_accept_code']]
+    dfr = dfr[['name', 'full_code', 'XBT_reject_code']]
     return dfa, dfr
 
 
@@ -305,14 +292,14 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         generate_netcdf_att(output_netcdf_obj, conf_file, conf_file_point_of_truth=True)
         # add the flag and feature type attributes:
         dfa, dfr = create_flag_feature()
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'valid_max', int(dfa['byte_value'].sum()))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_masks', dfa['byte_value'].astype(np.uint64))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_meanings', ' '.join(dfa['label']))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_codes', ' '.join(dfa['code']))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'valid_max', int(dfr['byte_value'].sum()))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_masks', dfr['byte_value'].astype(np.uint64))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_meanings', ' '.join(dfr['label']))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_codes', ' '.join(dfr['code']))
+        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'valid_max', int(dfa['XBT_accept_code'].sum()))
+        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_masks', dfa['XBT_accept_code'].astype(np.uint64))
+        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_meanings', ' '.join(dfa['name']))
+        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_codes', ' '.join(dfa['full_code']))
+        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'valid_max', int(dfr['XBT_reject_code'].sum()))
+        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_masks', dfr['XBT_reject_code'].astype(np.uint64))
+        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_meanings', ' '.join(dfr['name']))
+        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_codes', ' '.join(dfr['full_code']))
 
         # append the data to the file
         for v in varslist.keys():
