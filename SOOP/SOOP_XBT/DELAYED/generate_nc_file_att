@@ -1,5 +1,5 @@
 [global_attributes]
-Conventions                  = CF-1.6,IMOS-1.4
+Conventions                  = CF-1.8,IMOS-1.4
 acknowledgement              = Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: Data was sourced from the Integrated Marine Observing System (IMOS) - IMOS is a national collaborative research infrastructure, supported by the Australian Government. If relevant, also credit other organisations involved in collection of this particular datastream (as listed in credit in the metadata record).
 author                       = Cowley, Rebecca; Krummel, Lisa; Besnard, Laurent; Walsh, Andrew; Thresher, Ann; Sprintall, Janet
 author_email                 = rebecca.cowley@csiro.au; laurent.besnard@utas.edu.au
@@ -32,7 +32,7 @@ axis                = T
 
 [TIME_quality_control]
 long_name                   = quality flags for time
-standard_name               = time status_flag
+standard_name               = quality_flag
 quality_control_conventions = IMOS standard flags
 
 [LATITUDE]
@@ -41,7 +41,7 @@ ancillary_variables = LATITUDE_quality_control
 axis                = Y
 
 [LATITUDE_quality_control]
-standard_name               = latitude status_flag
+standard_name               = quality_flag
 long_name                   = quality flags for latitude
 quality_control_conventions = IMOS standard flags
 
@@ -51,21 +51,19 @@ ancillary_variables = LONGITUDE_quality_control
 axis                = X
 
 [LONGITUDE_quality_control]
-standard_name               = longitude status_flag
+standard_name               = quality_flag
 long_name                   = quality flags for longitude
 quality_control_conventions = IMOS standard flags
 
 [TIME_RAW]
 calendar 		= gregorian
 units 			= days since 1950-01-01 00:00:00 UTC
-axis 			= T
 standard_name	= time
 long_name 		= time uncorrected
 valid_min 		= 0
 valid_max 		= 90000
 
 [LATITUDE_RAW]
-axis 			= Y
 reference_datum 	= geographical coordinates, WGS84 projection
 standard_name 		= latitude
 long_name 		= latitude uncorrected
@@ -74,7 +72,6 @@ valid_min 		= -90
 valid_max 		= 90
 
 [LONGITUDE_RAW]
-axis 			= X
 reference_datum 	= geographical coordinates, WGS84 projection
 standard_name 		= longitude
 long_name 		= longitude uncorrected
@@ -101,13 +98,10 @@ reference_datum 	= WMO code table 1770
 long_name 		=  XBT probe type uncorrected name
 
 [PROBE_TYPE_quality_control]
-long_name 			= quality flags for probe type
 quality_control_conventions 	= IMOS standard flags 
-standard_name 			= probe_type status_flag
+long_name 			= quality flags for XBT probe type
 valid_min 			= 0
 valid_max 			= 9
-flag_values 			= 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-flag_meanings 			= No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value 
 
 [PROBE_TYPE_coef_a]
 reference_datum 	= WMO code table 1770
@@ -130,6 +124,7 @@ long_name 		= XBT fall rate correction factor applied to DEPTH
 
 [XBT_uniqueid]
 long_name 		= XBT unique identifier
+cf_role 		= profile_id
 
 [XBT_uniqueid_originator]
 long_name 		= XBT unique identifier from data originator
@@ -168,7 +163,6 @@ calendar            = gregorian
 long_name 		= XBT height of launch above water
 reference_datum 	= sea surface
 units 			= m
-positive 		= up
 valid_min 		= 0
 valid_max 		= 100
 
@@ -221,11 +215,10 @@ positive            = down
 
 [DEPTH_quality_control]
 long_name                   = quality flags for depth
-standard_name               = depth status_flag
+standard_name               = quality_flag
 quality_control_conventions = IMOS standard flags
 
 [DEPTH_uncertainty]
-axis 			= Z 
 standard_name 		= depth standard_error
 units 			= m 
 long_name 		= depth uncertainty
@@ -236,7 +229,6 @@ long_name           = depth raw
 standard_name       = depth
 units               = m
 ancillary_variables = DEPTH_RAW_quality_control
-axis                = Z
 positive            = down
 valid_min           = -5.
 valid_max           = 12000.
@@ -249,16 +241,13 @@ valid_min                 = -2.5
 valid_max                 = 40. 
 coordinates               = TIME LATITUDE LONGITUDE DEPTH
 ancillary_variables       = TEMP_quality_control TEMP_uncertainty
-axis                      = Z
-positive                  = down
 
 [TEMP_quality_control]
 long_name                   = quality flag for seawater temperature
-standard_name               = sea_water_temperature status_flag
+standard_name               = quality_flag
 quality_control_conventions = IMOS standard flags
 
 [TEMP_uncertainty]
-axis 			= Z 
 standard_name 		= sea_water_temperature standard_error
 units 			= Celcius 
 long_name 		= seawater temperature uncertainty
@@ -269,14 +258,11 @@ coordinates               = TIME LATITUDE LONGITUDE DEPTH_RAW
 units                     = Celsius
 valid_min                 = -2.5
 valid_max                 = 40
-axis                      = Z
-positive                  = down
 
 [TEMP_RECORDING_SYSTEM]
 coordinates 		= TIME LATITUDE LONGITUDE DEPTH
 valid_max 		= 40
 long_name 		= seawater temperature from recording system
-axis 			= Z
 units 			= Celsius
 ancillary_variables 	= TEMP_RECORDING_SYSTEM_quality_control
 standard_name		= sea_water_temperature
@@ -284,7 +270,7 @@ valid_min 		= -2.5
 
 [TEMP_RECORDING_SYSTEM_quality_control]
 long_name 		= quality flag for seawater temperature from recording system
-comment 		= For the full list of flags/flag meaning from the Turo software refer to this document: Data Quality Control Flags, Lindsay Pender, 2000,  https://www.marine.csiro.au/data/trawler/download.cfm?file_id=4716
+quality_control_conventions 		= Data Quality Control Flags, Lindsay Pender, 2000,  https://www.marine.csiro.au/data/trawler/download.cfm?file_id=4716
 valid_min 		= -128
 valid_max 		= 127
 flag_values 		= -119, -86, -64, 0, 73, 79, 106
@@ -292,16 +278,13 @@ flag_meanings 		= out_of_range spikes_bad no_qc_applied qc_applied_good_data sus
 
 [RESISTANCE]
 coordinates 		= TIME LATITUDE LONGITUDE DEPTH
-#valid_range 		=
 long_name 		= thermistor resistance
-axis 			= Z
 units 			= ohms
 
 [SAMPLE_TIME]
 coordinates 		= TIME LATITUDE LONGITUDE DEPTH
 calendar            = gregorian
 long_name 		= recorder sample time
-axis 			= Z
 
 [XBT_accept_code]
 long_name 		= XBT accept code
@@ -313,49 +296,44 @@ valid_min 		= 0
 
 [HISTORY_INSTITUTION]
 long_name   = Institution which performed quality control action
-Conventions = GTSPP IDENT_CODE (Institute Identity code) table
+quality_control_conventions = GTSPP IDENT_CODE (Institute Identity code) table
 
 [HISTORY_SOFTWARE]
 long_name   = Name of software which performed quality control action
-Conventions = Institution dependent
+quality_control_conventions = Institution dependent
 
 [HISTORY_SOFTWARE_RELEASE]
 long_name  = Version/Release of software which performed quality control action
-Conventions = Institution dependent
+quality_control_conventions = Institution dependent
 
 [HISTORY_DATE]
 long_name           = Date the  quality control history record was created
 calendar            = gregorian
 units               = days since 1950-01-01 00:00:00 UTC
-axis                = T
 
 [HISTORY_PARAMETER]
 long_name   = Parameter that quality control action is performed on
-Conventions = GTSPP PC_PROF (Parameter Code Profile) table
+quality_control_conventions = GTSPP PC_PROF (Parameter Code Profile) table
 
 [HISTORY_START_DEPTH]
 long_name   = Shallowest depth quality control action applied to
 units       = m
-axis        = Z
-positive    = down
 
 [HISTORY_STOP_DEPTH]
 long_name   = Deepest depth quality control action applied to
 units       = m
-axis        = Z
-positive    = down
 
 [HISTORY_QC_CODE]
 long_name =  Quality control code applied
-Conventions = Australian XBT Cookbook v1.1 or v2.0, https://doi.org/10.25919/3tm5-zn80
+quality_control_conventions = Australian XBT Cookbook v1.1 or v2.0, https://doi.org/10.25919/3tm5-zn80
 
 [HISTORY_QC_CODE_DESCRIPTION]
 long_name = Description of HISTORY_QC_CODE
-Conventions = Australian XBT Cookbook v1.1 or v2.0, https://doi.org/10.25919/3tm5-zn80
+quality_control_conventions = Australian XBT Cookbook v1.1 or v2.0, https://doi.org/10.25919/3tm5-zn80
 
 [HISTORY_QC_CODE_VALUE]
 long_name                   = quality flag applied to variable named in HISTORY_PARAMETER
-standard_name               = status_flag
+standard_name               = quality_flag
 quality_control_conventions = IMOS standard flags
 
 [PSAL]
@@ -366,16 +344,13 @@ valid_min                 = 2
 valid_max                 = 41.
 coordinates               = TIME LATITUDE LONGITUDE DEPTH
 ancillary_variables       = PSAL_quality_control PSAL_uncertainty
-axis                      = Z
-positive                  = down
 
 [PSAL_quality_control]
 long_name                   = quality flag for sea_water_salinity
-standard_name               = sea_water_salinity status_flag
+standard_name               = quality_flag
 quality_control_conventions = IMOS standard flags
 
 [PSAL_uncertainty]
-axis 			= Z
 standard_name 		= sea_water_salinity standard_error
 units 			= 1
 long_name 		= seawater salinity uncertainty
@@ -386,8 +361,6 @@ coordinates               = TIME LATITUDE LONGITUDE DEPTH
 units                     = 1
 valid_min                 = 2
 valid_max                 = 41.
-axis                      = Z
-positive                  = down
 
 [SSPD]
 long_name                 = speed_of_sound_in_sea_water
@@ -395,16 +368,13 @@ standard_name             = speed_of_sound_in_sea_water
 ancillary_variables       = SSPD_quality_control SSPD_uncertainty
 units                     = m s-1
 coordinates               = TIME LATITUDE LONGITUDE DEPTH
-axis                      = Z
-positive                  = down
 
 [SSPD_quality_control]
 long_name                   = quality flag for speed_of_sound_in_sea_water
-standard_name               = speed_of_sound_in_sea_water status_flag
+standard_name               = quality_flag
 quality_control_conventions = IMOS standard flags
 
 [SSPD_uncertainty]
-axis 			= Z
 standard_name 		= speed_of_sound_in_sea_water standard_error
 units 			= 1
 long_name 		= speed_of_sound_in_sea_water uncertainty
@@ -415,5 +385,9 @@ coordinates               = TIME LATITUDE LONGITUDE DEPTH
 units                     = 1
 valid_min                 = 2
 valid_max                 = 41.
-axis                      = Z
-positive                  = down
+
+[XBT_predrop_comments]
+long_name = XBT pre-drop comments
+
+[XBT_postdrop_comments]
+long_name = XBT post-drop comments

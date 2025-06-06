@@ -255,7 +255,7 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                 if vv in ['COND', 'RESISTANCE', 'SAMPLE_TIME', 'TEMP_RECORDING_SYSTEM']:
                     output_netcdf_obj.createVariable(vv, datatype=dttyp, dimensions=('DEPTH',), fill_value=fillvalue)
                     if vv in ['TEMP_RECORDING_SYSTEM']:
-                        output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
+                        output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=-51)
                 # test if the output_netCDF_obj already has the variable created
                 if vv not in output_netcdf_obj.variables:
                     output_netcdf_obj.createVariable(vv, datatype=dttyp, fill_value=fillvalue)
@@ -285,7 +285,7 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         output_netcdf_obj.createVariable("HISTORY_STOP_DEPTH", "f", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_QC_CODE", "str", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_QC_CODE_DESCRIPTION", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_QC_CODE_VALUE", "f", 'N_HISTORY')
+        output_netcdf_obj.createVariable("HISTORY_QC_CODE_VALUE", "b", 'N_HISTORY')
 
         # write attributes from the generate_nc_file_att file, now that we have added the variables:
         conf_file = os.path.join(os.path.dirname(__file__), 'generate_nc_file_att')

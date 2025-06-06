@@ -212,7 +212,7 @@ XBT_manufacturer_date,0, XBT_manufacturer_date,                                 
 XBT_box_number,      0, XBT_box_number,                                                                         ,                                      ,          , ,        ,         str
 XBT_calibration_OFFSET, 0, XBT_calibration_offset_for_temperature_from_the_probe,                               ,                                      , 999999.0, ,        ,         float
 XBT_calibration_SCALE, 0, XBT_calibration_scale_for_temperature_from_the_probe,                                 ,                                      , 999999.0, ,        ,         float
-XBT_height_launch_above_water, 0, XBT_height_of_launch_above_water,                                             ,                                      , 999999.0, ,        ,         float
+XBT_height_launch_above_water, 1, height,                                             ,                                      , 999999.0, ,        ,         float
 XBT_cyclic_redundancy_code, 0, XBT_cyclic_redundancy_code,                                                      ,                                      ,          , ,        ,         str
 XBT_line,             0, XBT_line_identifier,                                                                   ,                                      ,          , ,        ,         str
 XBT_line_description, 0, XBT_line_description,                                                                  ,                                      ,          , ,        ,         str
