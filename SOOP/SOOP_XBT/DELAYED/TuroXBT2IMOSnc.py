@@ -491,6 +491,31 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][0] = df[df['code'] == 'TPR']['tempqc'].values[0]
             output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][0] = df[df['code'] == 'TPR']['label'].values[0]
 
+        # add automatic CSR QC flag to the profile if it is not a test canister
+        else:
+            # create a dataframe with the codes and their integer representation
+            df = read_qc_config()
+            # get the CSR code
+            csr_code = df[df['code'] == 'CSR']['byte_value'].values[0]
+            # get an index of the depths that are less than or equal to 3.6m
+            depths_index = np.where(nco.depth.data <= 3.6)[0]
+            # add the CSR code to the XBT_accept_code
+            output_netcdf_obj.variables['XBT_reject_code'][depths_index] = csr_code
+            # change the TEMP_quality_control to the CSR value
+            output_netcdf_obj.variables['TEMP_quality_control'][depths_index] = df[df['code'] == 'CSR']['tempqc'].values[0]
+            # update the HISTORIES
+            output_netcdf_obj.variables['HISTORY_INSTITUTION'][0] = 'CSIRO'
+            output_netcdf_obj.variables['HISTORY_SOFTWARE'][0] = 'TuroXBT2IMOSnc.py'
+            output_netcdf_obj.variables['HISTORY_SOFTWARE_RELEASE'][0] = 'V1.0'
+            output_netcdf_obj.variables['HISTORY_DATE'][0] = date2num(datetime.datetime.now(), output_netcdf_obj['HISTORY_DATE'].units,
+                                                                        output_netcdf_obj['HISTORY_DATE'].calendar)
+            output_netcdf_obj.variables['HISTORY_PARAMETER'][0] = df[df['code'] == 'CSR']['parameter'].values[0]
+            output_netcdf_obj.variables['HISTORY_START_DEPTH'][0] = nco.depth.data[0]
+            output_netcdf_obj.variables['HISTORY_STOP_DEPTH'][0] = depths_index[-1]
+            output_netcdf_obj.variables['HISTORY_QC_CODE'][0] = 'CSR'
+            output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][0] = df[df['code'] == 'CSR']['tempqc'].values[0]
+            output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][0] = df[df['code'] == 'CSR']['label'].values[0]
+
     # copy the file to the outfile_raw file using shutil.copy
     if not os.path.exists(os.path.dirname(outfile_raw)):
         os.makedirs(os.path.dirname(outfile_raw))
