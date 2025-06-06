@@ -1448,6 +1448,9 @@ def restore_temp_val(profile):
 def create_flag_feature(profile):
     """ Take the existing QC code values and turn them into a integer representation. One bit for every code.
     And there are now two variables, one for accept codes, one for reject codes."""
+    # TODO: recode this to be common to the the other converters, See TuroXBT2IMOSnc.py/create_flag_feature
+    # get the flag quality table with all the historic codes
+    # dfa, dfr = read_flag_quality_table(all=True)
 
     # create a dataframe with the codes and their integer representation
     df = read_qc_config()
