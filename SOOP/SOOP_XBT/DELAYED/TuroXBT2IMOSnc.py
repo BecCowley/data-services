@@ -32,7 +32,7 @@ from xbt_parse import read_section_from_xbt_config
 from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
 from ship_callsign import ship_callsign_list
 from imos_logging import IMOSLogging
-from xbt_utils import read_qc_config, read_flag_quality_table
+from xbt_utils import read_qc_config, read_flag_quality_table, convert_time_string
 
 
 def args():
@@ -332,23 +332,29 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                     time_val_dateobj = date2num(datetime_list, output_netcdf_obj[vname].units,
                                                 output_netcdf_obj[vname].calendar)
                 else:
-                    if vname == 'XBT_manufacturer_date' and test:
-                        # data is not applicable as it is a test canister, so set to fill value
-                        time_val_dateobj = np.ma.array([output_netcdf_obj[vname]._FillValue],
-                                                       mask=True, fill_value=output_netcdf_obj[vname]._FillValue)
-                    else:
-                        if type(data) == str or data is None:
-                            # put a fill value in the time_val_dateobj
+                    if vname == 'XBT_manufacturer_date':
+                        # convert the string to a datetime object, assuming correct format entry of MM/DD/YY
+                        data = convert_time_string(data, format='%m/%d/%y', output='datetime')
+
+                        if data is None or test:
+                            # data is not applicable as it is a test canister, so set to fill value
                             time_val_dateobj = np.ma.array([output_netcdf_obj[vname]._FillValue],
-                                                              mask=True, fill_value=output_netcdf_obj[vname]._FillValue)
+                                                               mask=True, fill_value=output_netcdf_obj[vname]._FillValue)
                         else:
-                            time_val_dateobj = date2num(pd.to_datetime(data), output_netcdf_obj[vname].units,
-                                                        output_netcdf_obj[vname].calendar)
-                        if vname == 'TIME':
-                            # set the time_coverage_start and time_coverage_end
-                            output_netcdf_obj.time_coverage_start = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
-                            output_netcdf_obj.time_coverage_end = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
-                output_netcdf_obj.variables[vname][:] = time_val_dateobj
+                            if type(data) == str or data is None:
+                                # put a fill value in the time_val_dateobj
+                                time_val_dateobj = np.ma.array([output_netcdf_obj[vname]._FillValue],
+                                                                  mask=True, fill_value=output_netcdf_obj[vname]._FillValue)
+                            else:
+                                time_val_dateobj = date2num(pd.to_datetime(data), output_netcdf_obj[vname].units,
+                                                            output_netcdf_obj[vname].calendar)
+                    else:
+                        time_val_dateobj = date2num(pd.to_datetime(data), output_netcdf_obj[vname].units,
+                                                    output_netcdf_obj[vname].calendar)
+                        # set the time_coverage_start and time_coverage_end
+                        output_netcdf_obj.time_coverage_start = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
+                        output_netcdf_obj.time_coverage_end = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    output_netcdf_obj.variables[vname][:] = time_val_dateobj
                 # if vname is TIME, output the TIME_RAW variable as it is the same as TIME
                 if vname == 'TIME':
                     output_netcdf_obj.variables[vname + '_RAW'][:] = time_val_dateobj

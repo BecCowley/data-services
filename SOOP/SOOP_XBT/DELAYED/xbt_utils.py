@@ -49,7 +49,11 @@ def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
             dt = time_string.replace(' ', '0')
         dt = pd.to_datetime(dt, errors='coerce', format=format)
         if output == 'datetime':
-            return dt
+            # if the result is NaT, return None
+            if pd.isna(dt):
+                return None
+            else:
+                return dt
         elif output == 'string':
             return dt.strftime(format)
         else:
