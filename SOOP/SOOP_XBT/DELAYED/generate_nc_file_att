@@ -249,7 +249,7 @@ quality_control_conventions = IMOS standard flags
 
 [TEMP_uncertainty]
 standard_name 		= sea_water_temperature standard_error
-units 			= Celcius 
+units 			= Celsius
 long_name 		= seawater temperature uncertainty
 
 [TEMP_RAW]

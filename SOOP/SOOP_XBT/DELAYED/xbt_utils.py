@@ -174,3 +174,34 @@ def generate_table_att(conf_file, conf_file_point_of_truth=False):
 
     # return the dictionary of attributes
     return table_att, variable_list
+
+
+def wire_break(dat):
+    """
+    Check for wire break in the XBT data.
+    Parameters
+    ----------
+    dat : DataFrame
+        DataFrame containing the XBT data with 'TEMP' and 'DEPTH' columns.
+    -------
+
+    """
+    dat.reset_index(inplace=True)
+
+    # calc diff between each pair of points
+    d = np.diff(dat['TEMP'])
+    # add one more so num. of rows are the same as temp df
+    # d  = np.insert(d, 0, 0)
+    d = np.append(d, 0)
+    # points within acceptable temp bounds
+    valid_data = np.where((dat['TEMP'] > -2.4) & (dat['TEMP'] < 32.) & np.abs(d <= 0.1))[0]
+    last_valid = min(valid_data[-1] + 1, len(dat) - 1)  # Use min with length to prevent going out of index bounds
+    # find the first point that is not in jj
+    #TODO: refine this to select the first time it happens in depth order
+    first_wb = next((i for i in range(last_valid + 1, len(dat)) if i not in valid_data), None)
+    flag = False
+    if first_wb is not None:
+        # set flag to True
+        flag = True
+
+    return first_wb, flag
