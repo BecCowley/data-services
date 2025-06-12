@@ -32,7 +32,7 @@ from xbt_parse import read_section_from_xbt_config
 from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
 from ship_callsign import ship_callsign_list
 from imos_logging import IMOSLogging
-from xbt_utils import read_qc_config, read_flag_quality_table, convert_time_string
+from xbt_utils import read_qc_config, read_flag_quality_table, convert_time_string, wire_break
 
 
 def args():
@@ -293,11 +293,11 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         # add the flag and feature type attributes:
         dfa, dfr = create_flag_feature()
         setattr(output_netcdf_obj.variables['XBT_accept_code'], 'valid_max', int(dfa['XBT_accept_code'].sum()))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_masks', dfa['XBT_accept_code'].astype(np.uint64))
+        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_masks', dfa['XBT_accept_code'].astype(np.int64))
         setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_meanings', ' '.join(dfa['name']))
         setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_codes', ' '.join(dfa['full_code']))
         setattr(output_netcdf_obj.variables['XBT_reject_code'], 'valid_max', int(dfr['XBT_reject_code'].sum()))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_masks', dfr['XBT_reject_code'].astype(np.uint64))
+        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_masks', dfr['XBT_reject_code'].astype(np.int64))
         setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_meanings', ' '.join(dfr['name']))
         setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_codes', ' '.join(dfr['full_code']))
 
@@ -515,6 +515,33 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             output_netcdf_obj.variables['HISTORY_QC_CODE'][0] = 'CSR'
             output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][0] = df[df['code'] == 'CSR']['tempqc'].values[0]
             output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][0] = df[df['code'] == 'CSR']['label'].values[0]
+
+            # also add a WBR test here
+            # create a dataframe with the TEMP and DEPTH values to pass to the WBR test
+            wbr_df = pd.DataFrame({'TEMP': np.squeeze(nco.temperature.data), 'DEPTH': np.squeeze(nco.depth.data)})
+            # run the WBR test
+            wbr_point, wbr_result = wire_break(wbr_df)
+            # if the WBR test failed write the WBR code to the XBT_reject_code and add the WBR history
+            if wbr_result:
+                # get the WBR code from the dataframe
+                wbr_code = df[df['code'] == 'WBR']['byte_value'].values[0]
+
+                # add the WBR code to the XBT_reject_code
+                output_netcdf_obj.variables['XBT_reject_code'][wbr_point] = wbr_code
+                # change the TEMP_quality_control to the WBR value
+                output_netcdf_obj.variables['TEMP_quality_control'][wbr_point:] = df[df['code'] == 'WBR']['tempqc'].values[0]
+                # update the HISTORIES
+                output_netcdf_obj.variables['HISTORY_INSTITUTION'][1] = 'CSIRO'
+                output_netcdf_obj.variables['HISTORY_SOFTWARE'][1] = 'TuroXBT2IMOSnc.py'
+                output_netcdf_obj.variables['HISTORY_SOFTWARE_RELEASE'][1] = 'V1.0'
+                output_netcdf_obj.variables['HISTORY_DATE'][1] = date2num(datetime.datetime.now(), output_netcdf_obj['HISTORY_DATE'].units,
+                                                                            output_netcdf_obj['HISTORY_DATE'].calendar)
+                output_netcdf_obj.variables['HISTORY_PARAMETER'][1] = df[df['code'] == 'WBR']['parameter'].values[0]
+                output_netcdf_obj.variables['HISTORY_START_DEPTH'][1] = wbr_df['DEPTH'].min()
+                output_netcdf_obj.variables['HISTORY_STOP_DEPTH'][1] = wbr_df['DEPTH'].max()
+                output_netcdf_obj.variables['HISTORY_QC_CODE'][1] = 'WBR'
+                output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][1] = df[df['code'] == 'WBR']['tempqc'].values[0]
+                output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][1] = df[df['code'] == 'WBR']['label'].values[0]
 
     # copy the file to the outfile_raw file using shutil.copy
     if not os.path.exists(os.path.dirname(outfile_raw)):

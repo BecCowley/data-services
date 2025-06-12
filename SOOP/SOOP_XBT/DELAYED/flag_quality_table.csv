@@ -63,7 +63,7 @@ surface_temperature_anomaly,1,,SA,SAR,0,,down,262144,,,,,,3,1,TEMP
 surface_offset,1,,SO,SOR,0,,down,524288,,,,,,3,1,TEMP
 no_trace,1,,NT,NTR,0,,down,1048576,,,,,,4,1,TEMP
 bowing_BathySystems,1,,BO,BOR,0,,down,2097152,,,,,,3,1,TEMP
-sippicanMK_ timing_delay_driver_error,1,,DR,DRR,,,down,4194304,,,,,,3,1,TEMP
+sippicanMK_timing_delay_driver_error,1,,DR,DRR,,,down,4194304,,,,,,3,1,TEMP
 protecho_systems_leakage_fault,1,,PF,PFR,0,,down,8388608,,,,,,3,1,TEMP
 contact_lost_with_probe,1,,CL,CLR,,,down,16777216,,,,,,3,1,TEMP
 bathy_data_low_resolution,1,,BD,BDR,0,,down,33554432,,,,,,3,1,TEMP
