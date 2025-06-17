@@ -107,9 +107,9 @@ def create_flag_feature():
     # set up a dataframe of the codes and their values
     # codes from the new cookbook, read from csv file
     dfa, dfr = read_flag_quality_table()
-    # keep some of the columns only: 'name', 'full_code', 'XBT_accept_code', 'XBT_reject_code'
-    dfa = dfa[['name', 'full_code', 'XBT_accept_code']]
-    dfr = dfr[['name', 'full_code', 'XBT_reject_code']]
+    # keep some of the columns only: 'name', 'full_code', 'QC_accept_code', 'QC_reject_code'
+    dfa = dfa[['name', 'full_code', 'QC_accept_code']]
+    dfr = dfr[['name', 'full_code', 'QC_reject_code']]
     return dfa, dfr
 
 
@@ -220,26 +220,26 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                     output_netcdf_obj.createVariable(vv + "_quality_control", "b", fill_value=99)
                     # and the *_RAW variables:
                     output_netcdf_obj.createVariable(vv + "_RAW", datatype=dttyp, fill_value=fillvalue)
-                if vv in ['XBT_recorder_type', 'PROBE_TYPE']:
+                if vv in ['RECORDER_type', 'PROBE_TYPE']:
                     # add the *_name variable
                     output_netcdf_obj.createVariable(vv + "_name", "str", fill_value=fillvalue)
                     # for PROBE_TYPE also add PROBE_TYPE_RAW_name, *_coef_a, *_coef_b
                     if vv == 'PROBE_TYPE':
-                        output_netcdf_obj.createVariable(vv + "_RAW_name", "str", fill_value=fillvalue)
+                        output_netcdf_obj.createVariable(vv + "_name_RAW", "str", fill_value=fillvalue)
                         output_netcdf_obj.createVariable(vv + "_coef_a", "f", fill_value=fillvalue)
                         output_netcdf_obj.createVariable(vv + "_coef_b", "f", fill_value=fillvalue)
-                        output_netcdf_obj.createVariable(vv + "_RAW_coef_a", "f", fill_value=fillvalue)
-                        output_netcdf_obj.createVariable(vv + "_RAW_coef_b", "f", fill_value=fillvalue)
+                        output_netcdf_obj.createVariable(vv + "_coef_a_RAW", "f", fill_value=fillvalue)
+                        output_netcdf_obj.createVariable(vv + "_coef_b_RAW", "f", fill_value=fillvalue)
                 if vv == 'Institute_code':
                     output_netcdf_obj.createVariable(vv, "str", fill_value=fillvalue)
                     # create a variable for the institute name
                     output_netcdf_obj.createVariable('Institute_name', "str", fill_value=fillvalue)
-                if vv == 'XBT_line':
+                if vv == 'SOOP_line':
                     output_netcdf_obj.createVariable(vv, "str", fill_value=fillvalue)
                     # create a variable for the line description
-                    output_netcdf_obj.createVariable('XBT_line_description', "str", fill_value=fillvalue)
+                    output_netcdf_obj.createVariable('SOOP_line_description', "str", fill_value=fillvalue)
                 # create dimensioned variables:
-                if vv in ['XBT_accept_code', 'XBT_reject_code']:
+                if vv in ['QC_accept_code', 'QC_reject_code']:
                     output_netcdf_obj.createVariable(vv, datatype=dttyp, dimensions=('DEPTH',), fill_value=fillvalue)
                 if vv in ['DEPTH', 'TEMP', 'PSAL']:
                     output_netcdf_obj.createVariable(vv, datatype=dttyp, dimensions=('DEPTH',), fill_value=fillvalue)
@@ -264,9 +264,9 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                 if vv != 'TEMP_RECORDING_SYSTEM_quality_control':
                     print("Variable skipped: \"%s\". Please check!!" % vv)
 
-        # Add the XBT_accept_code and XBT_reject_code variables and size to same size as TEMP
-        output_netcdf_obj.createVariable('XBT_accept_code', "int64", fill_value=0, dimensions=('DEPTH',))
-        output_netcdf_obj.createVariable('XBT_reject_code', "int64", fill_value=0, dimensions=('DEPTH',))
+        # Add the QC_accept_code and QC_reject_code variables and size to same size as TEMP
+        output_netcdf_obj.createVariable('QC_accept_code', "int64", fill_value=0, dimensions=('DEPTH',))
+        output_netcdf_obj.createVariable('QC_reject_code', "int64", fill_value=0, dimensions=('DEPTH',))
 
         # set the sample time units
         year_value = nco.time.dt.year.astype(int).values[0]
@@ -282,7 +282,6 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         output_netcdf_obj.createVariable("HISTORY_DATE", "f", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_PARAMETER", "str", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_START_DEPTH", "f", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_STOP_DEPTH", "f", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_QC_CODE", "str", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_QC_CODE_DESCRIPTION", "str", 'N_HISTORY')
         output_netcdf_obj.createVariable("HISTORY_QC_CODE_VALUE", "b", 'N_HISTORY')
@@ -292,14 +291,14 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         generate_netcdf_att(output_netcdf_obj, conf_file, conf_file_point_of_truth=True)
         # add the flag and feature type attributes:
         dfa, dfr = create_flag_feature()
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'valid_max', int(dfa['XBT_accept_code'].sum()))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_masks', dfa['XBT_accept_code'].astype(np.int64))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_meanings', ' '.join(dfa['name']))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_codes', ' '.join(dfa['full_code']))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'valid_max', int(dfr['XBT_reject_code'].sum()))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_masks', dfr['XBT_reject_code'].astype(np.int64))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_meanings', ' '.join(dfr['name']))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_codes', ' '.join(dfr['full_code']))
+        setattr(output_netcdf_obj.variables['QC_accept_code'], 'valid_max', int(dfa['QC_accept_code'].sum()))
+        setattr(output_netcdf_obj.variables['QC_accept_code'], 'flag_masks', dfa['QC_accept_code'].astype(np.int64))
+        setattr(output_netcdf_obj.variables['QC_accept_code'], 'flag_meanings', ' '.join(dfa['name']))
+        setattr(output_netcdf_obj.variables['QC_accept_code'], 'flag_codes', ' '.join(dfa['full_code']))
+        setattr(output_netcdf_obj.variables['QC_reject_code'], 'valid_max', int(dfr['QC_reject_code'].sum()))
+        setattr(output_netcdf_obj.variables['QC_reject_code'], 'flag_masks', dfr['QC_reject_code'].astype(np.int64))
+        setattr(output_netcdf_obj.variables['QC_reject_code'], 'flag_meanings', ' '.join(dfr['name']))
+        setattr(output_netcdf_obj.variables['QC_reject_code'], 'flag_codes', ' '.join(dfr['full_code']))
 
         # append the data to the file
         for v in varslist.keys():
@@ -324,7 +323,7 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                     print("Variable not found in original file: \"%s\"." % v)
                     continue
             # print(vname)
-            if vname in ['TIME','XBT_manufacturer_date', 'SAMPLE_TIME']:
+            if vname in ['TIME','PROBE_manufacture_date', 'SAMPLE_TIME']:
                 if vname == 'SAMPLE_TIME':
                     # Convert numpy.datetime64 array to a list of datetime objects
                     datetime_list = [pd.to_datetime(d).to_pydatetime() for d in data]
@@ -332,7 +331,7 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                     time_val_dateobj = date2num(datetime_list, output_netcdf_obj[vname].units,
                                                 output_netcdf_obj[vname].calendar)
                 else:
-                    if vname == 'XBT_manufacturer_date':
+                    if vname == 'PROBE_manufacture_date':
                         # convert the string to a datetime object, assuming correct format entry of MM/DD/YY
                         data = convert_time_string(data, format='%m/%d/%y', output='datetime')
 
@@ -361,24 +360,24 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             elif v == 'InterfaceCode':
                 # get the recorder type information
                 rct = get_recorder_type(nco)
-                output_netcdf_obj.variables['XBT_recorder_type'][len(rct[0])] = str(rct[0])
-                output_netcdf_obj.variables['XBT_recorder_type_name'][len(rct[1])] = str(rct[1])
+                output_netcdf_obj.variables['RECORDER_type'][len(rct[0])] = str(rct[0])
+                output_netcdf_obj.variables['RECORDER_type_name'][len(rct[1])] = str(rct[1])
                 continue
-            elif vname == 'XBT_recorder_software_version':
+            elif vname == 'RECORDER_software_version':
                 # remove 'Version:' and any trailing spaces from the string
                 output_netcdf_obj.variables[vname][len(data)] = str(data).split('Version:')[1].strip()
                 continue
             elif vname == 'PROBE_TYPE':
                 # do for both the PROBE_TYPE and the PROBE_TYPE_RAW
-                for probe in ['PROBE_TYPE', 'PROBE_TYPE_RAW']:
+                for probe in ['', '_RAW']:
                     output_netcdf_obj.variables[probe][len(data)] = str(data)
                     # get the probe type name
                     probe_type_name = read_section_from_xbt_config('PEQ$')[data].split(',')[0]
-                    output_netcdf_obj.variables[probe + '_name'][len(probe_type_name)] = str(probe_type_name)
+                    output_netcdf_obj.variables['PROBE_TYPE_name' + probe][len(probe_type_name)] = str(probe_type_name)
                     # get the probe type coefficients
                     probe_type_coef = read_section_from_xbt_config('FRE')[data].split(',')
-                    output_netcdf_obj.variables[probe + '_coef_a'][:] = float(probe_type_coef[0])
-                    output_netcdf_obj.variables[probe + '_coef_b'][:] = float(probe_type_coef[1]) * 1e-3
+                    output_netcdf_obj.variables['PROBE_TYPE_coeff_a' + probe][:] = float(probe_type_coef[0])
+                    output_netcdf_obj.variables['PROBE_TYPE_coeff_b' + probe][:] = float(probe_type_coef[1]) * 1e-3
                 # add quality control for the probe type
                 output_netcdf_obj.variables['PROBE_TYPE_quality_control'][:] = 0
                 continue
@@ -410,10 +409,10 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         output_netcdf_obj.variables['DEPTH_uncertainty'][:] = depth_uncertainty
 
         # add the extra variables
-        output_netcdf_obj.variables['XBT_input_filename'][0] = raw_netCDF_file
-        output_netcdf_obj.variables['XBT_cruise_ID'][0] = crid
+        output_netcdf_obj.variables['Input_filename'][0] = raw_netCDF_file
+        output_netcdf_obj.variables['Cruise_ID'][0] = crid
         # Profile Id
-        output_netcdf_obj.variables['XBT_uniqueid'][0] = unique_id
+        output_netcdf_obj.variables['Institute_uniqueid'][0] = unique_id
 
         # read from the controlled list of global attributes in the config file
         globals_list = read_section_from_xbt_config('Turo_globals')
@@ -448,8 +447,8 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             output_netcdf_obj.variables['Institute_name'][0] = 'Unknown'
 
         # ship name, IMO and callsign
-        output_netcdf_obj.variables['ship_name'] = ship_name
-        output_netcdf_obj.variables['ship_IMO'] = ship_IMO
+        output_netcdf_obj.variables['Ship_name'] = ship_name
+        output_netcdf_obj.variables['Ship_IMO'] = ship_IMO
         output_netcdf_obj.variables['Platform_code'] = callsign
 
         # add some final global attributes
@@ -466,16 +465,16 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         output_netcdf_obj.date_created = utctime
 
         # add the line information
-        output_netcdf_obj.variables['XBT_line_description'][0] = line_info[1]
+        output_netcdf_obj.variables['SOOP_line_description'][0] = line_info[1]
 
-        # if this is a test canister, add the TP code and associated information to the HISTORIES and update the QC and XBT_reject_code
+        # if this is a test canister, add the TP code and associated information to the HISTORIES and update the QC and QC_reject_code
         if test:
             # create a dataframe with the codes and their integer representation
             df = read_qc_config()
             # get the test probe code
             tp_code = df[df['code'] == 'TPR']['byte_value'].values[0]
-            # add the test probe code to the XBT_reject_code
-            output_netcdf_obj.variables['XBT_reject_code'][0] = tp_code
+            # add the test probe code to the QC_reject_code
+            output_netcdf_obj.variables['QC_reject_code'][0] = tp_code
             # change the TEMP_quality_control to 4
             output_netcdf_obj.variables['TEMP_quality_control'][:] = df[df['code'] == 'TPR']['tempqc'].values[0]
             # update the HISTORIES
@@ -486,7 +485,6 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                                                                         output_netcdf_obj['HISTORY_DATE'].calendar)
             output_netcdf_obj.variables['HISTORY_PARAMETER'][0] = df[df['code'] == 'TPR']['parameter'].values[0]
             output_netcdf_obj.variables['HISTORY_START_DEPTH'][0] = nco.depth[0]
-            output_netcdf_obj.variables['HISTORY_STOP_DEPTH'][0] = nco.depth[-1]
             output_netcdf_obj.variables['HISTORY_QC_CODE'][0] = 'TPR'
             output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][0] = df[df['code'] == 'TPR']['tempqc'].values[0]
             output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][0] = df[df['code'] == 'TPR']['label'].values[0]
@@ -499,8 +497,8 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             csr_code = df[df['code'] == 'CSR']['byte_value'].values[0]
             # get an index of the depths that are less than or equal to 3.6m
             depths_index = np.where(nco.depth.data <= 3.6)[0]
-            # add the CSR code to the XBT_accept_code
-            output_netcdf_obj.variables['XBT_reject_code'][depths_index] = csr_code
+            # add the CSR code to the QC_accept_code
+            output_netcdf_obj.variables['QC_reject_code'][depths_index] = csr_code
             # change the TEMP_quality_control to the CSR value
             output_netcdf_obj.variables['TEMP_quality_control'][depths_index] = df[df['code'] == 'CSR']['tempqc'].values[0]
             # update the HISTORIES
@@ -511,7 +509,6 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                                                                         output_netcdf_obj['HISTORY_DATE'].calendar)
             output_netcdf_obj.variables['HISTORY_PARAMETER'][0] = df[df['code'] == 'CSR']['parameter'].values[0]
             output_netcdf_obj.variables['HISTORY_START_DEPTH'][0] = nco.depth.data[0]
-            output_netcdf_obj.variables['HISTORY_STOP_DEPTH'][0] = depths_index[-1]
             output_netcdf_obj.variables['HISTORY_QC_CODE'][0] = 'CSR'
             output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][0] = df[df['code'] == 'CSR']['tempqc'].values[0]
             output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][0] = df[df['code'] == 'CSR']['label'].values[0]
@@ -521,13 +518,13 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             wbr_df = pd.DataFrame({'TEMP': np.squeeze(nco.temperature.data), 'DEPTH': np.squeeze(nco.depth.data)})
             # run the WBR test
             wbr_point, wbr_result = wire_break(wbr_df)
-            # if the WBR test failed write the WBR code to the XBT_reject_code and add the WBR history
+            # if the WBR test failed write the WBR code to the QC_reject_code and add the WBR history
             if wbr_result:
                 # get the WBR code from the dataframe
                 wbr_code = df[df['code'] == 'WBR']['byte_value'].values[0]
 
-                # add the WBR code to the XBT_reject_code
-                output_netcdf_obj.variables['XBT_reject_code'][wbr_point] = wbr_code
+                # add the WBR code to the QC_reject_code
+                output_netcdf_obj.variables['QC_reject_code'][wbr_point] = wbr_code
                 # change the TEMP_quality_control to the WBR value
                 output_netcdf_obj.variables['TEMP_quality_control'][wbr_point:] = df[df['code'] == 'WBR']['tempqc'].values[0]
                 # update the HISTORIES
@@ -538,7 +535,6 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                                                                             output_netcdf_obj['HISTORY_DATE'].calendar)
                 output_netcdf_obj.variables['HISTORY_PARAMETER'][1] = df[df['code'] == 'WBR']['parameter'].values[0]
                 output_netcdf_obj.variables['HISTORY_START_DEPTH'][1] = wbr_df['DEPTH'].min()
-                output_netcdf_obj.variables['HISTORY_STOP_DEPTH'][1] = wbr_df['DEPTH'].max()
                 output_netcdf_obj.variables['HISTORY_QC_CODE'][1] = 'WBR'
                 output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][1] = df[df['code'] == 'WBR']['tempqc'].values[0]
                 output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][1] = df[df['code'] == 'WBR']['label'].values[0]

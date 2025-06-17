@@ -13,6 +13,32 @@ def _error(message):
     """ Raise an exception with the given message."""
     raise XbtException('{message}'.format(message=message))
 
+def read_globals_config():
+    """
+    read the global attributes from the xbt_config file
+    """
+    # Specify the file path
+    file_path = 'netcdfGlobalAtts.csv'
+    # Read the CSV file and convert it to a DataFrame
+    df = pd.read_csv(os.path.join(os.path.dirname(__file__), file_path))
+    # fill any empty cells and strings with None
+    df = df.fillna(value=pd.NA)
+    df = df.replace(r'^\s*$', pd.NA, regex=True)
+    return df
+
+def read_variables_config():
+    """
+    read the variable attributes from the xbt_config file
+    """
+    # Specify the file path
+    file_path = 'netcdfVars.csv'
+    # Read the CSV file and convert it to a DataFrame
+    df = pd.read_csv(os.path.join(os.path.dirname(__file__), file_path))
+    # fill any empty cells and strings with NaN
+    df = df.fillna(value=pd.NA)
+    df = df.replace(r'^\s*$', pd.NA, regex=True)
+
+    return df
 
 def read_flag_quality_table(all=False):
     # Specify the file path
@@ -32,9 +58,9 @@ def read_flag_quality_table(all=False):
     # convert the depth and rule_direction columns to match categories in the xbt_config file
     df['depth'] = df['depth'].map({0: 'ACT_CODES_FULL_PROFILE', 1: 'ACT_CODES_TO_NEXT_FLAG', 3.6: 'ACT_CODES_SINGLE_POINT'})
     # drop the rows with NaN values in the XBT_accept_code column
-    dfa = df.dropna(subset=['XBT_accept_code'])
+    dfa = df.dropna(subset=['QC_accept_code'])
     # drop the rows with NaN values in the XBT_reject_code column
-    dfr = df.dropna(subset=['XBT_reject_code'])
+    dfr = df.dropna(subset=['QC_reject_code'])
 
     return dfa, dfr
 
@@ -50,10 +76,14 @@ def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
         dt = pd.to_datetime(dt, errors='coerce', format=format)
         if output == 'datetime':
             # if the result is NaT, return None
-            if pd.isna(dt):
-                return None
-            else:
+            if isinstance(dt, pd.Series):
+                dt = dt.apply(lambda x: None if pd.isna(x) else x)
                 return dt
+            elif isinstance(dt, pd.Timestamp):
+                if pd.isna(dt):
+                    return None
+                else:
+                    return dt
         elif output == 'string':
             return dt.strftime(format)
         else:

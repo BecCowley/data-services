@@ -1,4 +1,4 @@
-﻿name,historic_extra_code,old_code,code,full_code,depth,condition,rule_direction,XBT_reject_code,XBT_accept_code,TIME_quality_control,LATITUDE_quality_control,LONGITUDE_quality_control,PROBE_TYPE_quality control,TEMP_quality_control,DEPTH_quality_control,Parameter
+﻿name,historic_extra_code,old_code,code,full_code,depth,condition,rule_direction,QC_reject_code,QC_accept_code,TIME_quality_control,LATITUDE_quality_control,LONGITUDE_quality_control,PROBE_TYPE_quality control,TEMP_quality_control,DEPTH_quality_control,Parameter
 scientific_qc_applied,0,,QC,QCA,0,,down,,1,1,1,1,1,1,1,TEMP
 wire_stretch,0,,WS,WSA,,,down,,2,,,,,2,1,TEMP
 leakage,0,,LE,LEA,,,down,,4,,,,,2,1,TEMP

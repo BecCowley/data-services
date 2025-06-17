@@ -22,7 +22,7 @@ quality_control_set          = 1.0
 references                   = https://doi.org/10.25919/3tm5-zn80, https://www.aoml.noaa.gov/phod/goos/xbtscience/index.php
 source                       = Expendable Bathythermograph (XBT)
 standard_name_vocabulary     = NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table 27
-title                        = Upper ocean temperature data collected on the transect in variable XBT_line using XBT (expendable bathythermographs) on the vessel named in the ship_name variable
+title                        = Upper ocean temperature data collected on the transect in variable SOOP_line using XBT (expendable bathythermographs) on the vessel named in the Ship_name variable
 
 [TIME]
 calendar            = gregorian
@@ -81,19 +81,19 @@ valid_max 		= 180
 
 [PROBE_TYPE]
 reference_datum 	= WMO code table 1770 
-ancillary_variables 	= PROBE_TYPE_quality_control, PROBE_TYPE_name, PROBE_TYPE_coef_a, PROBE_TYPE_coef_b
+ancillary_variables 	= PROBE_TYPE_quality_control, PROBE_TYPE_name, PROBE_TYPE_coeff_a, PROBE_TYPE_coeff_b
 long_name 		= XBT probe type
 
 [PROBE_TYPE_RAW]
 reference_datum 	= WMO code table 1770
-ancillary_variables 	= PROBE_TYPE_RAW_name, PROBE_TYPE_RAW_coef_a, PROBE_TYPE_RAW_coef_b
+ancillary_variables 	= PROBE_TYPE_name_RAW, PROBE_TYPE_coeff_a_RAW, PROBE_TYPE_coeff_b_RAW
 long_name 		=  XBT probe type uncorrected
 
 [PROBE_TYPE_name]
 reference_datum 	= WMO code table 1770
 long_name 		= XBT probe type name
 
-[PROBE_TYPE_RAW_name]
+[PROBE_TYPE_name_RAW]
 reference_datum 	= WMO code table 1770
 long_name 		=  XBT probe type uncorrected name
 
@@ -103,88 +103,87 @@ long_name 			= quality flags for XBT probe type
 valid_min 			= 0
 valid_max 			= 9
 
-[PROBE_TYPE_coef_a]
+[PROBE_TYPE_coeff_a]
 reference_datum 	= WMO code table 1770
 long_name 		= PROBE_TYPE Fall Rate Equation coefficient a
 
-[PROBE_TYPE_coef_b]
+[PROBE_TYPE_coeff_b]
 reference_datum 	= WMO code table 1770
 long_name 		= PROBE_TYPE Fall Rate Equation coefficient b
 
-[PROBE_TYPE_RAW_coef_a]
+[PROBE_TYPE_coeff_a_RAW]
 reference_datum 	= WMO code table 1770
 long_name 		= PROBE_TYPE_RAW Fall Rate Equation coefficient a
 
-[PROBE_TYPE_RAW_coef_b]
+[PROBE_TYPE_coeff_b_RAW]
 reference_datum 	= WMO code table 1770
 long_name 		= PROBE_TYPE_RAW Fall Rate Equation coefficient b
 
-[XBT_fall_rate_correction_factor]
+[PROBE_fall_rate_correction_factor]
 long_name 		= XBT fall rate correction factor applied to DEPTH
 
-[XBT_uniqueid]
+[Institution_uniqueid]
 long_name 		= XBT unique identifier
 cf_role 		= profile_id
 
-[XBT_uniqueid_originator]
+[Institution_uniqueid_originator]
 long_name 		= XBT unique identifier from data originator
 
-[XBT_input_filename]
+[Input_filename]
 long_name 		= XBT input filename
 
-[XBT_recorder_type]
+[RECORDER_type]
 long_name 		= XBT recorder type code
 reference_datum 	= WMO code table 4770
 
-[XBT_recorder_type_name]
+[RECORDER_type_name]
 long_name 		= XBT recorder type name
 reference_datum 	= WMO code table 4770
 
-[XBT_recorder_serial_number]
+[RECORDER_serial_number]
 long_name 		= XBT recorder serial number
 
-[XBT_recorder_software_version]
+[RECORDER_software_version]
 long_name 		= XBT recorder software version
 
-[XBT_calibration_OFFSET]
+[PROBE_calibration_OFFSET]
 long_name 		= XBT calibration offset for temperature from the probe
 
-[XBT_calibration_SCALE]
+[PROBE_calibration_SCALE]
 long_name 		= XBT calibration scale for temperature from the probe
 
-[XBT_probe_serialnumber]
+[PROBE_serial_number]
 long_name 		= XBT probe serial number
 
-[XBT_manufacturer_date]
-long_name 		= XBT probe manufacturer date
+[PROBE_manufacture_date]
+long_name 		= XBT probe manufacture date
 calendar            = gregorian
 
-[XBT_height_launch_above_water]
+[Height_launch_above_water]
 long_name 		= XBT height of launch above water
-reference_datum 	= sea surface
 units 			= m
 valid_min 		= 0
 valid_max 		= 100
 
-[XBT_cyclic_redundancy_code]
+[Cyclic_redundancy_code]
 long_name 		= XBT cyclic redundancy code
 
-[XBT_line]
+[SOOP_line]
 long_name 		= XBT Ship Of Opportunity (SOOP) line identifier
 
-[XBT_line_description]
+[SOOP_line_description]
 long_name 		= XBT Ship Of Opportunity (SOOP) line description
 
-[XBT_cruise_ID]
+[Cruise_ID]
 long_name 		= XBT cruise identifier
 
-[XBT_box_number]
+[PROBE_box_number]
 long_name 		= XBT probe box number from manufacturer
 
-[Institute_name]
+[Institution]
 long_name 		= Institute name
 
-[Institute_code]
+[Institution_code]
 long_name 		= Global Telecommunications System (GTS) Institute code
 
 [SOT_ID]
@@ -286,11 +285,11 @@ coordinates 		= TIME LATITUDE LONGITUDE DEPTH
 calendar            = gregorian
 long_name 		= recorder sample time
 
-[XBT_accept_code]
+[QC_accept_code]
 long_name 		= XBT accept code
 valid_min 		= 0
 
-[XBT_reject_code]
+[QC_reject_code]
 long_name 		= XBT reject code
 valid_min 		= 0
 
@@ -318,10 +317,8 @@ quality_control_conventions = GTSPP PC_PROF (Parameter Code Profile) table
 [HISTORY_START_DEPTH]
 long_name   = Shallowest depth quality control action applied to
 units       = m
-
-[HISTORY_STOP_DEPTH]
-long_name   = Deepest depth quality control action applied to
-units       = m
+valid_min   = -5.
+valid_max   = 12000.
 
 [HISTORY_QC_CODE]
 long_name =  Quality control code applied
@@ -386,8 +383,8 @@ units                     = 1
 valid_min                 = 2
 valid_max                 = 41.
 
-[XBT_predrop_comments]
+[Predrop_comments]
 long_name = XBT pre-drop comments
 
-[XBT_postdrop_comments]
+[Postdrop_comments]
 long_name = XBT post-drop comments

@@ -11,17 +11,18 @@ from netCDF4 import Dataset, date2num
 
 from generate_netcdf_att import get_imos_parameter_info, generate_netcdf_att
 from xbt_parse import read_section_from_xbt_config
+from xbt_utils import read_flag_quality_table, read_variables_config, read_globals_config
 
 def create_filename_output(prof, hist):
     filename = 'XBT_T_%s_%s_FV01_ID-%s' % (
-        prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), prof['XBT_line'],
-        prof['XBT_uniqueid'])
+        prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line'],
+        prof['Institution_uniqueid'])
 
     # decide what prefix is required
     names = read_section_from_xbt_config('VARIOUS')
     str = names['FILENAME']
     if str == 'Cruise_ID':
-        str = prof['XBT_cruise_ID']
+        str = prof['Cruise_ID']
         filename = '{}-{}'.format(str, filename)
     else:
         if prof['TIME'] > datetime(2008, 0o1, 0o1):
@@ -41,92 +42,115 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
     netcdf_filepath = os.path.join(output_folder, "%s.nc" % create_filename_output(profile.iloc[0], history))
     print('Creating output %s' % netcdf_filepath)
 
-    # TODO: create groups in the netcdf file. Group of data, group of histories and group of variables that were previously in the global attributes
+    # read the variables config file
+    vars = read_variables_config()
+    # Identify attribute columns starting with 'att_'
+    att_cols = [col for col in vars.columns if col.startswith('att_')]
+    # remove the 'att_' prefix from the attribute columns
+    att_labels = [col.replace('att_', '') for col in att_cols]
 
     with Dataset(netcdf_filepath, "w", format="NETCDF4") as output_netcdf_obj:
         # Create the dimensions
         output_netcdf_obj.createDimension('DEPTH', len(profile['DEPTH']))
         output_netcdf_obj.createDimension('N_HISTORY', 0) #make this unlimited
 
-        # Create the variables, no dimensions:
-        # varslist = ["TIME", "LATITUDE", "LONGITUDE", "PROBE_TYPE"]
-        varslist = [key for key in profile.keys()]
-        for vv in varslist:
-            # first check if this variable is in the imosParameters.txt file
-            dt = get_imos_parameter_info(vv, '__data_type')
-            fillvalue = get_imos_parameter_info(vv, '_FillValue')
-            if fillvalue == '':
-                fillvalue = None
-            if dt:
-                if vv in ['TIME', 'LATITUDE', 'LONGITUDE', 'PROBE_TYPE']:
-                    output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue)
-                    # and associated QC variables:
-                    output_netcdf_obj.createVariable(vv + "_quality_control", "b", fill_value=99)
-                    # and the *_RAW variables:
-                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dt, fill_value=fillvalue)
-                # create dimensioned variables:
-                if vv in ['XBT_accept_code', 'XBT_reject_code']:
-                    output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=('DEPTH',), fill_value=fillvalue)
-                if vv in ['DEPTH', 'TEMP', 'PSAL', 'COND', 'RESISTANCE', 'SAMPLE_TIME']:
-                    output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=('DEPTH',), fill_value=fillvalue)
-                    # and associated QC variables:
-                    output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
-                    # and the *_RAW variables:
-                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dt,
-                                                 dimensions=('DEPTH',), fill_value=fillvalue)
-                    if vv in ['TEMP', 'DEPTH', 'PSAL']:
-                        # add the uncertainty variable
-                        output_netcdf_obj.createVariable(vv + "_uncertainty", datatype=dt, dimensions=('DEPTH',),
-                                                        fill_value=fillvalue)
-                # test if the output_netCDF_obj already has the variable created
-                if vv not in output_netcdf_obj.variables:
-                    output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue)
-            elif vv not in output_netcdf_obj.variables:
-                print("Variable skipped: \"%s\". Please check!!" % vv)
+        # Create the variables from the vars Dataframe by looping through the rows
+        for index, row in vars.iterrows():
+            vv = row['variable_name']
+            # print(vv)
+            # check if there is data in the profile DataFrame for this variable
+            if vv not in profile.columns and vv not in history.columns:
+                # if not, skip this variable
+                print(f"Variable {vv} not found in profile data, skipping.")
+                continue
+            # get the datatype as specified in the att_variable_type column
+            dt = row['variable_type']
+            # get the fill value as specified in the att_fillValue column
+            fillvalue = row['fillValue']
+            # get the dimensions as specified in the Dimensions column
+            dimensions = row['Dimensions']
 
-        # create HISTORY variable set associated
-        output_netcdf_obj.createVariable("HISTORY_INSTITUTION", "str", 'N_HISTORY')
-        # output_netcdf_obj.createVariable("HISTORY_STEP", "str", 'N_HISTORY') # removed for now, RC August 2023
-        output_netcdf_obj.createVariable("HISTORY_SOFTWARE", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_SOFTWARE_RELEASE", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_DATE", "f", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_PARAMETER", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_START_DEPTH", "f", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_STOP_DEPTH", "f", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_QC_CODE", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_QC_CODE_DESCRIPTION", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_QC_CODE_VALUE", "f", 'N_HISTORY')
+            # if dimensions is NaN create the variable without dimensions or fill value
+            if pd.isna(dimensions) and pd.isna(fillvalue):
+                output_netcdf_obj.createVariable(vv, datatype=dt)
+            elif pd.isna(dimensions) and not pd.isna(fillvalue):
+                # create the variable in the netcdf file with fill value
+                output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue)
+            elif not pd.isna(dimensions) and pd.isna(fillvalue):
+                # create the variable in the netcdf file with dimensions
+                output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=dimensions)
+            else:
+                # create the variable in the netcdf file with dimensions and fill value
+                output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue, dimensions=dimensions)
+            # set the attributes for the variable
+            for att in att_labels:
+                # the column is labelled att_<att_name> in the vars DataFrame
+                att_name = 'att_' + att
+                if att_name in row and pd.notna(row[att_name]):
+                    # if the attribute is a validMax, validMin change it to the data type specified in the variable_type column
+                    if att in ['valid_max', 'valid_min']:
+                        # convert the value to the data type specified in the dt variable where types are int8, int64, int32, float32, float64
+                        if dt == 'int8':
+                            row[att_name] = np.int8(row[att_name])
+                        elif dt == 'int64':
+                            row[att_name] = np.int64(row[att_name])
+                        elif dt == 'int32':
+                            row[att_name] = np.int32(row[att_name])
+                        elif dt == 'float32':
+                            row[att_name] = np.float32(row[att_name])
+                        elif dt == 'float64':
+                            row[att_name] = np.float64(row[att_name])
 
-        # write attributes from the generate_nc_file_att file, now that we have added the variables:
-        conf_file = os.path.join(os.path.dirname(__file__), 'generate_nc_file_att')
-        generate_netcdf_att(output_netcdf_obj, conf_file, conf_file_point_of_truth=True)
+                    if att in 'flag_values':
+                        # convert to a byte array
+                        if isinstance(row[att_name], str):
+                            # if the attribute is a string, convert it to a list of bytes
+                            row[att_name] = np.array([np.byte(int(x.strip())) for x in row[att_name].split(' ')])
+                    # set the attribute on the variable
+                    setattr(output_netcdf_obj.variables[vv], att, row[att_name])
 
-        # set up a dataframe of the codes and their values
-        # codes from the new cookbook, read from csv file
-        # Specify the file path
-        a_file_path = os.path.join(os.path.dirname(__file__), 'xbt_accept_code.csv')
-        r_file_path = os.path.join(os.path.dirname(__file__), 'xbt_reject_code.csv')
-
-        # Read the CSV file and convert it to a DataFrame
-        dfa = pd.read_csv(a_file_path)
-        dfr = pd.read_csv(r_file_path)
+        # read the flag quality tables
+        dfa, dfr = read_flag_quality_table()
 
         # add the accept and reject code attributes:
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'valid_max', int(dfa['byte_value'].values.sum()))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_masks', dfa['byte_value'].values.astype(np.uint64))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_meanings', ' '.join(dfa['label'].values))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_codes', ' '.join(dfa['code'].values))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'valid_max', int(dfr['byte_value'].values.sum()))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_masks', dfr['byte_value'].values.astype(np.uint64))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_meanings', ' '.join(dfr['label'].values))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_codes', ' '.join(dfr['code'].values))
+        setattr(output_netcdf_obj.variables['QC_accept_code'], 'valid_max', int(dfa['QC_accept_code'].values.sum()))
+        setattr(output_netcdf_obj.variables['QC_accept_code'], 'flag_masks', dfa['QC_accept_code'].values.astype(np.uint64))
+        setattr(output_netcdf_obj.variables['QC_accept_code'], 'flag_meanings', ' '.join(dfa['name'].values))
+        setattr(output_netcdf_obj.variables['QC_accept_code'], 'flag_codes', ' '.join(dfa['code'].values))
+        setattr(output_netcdf_obj.variables['QC_reject_code'], 'valid_max', int(dfr['QC_reject_code'].values.sum()))
+        setattr(output_netcdf_obj.variables['QC_reject_code'], 'flag_masks', dfr['QC_reject_code'].values.astype(np.uint64))
+        setattr(output_netcdf_obj.variables['QC_reject_code'], 'flag_meanings', ' '.join(dfr['name'].values))
+        setattr(output_netcdf_obj.variables['QC_reject_code'], 'flag_codes', ' '.join(dfr['code'].values))
 
-        # if SAMPLE_TIME is in the output_netcdf_obj, add the units
+        # if SAMPLE_TIME is in the output_netcdf_obj, add the units based on the TIME variable
         if 'SAMPLE_TIME' in output_netcdf_obj.variables:
             year_value = profile['TIME'].dt.year.astype(int).values[0]
             dt = datetime.datetime(year_value, 1, 1, 0, 0, 0)
             setattr(output_netcdf_obj.variables['SAMPLE_TIME'], 'units', 'milliseconds since ' +
                     dt.strftime("%Y-%m-%d %H:%M:%S UTC"))
+
+        # add the global attributes
+        global_list = read_globals_config()
+        for index, row in global_list.iterrows():
+            if pd.notna(row['Attribute Value']):
+                setattr(output_netcdf_obj, row['Attribute Name'], row['Attribute Value'])
+            else:
+                # check for information in the global_atts DataFrame
+                if row['Attribute Name'] in global_atts.columns:
+                    setattr(output_netcdf_obj, row['Attribute Name'], global_atts[row['Attribute Name']].values[0])
+                # check for information in the profile DataFrame
+                # check for a profile.columns name match including upper and lower case
+                elif row['Attribute Name'].lower() in profile.columns.str.lower().tolist():
+                    # get the first match
+                    matched_col = profile.columns[profile.columns.str.lower() == row['Attribute Name'].lower()][0]
+                    setattr(output_netcdf_obj, row['Attribute Name'], profile[matched_col].values[0])
+                # print a warning if the attribute is not found
+                else:
+                    # if this is date_created, set it to the current time
+                    if row['Attribute Name'] == 'date_created':
+                        setattr(output_netcdf_obj, row['Attribute Name'], strftime("%Y-%m-%dT%H:%M:%SZ", gmtime()))
+                    else:
+                        print(f"Global attribute {row['Attribute Name']} not found in profile or global attributes, skipping.")
 
         # append the data to the file
         # qc'd
@@ -134,7 +158,7 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
             if v not in list(profile) and v not in list(history) and v not in list(global_atts):
                 print("Variable not written: \"%s\". Please check!!" % v)
                 continue
-            if v in ['TIME', 'TIME_RAW','XBT_manufacturer_date', 'SAMPLE_TIME']:
+            if v in ['TIME', 'TIME_RAW','PROBE_manufacture_date', 'SAMPLE_TIME']:
                 time_val_dateobj = date2num(pd.to_datetime(profile[v].values[0]), output_netcdf_obj[v].units,
                                             output_netcdf_obj[v].calendar)
                 output_netcdf_obj[v][:] = time_val_dateobj
