@@ -13,9 +13,14 @@ from generate_netcdf_att import get_imos_parameter_info, generate_netcdf_att
 from xbt_parse import read_section_from_xbt_config
 from xbt_utils import read_flag_quality_table, read_variables_config, read_globals_config
 
-def create_filename_output(prof, hist):
-    filename = 'XBT_T_%s_%s_FV01_ID-%s' % (
-        prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line'],
+def create_filename_output(prof, hist, profile_raw=False):
+    if profile_raw:
+        fv = 'FV00'
+    else:
+        fv = 'FV01'
+
+    filename = 'XBT_T_%s_%s_%s_ID-%s' % (
+        prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line'], fv,
         prof['Institution_uniqueid'])
 
     # decide what prefix is required
@@ -29,17 +34,23 @@ def create_filename_output(prof, hist):
             filename = 'IMOS_SOOP-{}'.format(filename)
 
     # if profile histories contains TP, change the filename
-    if 'TP' in hist['HISTORY_QC_CODE'].values:
-        filename = filename.replace('XBT', 'TESTPROBE')
+    if 'TPR' in hist['HISTORY_QC_CODE'].values:
+        filename = filename.replace('XBT', 'TEST')
 
     return filename
 
 
-def write_output_nc(output_folder, profile, history, global_atts, profile_raw=None):
-    """output the data to the IMOS format netcdf version"""
+def write_output_nc(output_folder, profile, history, global_atts, profile_raw=False, historic_flags=False):
+    """output the data to the IMOS format netcdf version
+    :param output_folder: the folder to write the netcdf file to
+    :param profile: the profile DataFrame
+    :param history: the history DataFrame
+    :param global_atts: the global attributes dictionary
+    :param profile_raw: if True, the create a FV00 file, if False create a FV01 file, default is False
+    """
 
     # now begin write out to new format
-    netcdf_filepath = os.path.join(output_folder, "%s.nc" % create_filename_output(profile.iloc[0], history))
+    netcdf_filepath = os.path.join(output_folder, "%s.nc" % create_filename_output(profile.iloc[0], history, profile_raw))
     print('Creating output %s' % netcdf_filepath)
 
     # read the variables config file
@@ -58,10 +69,8 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
         for index, row in vars.iterrows():
             vv = row['variable_name']
             # print(vv)
-            # check if there is data in the profile DataFrame for this variable
-            if vv not in profile.columns and vv not in history.columns:
-                # if not, skip this variable
-                print(f"Variable {vv} not found in profile data, skipping.")
+            # check if there is data in the profile DataFrame for this variable. Required variables must be kept in the output netcdf file
+            if vv not in profile.columns and vv not in history.columns and row['variable optional/required (1=required 0=optional)'] == 0:
                 continue
             # get the datatype as specified in the att_variable_type column
             dt = row['variable_type']
@@ -105,12 +114,12 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
                         # convert to a byte array
                         if isinstance(row[att_name], str):
                             # if the attribute is a string, convert it to a list of bytes
-                            row[att_name] = np.array([np.byte(int(x.strip())) for x in row[att_name].split(' ')])
+                            row[att_name] = np.array([np.byte(x.strip().strip(',')) for x in row[att_name].split(' ')])
                     # set the attribute on the variable
                     setattr(output_netcdf_obj.variables[vv], att, row[att_name])
 
         # read the flag quality tables
-        dfa, dfr = read_flag_quality_table()
+        dfa, dfr = read_flag_quality_table(historic_flags)
 
         # add the accept and reject code attributes:
         setattr(output_netcdf_obj.variables['QC_accept_code'], 'valid_max', int(dfa['QC_accept_code'].values.sum()))
@@ -125,40 +134,20 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
         # if SAMPLE_TIME is in the output_netcdf_obj, add the units based on the TIME variable
         if 'SAMPLE_TIME' in output_netcdf_obj.variables:
             year_value = profile['TIME'].dt.year.astype(int).values[0]
-            dt = datetime.datetime(year_value, 1, 1, 0, 0, 0)
+            dt = datetime(year_value, 1, 1, 0, 0, 0)
             setattr(output_netcdf_obj.variables['SAMPLE_TIME'], 'units', 'milliseconds since ' +
                     dt.strftime("%Y-%m-%d %H:%M:%S UTC"))
-
-        # add the global attributes
-        global_list = read_globals_config()
-        for index, row in global_list.iterrows():
-            if pd.notna(row['Attribute Value']):
-                setattr(output_netcdf_obj, row['Attribute Name'], row['Attribute Value'])
-            else:
-                # check for information in the global_atts DataFrame
-                if row['Attribute Name'] in global_atts.columns:
-                    setattr(output_netcdf_obj, row['Attribute Name'], global_atts[row['Attribute Name']].values[0])
-                # check for information in the profile DataFrame
-                # check for a profile.columns name match including upper and lower case
-                elif row['Attribute Name'].lower() in profile.columns.str.lower().tolist():
-                    # get the first match
-                    matched_col = profile.columns[profile.columns.str.lower() == row['Attribute Name'].lower()][0]
-                    setattr(output_netcdf_obj, row['Attribute Name'], profile[matched_col].values[0])
-                # print a warning if the attribute is not found
-                else:
-                    # if this is date_created, set it to the current time
-                    if row['Attribute Name'] == 'date_created':
-                        setattr(output_netcdf_obj, row['Attribute Name'], strftime("%Y-%m-%dT%H:%M:%SZ", gmtime()))
-                    else:
-                        print(f"Global attribute {row['Attribute Name']} not found in profile or global attributes, skipping.")
-
         # append the data to the file
         # qc'd
         for v in list(output_netcdf_obj.variables):
-            if v not in list(profile) and v not in list(history) and v not in list(global_atts):
-                print("Variable not written: \"%s\". Please check!!" % v)
+            if v not in list(profile) and v not in list(history) and v not in list(global_atts.keys()):
+                # if the variable is not in the profile or history or global attributes, skip it, keep fill value
+                print(f"Variable {v} not found in profile or history data, skipping.")
                 continue
             if v in ['TIME', 'TIME_RAW','PROBE_manufacture_date', 'SAMPLE_TIME']:
+                # if the profile[v] is None, skip it
+                if profile[v].isnull().all():
+                    continue
                 time_val_dateobj = date2num(pd.to_datetime(profile[v].values[0]), output_netcdf_obj[v].units,
                                             output_netcdf_obj[v].calendar)
                 output_netcdf_obj[v][:] = time_val_dateobj
@@ -167,6 +156,9 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
                     output_netcdf_obj.time_coverage_start = pd.to_datetime(profile[v].values[0]).strftime("%Y-%m-%dT%H:%M:%SZ")
                     output_netcdf_obj.time_coverage_end = pd.to_datetime(profile[v].values[0]).strftime("%Y-%m-%dT%H:%M:%SZ")
             elif v in list(profile):
+                # if all the values of profile[v] are NaN, skip it
+                if profile[v].isnull().all():
+                    continue
                 # Check the shape of the NetCDF variable
                 var_shape = output_netcdf_obj[v].shape
 
@@ -192,18 +184,13 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=No
                 else:
                     output_netcdf_obj[v][:] = history[v].values
 
-        # first remove all the columns in global_atts that end in '_RAW' as these are not required
-        global_atts = global_atts.loc[:, ~global_atts.columns.str.contains('_RAW')]
-        # and remove the station_number column
-        global_atts = global_atts.drop(columns='station_number')
-
-        # write out the extra global attributes we have collected
-        for key, item in global_atts.items():
-            if item.values[0] is not None:
-                setattr(output_netcdf_obj, key, item.values[0])
-        # Add date created
+        # Add date created to the global attributes
         utctime = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
-        output_netcdf_obj.date_created = utctime
+        global_atts['date_created'] = utctime
+
+        # set the global attributes where the index is the attribute name
+        for att_name, att_value in global_atts.items():
+            output_netcdf_obj.setncattr(att_name, att_value)
 
 # main function
 if __name__ == '__main__':
@@ -245,5 +232,10 @@ if __name__ == '__main__':
             profile = profiles[profiles['station_number'] == station]
             profile_histories = histories[histories['station_number'] == station]
             profile_global_atts = global_atts[global_atts['station_number'] == station]
+            # and remove the station_number column
+            profile_global_atts = profile_global_atts.drop(columns='station_number')
+            # convert the global attributes to a dictionary
+            profile_global_atts = profile_global_atts.to_dict(orient='records')[0]
+
             # write the profile to the netcdf file
-            write_output_nc(output_folder, profile, profile_histories, profile_global_atts)
+            write_output_nc(output_folder, profile, profile_histories, profile_global_atts,profile_raw=False, historic_flags=True)

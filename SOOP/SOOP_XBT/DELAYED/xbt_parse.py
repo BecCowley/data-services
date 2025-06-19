@@ -157,7 +157,7 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
         profile_qc = adjust_time_qc_flags(profile_qc)
 
     # perform a check of the qc vs noqc global attributes and histories. Do any of these need reconciling?
-    if len(profile_qc.global_atts.keys() - profile_noqc.global_atts):
+    if len(profile_qc.global_atts.keys() - profile_noqc.global_atts.keys()):
         # if the difference in the global attributes is just the qc_completed key, continue
         if len(profile_qc.global_atts.keys() - profile_noqc.global_atts) == 1:
             if 'qc_completed' in profile_qc.global_atts.keys() - profile_noqc.global_atts:
@@ -265,28 +265,24 @@ def parse_extra_vars(profile_qc, profile_noqc):
         dataf['Input_filename'] = re.split(r'ed\.nc|raw\.nc', profile.Input_filename)[0]
 
         # create global attributes
-        profile.global_atts = {'geospatial_vertical_units': 'meters', 'geospatial_vertical_positive': 'down'}
-        # add geospatial information to global attributes
-        try:
-            profile.global_atts['geospatial_lat_max'] = np.unique(dataf['LATITUDE']).item()
-            profile.global_atts['geospatial_lat_min'] = np.unique(dataf['LATITUDE']).item()
-            profile.global_atts['geospatial_lon_max'] = np.unique(dataf['LONGITUDE']).item()
-            profile.global_atts['geospatial_lon_min'] = np.unique(dataf['LONGITUDE']).item()
-            profile.global_atts['geospatial_vertical_max'] = max(dataf['DEPTH'])
-            profile.global_atts['geospatial_vertical_min'] = min(dataf['DEPTH'])
-            # include time_coverage_start and time_coverage_end in the global attributes
-            profile.global_atts['time_coverage_start'] = dataf['TIME'].unique().strftime("%Y-%m-%dT%H:%M:%SZ").item()
-            profile.global_atts['time_coverage_end'] = dataf['TIME'].unique().strftime("%Y-%m-%dT%H:%M:%SZ").item()
-        except:
-            profile.global_atts['geospatial_lat_max'] = []
-            profile.global_atts['geospatial_lat_min'] = []
-            profile.global_atts['geospatial_lon_max'] = []
-            profile.global_atts['geospatial_lon_min'] = []
-            profile.global_atts['geospatial_vertical_max'] = []
-            profile.global_atts['geospatial_vertical_min'] = []
-            profile.global_atts['time_coverage_start'] = []
-            profile.global_atts['time_coverage_end'] = []
+        # read the global_attributes config file
+        global_list = read_globals_config()
 
+        # add geospatial information to global attributes dictionary
+        global_list['geospatial_lat_max'] = np.unique(dataf['LATITUDE']).item()
+        global_list['geospatial_lat_min'] = np.unique(dataf['LATITUDE']).item()
+        global_list['geospatial_lon_max'] = np.unique(dataf['LONGITUDE']).item()
+        global_list['geospatial_lon_min'] = np.unique(dataf['LONGITUDE']).item()
+        global_list['geospatial_vertical_max'] = max(dataf['DEPTH'])
+        global_list['geospatial_vertical_min'] = min(dataf['DEPTH'])
+        # add time coverage information to global attributes dictionary
+        global_list['time_coverage_start'] = dataf['TIME'].unique().strftime("%Y-%m-%dT%H:%M:%SZ").item()
+        global_list['time_coverage_end'] = dataf['TIME'].unique().strftime("%Y-%m-%dT%H:%M:%SZ").item()
+        # add the institution to the global attributes dictionary
+        global_list['institution'] = dataf['Institution'].unique().item()
+
+        # assign the global attributes to the profile object
+        profile.global_atts = global_list
         # Parse the surface codes into the variables too
         srfc_code_nc = profile.netcdf_file_obj['SRFC_Code'][:]
         srfc_parm = profile.netcdf_file_obj['SRFC_Parm'][:]
@@ -787,64 +783,6 @@ def adjust_time_qc_flags(profile):
     return profile
 
 
-def add_uncertainties(profile):
-    """ return the profile with added uncertainties"""
-
-    # use standard uncertainties assigned by IQuOD procedure:
-    # XBT manufacturers other than Sippican and TSK and unknown manufacturer / type:  0.2;  <= 230m: 4.6m; > 230 m: 2%
-    # XBT deployed from submarines or Tsurumi - Seiki Co(TSK) manufacturer 0.15;  <= 230 m: 4.6 m; > 230 m: 2%
-    # XBT Sippican manufacturer 0.1;  <= 230 m: 4.6 m; > 230 m: 2%
-    # XBT deployed from aircraft 0.056
-    # XCTD(pre - 1998) 0.06; 4 %
-    # XCTD(post - 1998) 0.02; 2 %
-
-    pt = int(profile.data['PROBE_TYPE'].unique())
-    # test probe
-    if pt == 104:
-        tunc = [0]
-        dunc = [0]
-    elif 1 <= pt <= 71:
-        # Sippican probe type
-        tunc = [0.1]
-        dunc = [0.02, 4.6]
-    elif 201 <= pt <= 252:
-        # TSK probe type
-        tunc = [0.15]
-        dunc = [0.02, 4.6]
-    elif 401 <= pt <= 501:
-        # Sparton probe type
-        tunc = [0.2]
-        dunc = [0.02, 4.6]
-    elif pt == 81 or pt == 281 or pt == 510:
-        # AIRIAL XBT probe types
-        tunc = [0.056]
-        dunc = [0]  # no depth uncertainty determined
-    elif 700 <= pt <= 751:
-        # XCTDs
-        year_value = profile.netcdf_file_obj.time.dt.year.astype(int).values[0]
-        dt = datetime.datetime(year_value, 1, 1, 0, 0, 0)
-        if dt < datetime.datetime.strptime('1998-01-01', '%Y-%m-%d'):
-            tunc = [0.02]
-            dunc = [0.04]
-        else:
-            tunc = [0.02]
-            dunc = [0.02]
-    else:
-        # probe type not defined above, not in the code table 1770
-        tunc = [0]
-        dunc = [0]
-    # temp uncertainties
-    profile.data['TEMP_uncertainty'] = ma.empty_like(profile.data['TEMP'])
-    profile.data['TEMP_uncertainty'] = tunc[0]
-    # depth uncertainties:
-    unc = np.ma.MaskedArray(profile.data['DEPTH'] * dunc[0], mask=False)
-    if len(dunc) > 1:
-        unc[profile.data['DEPTH'] <= 230] = dunc[1]
-    profile.data['DEPTH_uncertainty'] = np.round(unc, 2)
-
-    return profile
-
-
 def get_fallrate_eq_coef(profile_qc, profile_noqc):
     """return probe type name, coef_a, coef_b as defined in WMO1770"""
     fre_list = read_section_from_xbt_config('FRE')
@@ -955,19 +893,20 @@ def parse_histories_nc(profile):
     if nhist > 0:
         # check that the history codes exist in our list
         # read the set list of codes from the csv files
-        qc_df = read_qc_config()
-        # make a new column with the first two characters of the qc_df code
-        qc_df['code_short'] = qc_df['code'].str[:2]
+        qc_dfa, qc_dfr = read_flag_quality_table(True)
+        # combine the two dataframes
+        qc_df = pd.concat([qc_dfa, qc_dfr], ignore_index=True)
+
         # create list of acceptable parameter names
         parm_names = {'DEPH': 'DEPTH', 'DATI': 'DATE, TIME', 'DATE': 'DATE', 'TIME': 'TIME', 'LATI': 'LATITUDE',
                  'LONG': 'LONGITUDE', 'LALO': 'LATITUDE, LONGITUDE', 'TEMP': 'TEMP'}
         # check that the history codes are in the list
-        if not df['HISTORY_QC_CODE'].isin(qc_df['code_short']).all():
-            missing = df.loc[~df['HISTORY_QC_CODE'].isin(qc_df['code_short']), 'HISTORY_QC_CODE']
+        if not df['HISTORY_QC_CODE'].isin(qc_df['code']).all():
+            missing = df.loc[~df['HISTORY_QC_CODE'].isin(qc_df['code']), 'HISTORY_QC_CODE']
             LOGGER.warning('HISTORY_QC_CODE values %s not found in the QC code list. Please review output for this file %s'
                            % (missing.values, profile.Input_filename))
             # remove any codes that are not in the list and where PARAMETER is not in names list
-            df = df.loc[df['HISTORY_QC_CODE'].isin(qc_df['code_short']) & df['HISTORY_PARAMETER'].isin(parm_names.keys())]
+            df = df.loc[df['HISTORY_QC_CODE'].isin(qc_df['code']) & df['HISTORY_PARAMETER'].isin(parm_names.keys())]
             # reset nhist to the new length
             nhist = len(df)
 
@@ -1067,30 +1006,30 @@ def parse_histories_nc(profile):
         LOGGER.warning("HISTORY_INSTITUTION values %s are not defined. Please review output for this file %s"
                        % (missing, profile.Input_filename))
 
-    # get a list of qc_df['code'] values where qc_df['code_short'] only appears once in the dataframe
-    # Get the value counts of 'code_short'
-    code_short_counts = qc_df['code_short'].value_counts()
-    # Filter 'qc_df' to get rows where 'code_short' appears only once
-    single_code_short_df = qc_df[qc_df['code_short'].isin(code_short_counts[code_short_counts == 1].index)]
+    # get a list of qc_df['code'] values where qc_df['code'] only appears once in the dataframe
+    # Get the value counts of 'code'
+    code_short_counts = qc_df['code'].value_counts()
+    # Filter 'qc_df' to get rows where 'code' appears only once
+    single_code_short_df = qc_df[qc_df['code'].isin(code_short_counts[code_short_counts == 1].index)]
 
     # if any of the single_qc_codes are in the HISTORY_QC_CODE, change the HISTORY_QC_CODE_VALUE to match the single_qc_code_short_df['tempqc'] value
     for idx, row in single_code_short_df.iterrows():
         mask = df['HISTORY_QC_CODE'].str[:2] == row['code']
         if any(mask):
-            df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['code'],
-                                                                                               row['tempqc'],
-                                                                                               row['parameter']]
+            df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['full_code'],
+                                                                                               row['TEMP_quality_control'],
+                                                                                               row['Parameter']]
     # add the QC description information
     df["HISTORY_QC_CODE_DESCRIPTION"] = [''] * nhist
     # map the qc_df['code'] to the df['HISTORY_QC_CODE'] and add the description to the df['HISTORY_QC_CODE_DESCRIPTION']
 
     # Create a dictionary from qc_df for mapping
-    qc_code_to_description = qc_df.set_index('code')['label'].to_dict()
+    qc_code_to_description = qc_df.set_index('full_code')['name'].to_dict()
 
     # Map the 'HISTORY_QC_CODE' to the descriptions and add to 'HISTORY_QC_CODE_DESCRIPTION'
     df['HISTORY_QC_CODE_DESCRIPTION'] = df['HISTORY_QC_CODE'].map(qc_code_to_description)
 
-    if any(df['HISTORY_QC_CODE_DESCRIPTION'].eq('')):
+    if any(df['HISTORY_QC_CODE_DESCRIPTION'].eq('')) or any(df['HISTORY_QC_CODE_DESCRIPTION'].isna()):
         missing = df.loc[df['HISTORY_QC_CODE_DESCRIPTION'] == '', 'HISTORY_QC_CODE']
         if missing.any():
             LOGGER.warning("HISTORY_QC_CODE \"%s\" is not defined. Please edit xbt_config file. %s"
@@ -1418,20 +1357,21 @@ def restore_temp_val(profile):
 def create_flag_feature(profile):
     """ Take the existing QC code values and turn them into a integer representation. One bit for every code.
     And there are now two variables, one for accept codes, one for reject codes."""
-    # TODO: recode this to be common to the the other converters, See TuroXBT2IMOSnc.py/create_flag_feature
-    # get the flag quality table with all the historic codes
-    # dfa, dfr = read_flag_quality_table(all=True)
 
+    # get the flag quality table with all the historic codes
     # create a dataframe with the codes and their integer representation
-    df = read_qc_config()
-    # make a new column in df with just the first two characters of the code column
-    df['code_short'] = df['code'].str[:2]
+    dfa, dfr = read_flag_quality_table(all=True)
+    # combine the two dataframes, combining the 'QC_accept_code' and 'QC_reject_code' columns into one column labelled 'byte_value'
+    df = pd.concat([dfa[['name','code', 'full_code', 'TEMP_quality_control', 'Parameter', 'QC_accept_code']],
+                    dfr[['name','code', 'full_code', 'TEMP_quality_control', 'Parameter','QC_reject_code']]], ignore_index=True)
+    # combine the 'QC_accept_code' and 'QC_reject_code' columns into one column labelled 'byte_value'
+    df['byte_value'] = df['QC_accept_code'].fillna(0).astype(int) + df['QC_reject_code'].fillna(0).astype(int)
+
     df_data = profile.data.copy(deep=True)
 
     # set the fields to zeros to start
     df_data['QC_accept_code'] = 0
     df_data['QC_reject_code'] = 0
-    df_data['tempqc'] = 0
 
     # perform the flag mapping on the original flags and create the two new variables
     codes = profile.histories
@@ -1488,8 +1428,8 @@ def create_flag_feature(profile):
         if row['HISTORY_QC_CODE'] not in ['REA','TEA','LAA','LOA','PER','TER','CSR']:
             if row['tempqc'] != row['HISTORY_QC_CODE_VALUE']:
                 # get the df['tempqc'] value for the two-character code
-                tempqc = df.loc[df['code_short'].str.contains(row['HISTORY_QC_CODE'][:2]), 'tempqc'].values
-                # check if the two character code appears more than once in the df['code_short'] column
+                tempqc = df.loc[df['code'].str.contains(row['HISTORY_QC_CODE'][:2]), 'TEMP_quality_control'].values
+                # check if the two character code appears more than once in the df['code'] column
                 if np.size(tempqc) > 1:
                     # if so, then we need to check that the TEMP_quality_control value is in the same category as the tempqc value
                     # where the categories are 1,2,5 and 3,4
@@ -1517,7 +1457,7 @@ def create_flag_feature(profile):
     # delete the tempqc column in codes, no longer required
     codes = codes.drop(columns=['tempqc'])
     # delete the code_short column in df, no longer required
-    df = df.drop(columns=['code_short', 'group_label'])
+    df = df.drop(columns=['code', 'QC_accept_code', 'QC_reject_code'])
 
     # make sure the previous_values are the same as the data['TEMP_RAW'] values and replace missing TEMP values at CS
     profile.histories = codes
@@ -1527,7 +1467,7 @@ def create_flag_feature(profile):
     df_data = profile.data
 
     # merge the codes with the flag codes
-    mapcodes = pd.merge(df, codes, how='right', left_on='code', right_on='HISTORY_QC_CODE')
+    mapcodes = pd.merge(df, codes, how='right', left_on='full_code', right_on='HISTORY_QC_CODE')
 
     if mapcodes.empty:
         profile.global_atts['qc_completed'] = 'no'
@@ -1537,13 +1477,13 @@ def create_flag_feature(profile):
         profile.global_atts['qc_completed'] = 'yes'
 
     # update the HISTORY_QC_CODE_DESCRIPTION to the df label
-    mapcodes['HISTORY_QC_CODE_DESCRIPTION'] = mapcodes['label']
+    mapcodes['HISTORY_QC_CODE_DESCRIPTION'] = mapcodes['name']
 
     # update the HISTORY_PARAMETER to the parameter column in df
-    mapcodes['HISTORY_PARAMETER'] = mapcodes['parameter']
+    mapcodes['HISTORY_PARAMETER'] = mapcodes['Parameter']
 
     # any flags not included? check for nan in the label column
-    nan_values = mapcodes['label'].isna()
+    nan_values = mapcodes['name'].isna()
     if nan_values.any():
         # we have an extra flag that we haven't coded
         # if any of the flags are in this list which I know about, remove them
@@ -1560,7 +1500,7 @@ def create_flag_feature(profile):
     # also check the TEMP_QC_CODE_VALUE is the same as the actual flag in the flag array
 
     # create a df with the same number of columns as the number of rows in the mapcodes table and number of rows is number of depths
-    tempdf = pd.DataFrame(np.zeros((len(df_data), len(mapcodes))) * np.zeros(len(mapcodes)), columns=mapcodes['code'])
+    tempdf = pd.DataFrame(np.zeros((len(df_data), len(mapcodes))) * np.zeros(len(mapcodes)), columns=mapcodes['full_code'])
 
     # iterate over the mapcodes table and fill a column in tempdf with QC values from the tempqc field
     for idx, row in mapcodes.iterrows():
@@ -1568,14 +1508,14 @@ def create_flag_feature(profile):
         ii = (np.abs(df_data['DEPTH'] - row['HISTORY_START_DEPTH'])).argmin()
         # if this is a CSR flag, just fill the depth with the tempqc value
         if row['HISTORY_QC_CODE'] == 'CSR':
-            tempdf.loc[ii, row['code']] = row['tempqc']
+            tempdf.loc[ii, row['full_code']] = row['TEMP_quality_control']
         else:
             # fill the tempdf from the depth index to the maximum index
-            tempdf.loc[ii:, row['code']] = row['tempqc']
+            tempdf.loc[ii:, row['full_code']] = row['TEMP_quality_control']
         # for flags that have been interpolated or filtered, these are 5 and 2 deeper. Change the flag at these depths to 5
         if row['HISTORY_QC_CODE'] in ['SPA', 'HFA', 'IPA', 'EIA']:
             # 2 should have been assigned above, now just overwriting with 5
-            tempdf.loc[ii, row['code']] = 5
+            tempdf.loc[ii, row['full_code']] = 5
 
     # index of the tempdf rows that have a value of 5
     idx = tempdf.eq(5).any(axis=1)
@@ -1607,10 +1547,9 @@ def create_flag_feature(profile):
             df_data.loc[ii, 'QC_reject_code'] = df_data.loc[ii, 'QC_reject_code'] + np.float64(row['byte_value'])
 
     # update the histories with the correct tempqc values from mapcodes
-    mapcodes['HISTORY_QC_CODE_VALUE'] = mapcodes['tempqc']
+    mapcodes['HISTORY_QC_CODE_VALUE'] = mapcodes['TEMP_quality_control']
     # drop unwanted columns
-    mapcodes = mapcodes.drop(columns=['tempqc', 'byte_value', 'label', 'code', 'parameter'])
-    df_data = df_data.drop(columns=['tempqc'])
+    mapcodes = mapcodes.drop(columns=['TEMP_quality_control', 'byte_value', 'name', 'full_code', 'Parameter'])
 
     # update the histories
     profile.histories = mapcodes
