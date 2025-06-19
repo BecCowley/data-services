@@ -176,7 +176,11 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     # check_sums_of_temp_depth(profile_qc)
 
     # add uncertainties:
-    profile_qc = add_uncertainties(profile_qc)
+    profile_qc.data = add_uncertainties(profile_qc.data)
+
+    # add Launcher variable and assign 'LM-3A Hand-Held' if the vessel is not l'Astrolabe and date is less than 2020-11-01
+    # else assign 'LM-4A Thru-Hull'
+    profile_qc.data = add_launcher_variable(profile_qc.data)
 
     # remove columns that are all NaN
     profile_qc.data = profile_qc.data.dropna(axis=1, how='all')
@@ -1657,20 +1661,48 @@ def check_nc_to_be_created(profile):
 
 def make_dataframe(profile_ed, profile_raw, profile_turo):
     # convert the data in profile to a parquet file
-    # create a dataframe from the profile data
-    df = pd.DataFrame(profile_ed.data)
-    # add the other data to the dataframe
-    for key, value in profile_ed.data.items():
-        # skip the data dataframe, already included
-        if key == 'data':
-            continue
-        df[key] = value
+    # profile_ed.data is already a dataframe, but check the columns against the netcdfVars.csv file
+    vars = read_variables_config()
+    # get a list of variables from the variable_name column
+    varslist = vars['variable_name'].tolist()
+
+    # get the columns from the profile_ed.data
+    columns = profile_ed.data.columns.tolist()
+    # check if the columns in profile_ed.data are in the varslist
+    missing_vars = [var for var in columns if var not in varslist]
+    if missing_vars:
+        # if the variable name ends in _RAW and the values are the same as the variable name without _RAW, then remove the _RAW
+        for var in missing_vars:
+            if var.endswith('_RAW'):
+                var_no_raw = var[:-4]
+                if var_no_raw in columns and profile_ed.data[var].equals(profile_ed.data[var_no_raw]):
+                    # remove the _RAW column
+                    profile_ed.data = profile_ed.data.drop(columns=[var])
+                    # LOGGER.info('Removing %s from the dataframe as it is the same as %s' % (var, var_no_raw))
+                else:
+                    # keep the _RAW column but put it in the global attributes
+                    profile_ed.global_atts[var] = profile_ed.data[var].unique().tolist()
+            elif var.endswith('_quality_control'):
+                # if the variable name ends with _quality_control and the values are zero or the same as the variable name without _quality_control, then remove the _quality_control
+                var_no_qc = var[:-16]  # remove _quality_control
+                if var_no_qc in columns and (profile_ed.data[var].eq(0).all() or profile_ed.data[var].equals(profile_ed.data[var_no_qc])):
+                    # remove the _quality_control column
+                    profile_ed.data = profile_ed.data.drop(columns=[var])
+                    # LOGGER.info('Removing %s from the dataframe as it is the same as %s' % (var, var_no_qc))
+
+    # save the final dataframe to a
+    df = profile_ed.data.copy(deep=True)
+
     # make a global attributes dataframe
     gdf = pd.DataFrame(profile_ed.global_atts, index=[0])
 
     # add the raw global attributes to the dataframe
     for key, value in profile_raw.global_atts.items():
-        gdf[key + '_RAW'] = value
+        # if the key and value are not already in the dataframe, skip them
+        if key in gdf.columns and gdf[key].equals(pd.Series([value])):
+            continue
+        else:
+            gdf[key + '_RAW'] = value
 
     return df, gdf
 

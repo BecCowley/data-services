@@ -91,19 +91,16 @@ def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
     except:
         _error('Time string not in a valid format')
 
+def add_launcher_variable(df):
+    # add Launcher variable and assign 'LM-3A Hand-Held' if the vessel is not l'Astrolabe and date is less than 2020-11-01
+    # else assign 'LM-4A Thru-Hull'
 
-def read_qc_config():
-    # set up a dataframe of the codes and their values
-    # codes from the new cookbook, read from csv file
-    # Specify the file path
-    a_file_path = os.path.join(os.path.dirname(__file__), 'xbt_accept_code.csv')
-    r_file_path = os.path.join(os.path.dirname(__file__), 'xbt_reject_code.csv')
-
-    # Read the CSV file and convert it to a DataFrame
-    dfa = pd.read_csv(a_file_path)
-    dfr = pd.read_csv(r_file_path)
-    # merge the two dataframes
-    df = pd.concat([dfa, dfr])
+    # if profile_qc.data['Ship_name'].unique().item() contains 'Astrolabe' and date is > 2020-11-01, assign 'LM-4A Thru-Hull'
+    if 'Astrolabe' in df['Ship_name'].unique().item() and \
+            df['TIME'].unique().item() > datetime(2020, 11, 1):
+        df['Launcher_type'] = 'LM-4A Thru-Hull'
+    else:
+        df['Launcher_type'] = 'LM-3A Hand-Held'
 
     return df
 
