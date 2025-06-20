@@ -886,9 +886,9 @@ def parse_histories_nc(profile):
 
     # change HISTORY_START_DEPTH and HISTORY_PREVIOUS_VALUE to float64
     df['HISTORY_START_DEPTH'] = df['HISTORY_START_DEPTH'].astype('float32')
-    df['HISTORY_PREVIOUS_VALUE'] = df['HISTORY_PREVIOUS_VALUE'].astype('float32')
+    df['HISTORY_PREVIOUS_VALUE'] = df['HISTORY_PREVIOUS_VALUE'].astype('float64')
     # change HISTORY_QC_CODE_VALUE to int32
-    df['HISTORY_QC_CODE_VALUE'] = df['HISTORY_QC_CODE_VALUE'].astype('int32')
+    df['HISTORY_QC_CODE_VALUE'] = df['HISTORY_QC_CODE_VALUE'].astype('int8')
 
     if nhist > 0:
         # check that the history codes exist in our list
