@@ -886,7 +886,7 @@ def parse_histories_nc(profile):
 
     # change HISTORY_START_DEPTH and HISTORY_PREVIOUS_VALUE to float64
     df['HISTORY_START_DEPTH'] = df['HISTORY_START_DEPTH'].astype('float32')
-    df['HISTORY_PREVIOUS_VALUE'] = df['HISTORY_PREVIOUS_VALUE'].astype('float64')
+    df['HISTORY_PREVIOUS_VALUE'] = df['HISTORY_PREVIOUS_VALUE'].astype('object')
     # change HISTORY_QC_CODE_VALUE to int32
     df['HISTORY_QC_CODE_VALUE'] = df['HISTORY_QC_CODE_VALUE'].astype('int8')
 
@@ -936,7 +936,7 @@ def parse_histories_nc(profile):
         (df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'BDA', 2
 
     # fix any 9999 etc values in HISTORY_PREVIOUS_VALUE where HISTORY_PARAMETER is TEMP to be 99.99 to match the data
-    df.loc[(df['HISTORY_PARAMETER'] == 'TEMP') & (df['HISTORY_PREVIOUS_VALUE'] > 99), 'HISTORY_PREVIOUS_VALUE'] = 99.99
+    df.loc[(df['HISTORY_PARAMETER'] == 'TEMP') & (df['HISTORY_PREVIOUS_VALUE'].values.astype('float') > 99), 'HISTORY_PREVIOUS_VALUE'] = 99.99
 
     # change CSA to CSR and the flag to 3 to match new format
     df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
@@ -1173,7 +1173,7 @@ def combine_histories(profile_qc, profile_noqc):
     temp_codes = combined_histories[combined_histories['HISTORY_PARAMETER'] == 'TEMP']
     # get the index of the rows to drop for TEMP variables only
     idx = temp_codes[(temp_codes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)) &
-                        (temp_codes['HISTORY_PREVIOUS_VALUE'] > 90)].index
+                        (temp_codes['HISTORY_PREVIOUS_VALUE'].values.astype('float') > 90)].index
     if len(idx) > 0:
         LOGGER.warning(
             'HISTORY: Duplicate QC code encountered and removed in create_flag_feature: %s. Please review. %s'
