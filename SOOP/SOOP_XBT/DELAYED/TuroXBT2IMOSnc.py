@@ -32,7 +32,8 @@ from xbt_parse import read_section_from_xbt_config
 from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
 from ship_callsign import ship_callsign_list
 from imos_logging import IMOSLogging
-from xbt_utils import read_qc_config, read_flag_quality_table, convert_time_string, wire_break
+from xbt_utils import *
+from write2netcdf import write_output_nc
 
 
 def args():
@@ -91,84 +92,7 @@ def create_out_filename(profile, line, crid, n, test):
     # create the unique ID from the crid, time and drop number formatted to three digits
     uniqueid = crid + '_' + profile.time.dt.strftime('%Y%m%d%H%M%S').values[0] + '_' + str(n).zfill(3)
 
-    if test:
-        filename = 'XBTTEST_T_%s_%s_FV01_ID-%s.nc' % (profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], line, uniqueid)
-        filename_raw = 'XBTTEST_T_%s_%s_FV00_ID-%s.nc' % (profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], line, uniqueid)
-    else:
-        filename = 'IMOS_SOOP-XBT_T_%s_%s_FV01_ID-%s.nc' % (profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], line, uniqueid)
-        filename_raw = 'IMOS_SOOP-XBT_T_%s_%s_FV00_ID-%s.nc' % (profile.time.dt.strftime('%Y%m%d%H%M%SZ').values[0], line, uniqueid)
-
-    return filename, filename_raw, uniqueid
-
-
-def create_flag_feature():
-    """ Take the existing QC code values and turn them into a integer representation. One bit for every code."""
-
-    # set up a dataframe of the codes and their values
-    # codes from the new cookbook, read from csv file
-    dfa, dfr = read_flag_quality_table()
-    # keep some of the columns only: 'name', 'full_code', 'XBT_accept_code', 'XBT_reject_code'
-    dfa = dfa[['name', 'full_code', 'XBT_accept_code']]
-    dfr = dfr[['name', 'full_code', 'XBT_reject_code']]
-    return dfa, dfr
-
-
-def add_uncertainties(nco):
-    """ return the profile with added uncertainties"""
-
-    # use standard uncertainties assigned by IQuOD procedure:
-    # XBT manufacturers other than Sippican and TSK and unknown manufacturer / type:  0.2;  <= 230m: 4.6m; > 230 m: 2%
-    # XBT deployed from submarines or Tsurumi - Seiki Co(TSK) manufacturer 0.15;  <= 230 m: 4.6 m; > 230 m: 2%
-    # XBT Sippican manufacturer 0.1;  <= 230 m: 4.6 m; > 230 m: 2%
-    # XBT deployed from aircraft 0.056
-    # XCTD(pre - 1998) 0.06; 4 %
-    # XCTD(post - 1998) 0.02; 2 %
-
-    pt = int(nco.Code)
-    # test probe
-    if pt == 104:
-        tunc = [0]
-        dunc = [0]
-    elif 1 <= pt <= 71:
-        # Sippican probe type
-        tunc = [0.1]
-        dunc = [0.02, 4.6]
-    elif 201 <= pt <= 252:
-        # TSK probe type
-        tunc = [0.15]
-        dunc = [0.02, 4.6]
-    elif 401 <= pt <= 501:
-        # Sparton probe type
-        tunc = [0.2]
-        dunc = [0.02, 4.6]
-    elif pt == 81 or pt == 281 or pt == 510:
-        # AIRIAL XBT probe types
-        tunc = [0.056]
-        dunc = [0]  # no depth uncertainty determined
-    elif 700 <= pt <= 751:
-        # XCTDs
-        year_value = nco.time.dt.year.astype(int).values[0]
-        dti = datetime.datetime(year_value, 1, 1, 0, 0, 0)
-        if dti < datetime.datetime.strptime('1998-01-01', '%Y-%m-%d'):
-            tunc = [0.02]
-            dunc = [0.04]
-        else:
-            tunc = [0.02]
-            dunc = [0.02]
-    else:
-        # probe type not defined above, not in the code table 1770
-        tunc = [0]
-        dunc = [0]
-    # temp uncertainties
-    temp_uncertainty = np.ma.empty_like(nco.temperature)
-    temp_uncertainty[:] = tunc
-    # depth uncertainties:
-    unc = np.ma.MaskedArray(nco.depth * dunc[0], mask=False)
-    if len(dunc) > 1:
-        unc[nco.depth <= 230] = dunc[1]
-    depth_uncertainty = np.round(unc, 2)
-
-    return temp_uncertainty, depth_uncertainty
+    return uniqueid
 
 
 def get_recorder_type(nco):
@@ -189,365 +113,227 @@ def get_recorder_type(nco):
 
 
 def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF_file):
+    ''' create three dataframes from the nco object and write them to a netCDF file using write_output_nc function.
+    nco: xarray dataset object
+    n: drop number
+    crid: cruise id
+    callsign: ship call sign
+    ship_IMO: ship IMO number
+    ship_name: ship name
+    line_info: list of line information
+    raw_netCDF_file: full path to the Turo netCDF file
+    '''
 
-    # create the output file name
+    # create a unique identifier
     test = False
     if nco.TestCanister == 'yes':
         test = True
-    outfile, outfile_raw, unique_id = create_out_filename(nco, line_info[0], crid, n, test)
-    outfile = os.path.join(vargs.output_folder, outfile)
-    outfile_raw = os.path.join(vargs.output_folder, 'non_qc', outfile_raw)
+    unique_id = create_out_filename(nco, line_info[0], crid, n, test)
 
+    # create a global_atts dataframe
+    global_att = read_globals_config()
+
+    # build the profile dataframe
     # First, get a list of variables mapped between nco and output_netcdf_obj
-    varslist = read_section_from_xbt_config('Turo_variables')
-    # create a ncobject to write out to new format
-    with Dataset(outfile, "w", format="NETCDF4") as output_netcdf_obj:
-        # Create the dimensions
-        output_netcdf_obj.createDimension('DEPTH', len(nco.depth))
-        output_netcdf_obj.createDimension('N_HISTORY', 0)  # make this unlimited
+    varslist = read_variables_config()
+    # remove the HISTORY* variables from the varslist
+    varslist = varslist[~varslist['variable_name'].str.startswith('HISTORY_')]
 
-        # Create the variables, no dimensions:
-        for vv in list(varslist.values()):
-            # get the variable attributes from imosParameters.txt
-            dttyp = get_imos_parameter_info(vv, '__data_type')
-            fillvalue = get_imos_parameter_info(vv, '_FillValue')
-            if fillvalue == '':
-                fillvalue = None
-            if dttyp:
-                if vv in ['TIME', 'LATITUDE', 'LONGITUDE', 'PROBE_TYPE']:
-                    output_netcdf_obj.createVariable(vv, datatype=dttyp, fill_value=fillvalue)
-                    # and associated QC variables:
-                    output_netcdf_obj.createVariable(vv + "_quality_control", "b", fill_value=99)
-                    # and the *_RAW variables:
-                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dttyp, fill_value=fillvalue)
-                if vv in ['XBT_recorder_type', 'PROBE_TYPE']:
-                    # add the *_name variable
-                    output_netcdf_obj.createVariable(vv + "_name", "str", fill_value=fillvalue)
-                    # for PROBE_TYPE also add PROBE_TYPE_RAW_name, *_coef_a, *_coef_b
-                    if vv == 'PROBE_TYPE':
-                        output_netcdf_obj.createVariable(vv + "_RAW_name", "str", fill_value=fillvalue)
-                        output_netcdf_obj.createVariable(vv + "_coef_a", "f", fill_value=fillvalue)
-                        output_netcdf_obj.createVariable(vv + "_coef_b", "f", fill_value=fillvalue)
-                        output_netcdf_obj.createVariable(vv + "_RAW_coef_a", "f", fill_value=fillvalue)
-                        output_netcdf_obj.createVariable(vv + "_RAW_coef_b", "f", fill_value=fillvalue)
-                if vv == 'Institute_code':
-                    output_netcdf_obj.createVariable(vv, "str", fill_value=fillvalue)
-                    # create a variable for the institute name
-                    output_netcdf_obj.createVariable('Institute_name', "str", fill_value=fillvalue)
-                if vv == 'XBT_line':
-                    output_netcdf_obj.createVariable(vv, "str", fill_value=fillvalue)
-                    # create a variable for the line description
-                    output_netcdf_obj.createVariable('XBT_line_description', "str", fill_value=fillvalue)
-                # create dimensioned variables:
-                if vv in ['XBT_accept_code', 'XBT_reject_code']:
-                    output_netcdf_obj.createVariable(vv, datatype=dttyp, dimensions=('DEPTH',), fill_value=fillvalue)
-                if vv in ['DEPTH', 'TEMP', 'PSAL']:
-                    output_netcdf_obj.createVariable(vv, datatype=dttyp, dimensions=('DEPTH',), fill_value=fillvalue)
-                    # and associated QC variables:
-                    output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=99)
-                    if vv in ['TEMP', 'DEPTH', 'PSAL']:
-                        # add the uncertainty variable
-                        output_netcdf_obj.createVariable(vv + "_uncertainty", datatype=dttyp, dimensions=('DEPTH',),
-                                                         fill_value=fillvalue)
-                    # and the *_RAW variables:
-                    output_netcdf_obj.createVariable(vv + "_RAW", datatype=dttyp,
-                                                     dimensions=('DEPTH',), fill_value=fillvalue)
-                if vv in ['COND', 'RESISTANCE', 'SAMPLE_TIME', 'TEMP_RECORDING_SYSTEM']:
-                    output_netcdf_obj.createVariable(vv, datatype=dttyp, dimensions=('DEPTH',), fill_value=fillvalue)
-                    if vv in ['TEMP_RECORDING_SYSTEM']:
-                        output_netcdf_obj.createVariable(vv + "_quality_control", "b", dimensions=('DEPTH',), fill_value=-51)
-                # test if the output_netCDF_obj already has the variable created
-                if vv not in output_netcdf_obj.variables:
-                    output_netcdf_obj.createVariable(vv, datatype=dttyp, fill_value=fillvalue)
+    # create an empty dataframe from the variable_name column of varslist and the same legth as np.squeeze(nco.depth.data)
+    dfprofile = pd.DataFrame(index=np.arange(len(np.squeeze(nco.depth.data))), columns=varslist['variable_name'].tolist())
+
+    #loop through each row of the varslist dataframe
+    for index, row in varslist.iterrows():
+        vname = row['variable_name']
+        # print(vname)
+        # get the turo variable name
+        turo_name = row['Turo']
+        # if the Turo column is empty, skip it
+        if turo_name is pd.NA:
+            continue
+
+        # read the data either from the variables or the globals
+        if turo_name in list(nco.variables.keys()):
+            # data is in the variables section of the original file
+            data = np.squeeze(nco.variables[turo_name].values)
+        else:
+            if turo_name in list(nco.attrs.keys()):
+                # information is kept in the globals of the original file
+                data = getattr(nco, turo_name)
             else:
-                # if not TEMP_RECORDING_SYSTEM_quality_control, print a warning
-                if vv != 'TEMP_RECORDING_SYSTEM_quality_control':
-                    print("Variable skipped: \"%s\". Please check!!" % vv)
-
-        # Add the XBT_accept_code and XBT_reject_code variables and size to same size as TEMP
-        output_netcdf_obj.createVariable('XBT_accept_code', "int64", fill_value=0, dimensions=('DEPTH',))
-        output_netcdf_obj.createVariable('XBT_reject_code', "int64", fill_value=0, dimensions=('DEPTH',))
-
-        # set the sample time units
-        year_value = nco.time.dt.year.astype(int).values[0]
-        dti = datetime.datetime(year_value, 1, 1, 0, 0, 0)
-        setattr(output_netcdf_obj.variables['SAMPLE_TIME'], 'units', 'milliseconds since ' +
-                dti.strftime("%Y-%m-%d %H:%M:%S UTC"))
-
-        # create HISTORY variable set associated
-        output_netcdf_obj.createVariable("HISTORY_INSTITUTION", "str", 'N_HISTORY')
-        # output_netcdf_obj.createVariable("HISTORY_STEP", "str", 'N_HISTORY') # removed for now, RC August 2023
-        output_netcdf_obj.createVariable("HISTORY_SOFTWARE", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_SOFTWARE_RELEASE", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_DATE", "f", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_PARAMETER", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_START_DEPTH", "f", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_STOP_DEPTH", "f", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_QC_CODE", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_QC_CODE_DESCRIPTION", "str", 'N_HISTORY')
-        output_netcdf_obj.createVariable("HISTORY_QC_CODE_VALUE", "b", 'N_HISTORY')
-
-        # write attributes from the generate_nc_file_att file, now that we have added the variables:
-        conf_file = os.path.join(os.path.dirname(__file__), 'generate_nc_file_att')
-        generate_netcdf_att(output_netcdf_obj, conf_file, conf_file_point_of_truth=True)
-        # add the flag and feature type attributes:
-        dfa, dfr = create_flag_feature()
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'valid_max', int(dfa['XBT_accept_code'].sum()))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_masks', dfa['XBT_accept_code'].astype(np.int64))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_meanings', ' '.join(dfa['name']))
-        setattr(output_netcdf_obj.variables['XBT_accept_code'], 'flag_codes', ' '.join(dfa['full_code']))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'valid_max', int(dfr['XBT_reject_code'].sum()))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_masks', dfr['XBT_reject_code'].astype(np.int64))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_meanings', ' '.join(dfr['name']))
-        setattr(output_netcdf_obj.variables['XBT_reject_code'], 'flag_codes', ' '.join(dfr['full_code']))
-
-        # append the data to the file
-        for v in varslist.keys():
-            # get the matching output variable name
-            vname = varslist[v]
-            if (v not in list(nco.variables.keys())) and (not hasattr(nco, v)):
-                print("Variable not found in original file: \"%s\"." % v)
+                # data not in variables or globals, skip this variable as it will have a fill value
+                print("Variable not found in original file: \"%s\"." % vname)
                 continue
-            if vname not in output_netcdf_obj.variables:
-                print("Variable not written to output file: \"%s\"." % v)
-                continue
-            # read the data either from the variables or the globals
-            if v in list(nco.variables.keys()):
-                # data is in the variables section of the original file
-                data = np.squeeze(nco.variables[v].values)
+
+        if vname in ['TIME','PROBE_manufacture_date', 'SAMPLE_TIME']:
+            if vname == 'SAMPLE_TIME':
+                # Convert numpy.datetime64 array to a list of datetime objects
+                datetime_list = [pd.to_datetime(d).to_pydatetime() for d in data]
+                # save the datetime list to the profile dataframe
+                dfprofile['SAMPLE_TIME'] = datetime_list
             else:
-                if v in list(nco.attrs.keys()):
-                    # information is kept in the globals of the original file
-                    data = getattr(nco, v)
-                else:
-                    # data not in variables or globals, skip this variable as it will have a fill value
-                    print("Variable not found in original file: \"%s\"." % v)
-                    continue
-            # print(vname)
-            if vname in ['TIME','XBT_manufacturer_date', 'SAMPLE_TIME']:
-                if vname == 'SAMPLE_TIME':
-                    # Convert numpy.datetime64 array to a list of datetime objects
-                    datetime_list = [pd.to_datetime(d).to_pydatetime() for d in data]
-                    # Convert the list of datetime objects to numeric values
-                    time_val_dateobj = date2num(datetime_list, output_netcdf_obj[vname].units,
-                                                output_netcdf_obj[vname].calendar)
-                else:
-                    if vname == 'XBT_manufacturer_date':
-                        # convert the string to a datetime object, assuming correct format entry of MM/DD/YY
-                        data = convert_time_string(data, format='%m/%d/%y', output='datetime')
+                if vname == 'PROBE_manufacture_date':
+                    # convert the string to a datetime object, assuming correct format entry of MM/DD/YY
+                    data = convert_time_string(data, format='%m/%d/%y', output='datetime')
 
-                        if data is None or test:
-                            # data is not applicable as it is a test canister, so set to fill value
-                            time_val_dateobj = np.ma.array([output_netcdf_obj[vname]._FillValue],
-                                                               mask=True, fill_value=output_netcdf_obj[vname]._FillValue)
+                    if data is None or test:
+                        # data is not applicable as it is a test canister, fill the profile['PROBE_manufacture_date'] with None
+                        dfprofile['PROBE_manufacture_date'] = None
+                    else:
+                        if type(data) == str or data is None:
+                            # put None in the profile dataframe
+                            dfprofile['PROBE_manufacture_date'] = None
                         else:
-                            if type(data) == str or data is None:
-                                # put a fill value in the time_val_dateobj
-                                time_val_dateobj = np.ma.array([output_netcdf_obj[vname]._FillValue],
-                                                                  mask=True, fill_value=output_netcdf_obj[vname]._FillValue)
-                            else:
-                                time_val_dateobj = date2num(pd.to_datetime(data), output_netcdf_obj[vname].units,
-                                                            output_netcdf_obj[vname].calendar)
-                    else:
-                        time_val_dateobj = date2num(pd.to_datetime(data), output_netcdf_obj[vname].units,
-                                                    output_netcdf_obj[vname].calendar)
-                        # set the time_coverage_start and time_coverage_end
-                        output_netcdf_obj.time_coverage_start = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
-                        output_netcdf_obj.time_coverage_end = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
-                    output_netcdf_obj.variables[vname][:] = time_val_dateobj
-                # if vname is TIME, output the TIME_RAW variable as it is the same as TIME
-                if vname == 'TIME':
-                    output_netcdf_obj.variables[vname + '_RAW'][:] = time_val_dateobj
-            elif v == 'InterfaceCode':
-                # get the recorder type information
-                rct = get_recorder_type(nco)
-                output_netcdf_obj.variables['XBT_recorder_type'][len(rct[0])] = str(rct[0])
-                output_netcdf_obj.variables['XBT_recorder_type_name'][len(rct[1])] = str(rct[1])
-                continue
-            elif vname == 'XBT_recorder_software_version':
-                # remove 'Version:' and any trailing spaces from the string
-                output_netcdf_obj.variables[vname][len(data)] = str(data).split('Version:')[1].strip()
-                continue
-            elif vname == 'PROBE_TYPE':
-                # do for both the PROBE_TYPE and the PROBE_TYPE_RAW
-                for probe in ['PROBE_TYPE', 'PROBE_TYPE_RAW']:
-                    output_netcdf_obj.variables[probe][len(data)] = str(data)
-                    # get the probe type name
-                    probe_type_name = read_section_from_xbt_config('PEQ$')[data].split(',')[0]
-                    output_netcdf_obj.variables[probe + '_name'][len(probe_type_name)] = str(probe_type_name)
-                    # get the probe type coefficients
-                    probe_type_coef = read_section_from_xbt_config('FRE')[data].split(',')
-                    output_netcdf_obj.variables[probe + '_coef_a'][:] = float(probe_type_coef[0])
-                    output_netcdf_obj.variables[probe + '_coef_b'][:] = float(probe_type_coef[1]) * 1e-3
-                # add quality control for the probe type
-                output_netcdf_obj.variables['PROBE_TYPE_quality_control'][:] = 0
-                continue
-            else:
-                # Check the shape of the NetCDF variable
-                var_shape = output_netcdf_obj[vname].shape
-
-                # Ensure the data from profile[v] matches the shape of the NetCDF variable
-                if not isinstance(data, str) and data.shape == var_shape:
-                    output_netcdf_obj.variables[vname][:] = data
+                            # put the datetime object in the profile dataframe
+                            dfprofile['PROBE_manufacture_date'] = data
                 else:
-                    if isinstance(output_netcdf_obj[vname][:], str):
-                        output_netcdf_obj.variables[vname][len(data)] = str(data)
-                    else:
-                        output_netcdf_obj.variables[vname][:] = data
-            # if this vname also has a variable with _RAW, and isn't TIME, add the data to that variable
-            if (vname != 'TIME') and (vname + '_RAW' in output_netcdf_obj.variables):
-                if isinstance(data, str):
-                    output_netcdf_obj.variables[vname + '_RAW'] = data
-                else:
-                    output_netcdf_obj.variables[vname + '_RAW'][:] = data
-            # if this vname has a *_quality_control variable, add 0 to indicate no QC
-            if vname + '_quality_control' in output_netcdf_obj.variables:
-                output_netcdf_obj.variables[vname + '_quality_control'][:] = 0
+                    dfprofile[vname] = pd.to_datetime(data)
+                    # set the time_coverage_start and time_coverage_end in the global attributes dictionary
+                    global_att['time_coverage_start'] = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    global_att['time_coverage_end'] = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-        # add the uncertainties
-        temp_uncertainty, depth_uncertainty = add_uncertainties(nco)
-        output_netcdf_obj.variables['TEMP_uncertainty'][:] = temp_uncertainty
-        output_netcdf_obj.variables['DEPTH_uncertainty'][:] = depth_uncertainty
-
-        # add the extra variables
-        output_netcdf_obj.variables['XBT_input_filename'][0] = raw_netCDF_file
-        output_netcdf_obj.variables['XBT_cruise_ID'][0] = crid
-        # Profile Id
-        output_netcdf_obj.variables['XBT_uniqueid'][0] = unique_id
-
-        # read from the controlled list of global attributes in the config file
-        globals_list = read_section_from_xbt_config('Turo_globals')
-
-        # read a list of code defined in the Turo_codes conf file. Create a
-        # dictionary of matching values
-        for att_name, att_name_out in globals_list.items():
-            try:
-                # Get the attribute value from the output_netcdf_obj
-                att_val = getattr(nco, att_name, None)
-                setattr(output_netcdf_obj, att_name_out, att_val.strip())
-            except:
-                LOGGER.warning('Attribute %s not found in the input file' % att_name)
-
-        # add institute information, should be in here from the previous section
-        # if nco.Agency is an attribute, use the value otherwise warn user we are setting agency to 'AD'
-        if hasattr(nco, 'Agency'):
-            institute_code = nco.Agency
+            # if vname is TIME, output the TIME_RAW variable as it is the same as TIME
+            if vname == 'TIME':
+                dfprofile['TIME_RAW'] = data
+        elif vname == 'RECORDER_type':
+            # get the recorder type information
+            rct = get_recorder_type(nco)
+            dfprofile['RECORDER_type'] = str(rct[0])
+            dfprofile['RECORDER_type_name'] = str(rct[1])
+            continue
+        elif vname == 'RECORDER_software_version':
+            # remove 'Version:' and any trailing spaces from the string
+            dfprofile[vname] = str(data).split('Version:')[1].strip()
+            continue
+        elif vname == 'PROBE_TYPE':
+            # do for both the PROBE_TYPE and the PROBE_TYPE_RAW
+            for probe in ['', '_RAW']:
+                dfprofile['PROBE_TYPE' + probe] = data
+                # get the probe type name
+                probe_type_name = read_section_from_xbt_config('PEQ$')[data].split(',')[0]
+                dfprofile['PROBE_TYPE_name' + probe] = str(probe_type_name)
+                # get the probe type coefficients
+                probe_type_coef = read_section_from_xbt_config('FRE')[data].split(',')
+                dfprofile['PROBE_TYPE_coeff_a' + probe] = float(probe_type_coef[0])
+                dfprofile['PROBE_TYPE_coeff_b' + probe] = float(probe_type_coef[1]) * 1e-3
+            # add quality control for the probe type
+            dfprofile['PROBE_TYPE_quality_control'] = 0
+            continue
         else:
-            LOGGER.warning('Agency code not found in the input file, setting to AD')
-            institute_code = 'AD'
-        # get the list from the config file
-        institute_list = read_section_from_xbt_config('INSTITUTE')
-        # match the institute code to the second value in the list and derive the agency code
-        for institute in institute_list:
-            if institute_list[institute].split(',')[1] == institute_code:
-                output_netcdf_obj.variables['Institute_name'][0] = institute_list[institute].split(',')[0]
+            dfprofile[vname] = data
+        # if this vname also has a variable with _RAW, and isn't TIME, add the data to that variable
+        if (vname != 'TIME') and (vname + '_RAW' in dfprofile.columns):
+            # if the variable is a string, convert it to a string
+            if isinstance(data, str):
+                dfprofile[vname + '_RAW'] = str(data)
             else:
-                continue
-        if not isinstance(output_netcdf_obj.variables['Institute_name'][0], str):
-            LOGGER.warning('Institute code %s is not defined in xbt_config file. Please edit xbt_config' % institute)
-            output_netcdf_obj.variables['Institute_name'][0] = 'Unknown'
+                # otherwise just copy the data
+                dfprofile[vname + '_RAW'] = data
+        # if this vname has a *_quality_control variable, add 0 to indicate no QC
+        if vname + '_quality_control' in dfprofile.columns:
+            # fill the quality control variable with 0
+            dfprofile[vname + '_quality_control'] = 0
 
-        # ship name, IMO and callsign
-        output_netcdf_obj.variables['ship_name'] = ship_name
-        output_netcdf_obj.variables['ship_IMO'] = ship_IMO
-        output_netcdf_obj.variables['Platform_code'] = callsign
+    # add the uncertainties
+    dfprofile = add_uncertainties(dfprofile)
 
-        # add some final global attributes
-        output_netcdf_obj.qc_completed = 'no'
-        output_netcdf_obj.geospatial_lat_min = nco.latitude
-        output_netcdf_obj.geospatial_lat_max = nco.latitude
-        output_netcdf_obj.geospatial_lon_min = nco.longitude
-        output_netcdf_obj.geospatial_lon_max = nco.longitude
-        output_netcdf_obj.geospatial_vertical_min = nco.depth[0]
-        output_netcdf_obj.geospatial_vertical_max = nco.depth[-1]
+    # add the extra variables
+    dfprofile['Input_filename'] = raw_netCDF_file
+    dfprofile['Cruise_ID'] = crid
+    # Profile Id
+    dfprofile['Institution_uniqueid'] = unique_id
 
-        # Convert time to a string
-        utctime = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
-        output_netcdf_obj.date_created = utctime
+    # read from the controlled list of global attributes in the config file
+    globals_list = read_section_from_xbt_config('Turo_globals')
 
-        # add the line information
-        output_netcdf_obj.variables['XBT_line_description'][0] = line_info[1]
+    # read a list of code defined in the Turo_codes conf file. Create a
+    # dictionary of matching values
+    for att_name, att_name_out in globals_list.items():
+        try:
+            # Get the attribute value from the output_netcdf_obj
+            att_val = getattr(nco, att_name, None)
+            # add the attribute to the global_atts dataframe
+            if att_val is not None:
+                    global_att[att_name_out] = att_val
+        except:
+            LOGGER.warning('Attribute %s not found in the input file' % att_name)
 
-        # if this is a test canister, add the TP code and associated information to the HISTORIES and update the QC and XBT_reject_code
-        if test:
-            # create a dataframe with the codes and their integer representation
-            df = read_qc_config()
-            # get the test probe code
-            tp_code = df[df['code'] == 'TPR']['byte_value'].values[0]
-            # add the test probe code to the XBT_reject_code
-            output_netcdf_obj.variables['XBT_reject_code'][0] = tp_code
-            # change the TEMP_quality_control to 4
-            output_netcdf_obj.variables['TEMP_quality_control'][:] = df[df['code'] == 'TPR']['tempqc'].values[0]
-            # update the HISTORIES
-            output_netcdf_obj.variables['HISTORY_INSTITUTION'][0] = 'CSIRO'
-            output_netcdf_obj.variables['HISTORY_SOFTWARE'][0] = 'TuroXBT2IMOSnc.py'
-            output_netcdf_obj.variables['HISTORY_SOFTWARE_RELEASE'][0] = 'V1.0'
-            output_netcdf_obj.variables['HISTORY_DATE'][0] = date2num(datetime.datetime.now(), output_netcdf_obj['HISTORY_DATE'].units,
-                                                                        output_netcdf_obj['HISTORY_DATE'].calendar)
-            output_netcdf_obj.variables['HISTORY_PARAMETER'][0] = df[df['code'] == 'TPR']['parameter'].values[0]
-            output_netcdf_obj.variables['HISTORY_START_DEPTH'][0] = nco.depth[0]
-            output_netcdf_obj.variables['HISTORY_STOP_DEPTH'][0] = nco.depth[-1]
-            output_netcdf_obj.variables['HISTORY_QC_CODE'][0] = 'TPR'
-            output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][0] = df[df['code'] == 'TPR']['tempqc'].values[0]
-            output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][0] = df[df['code'] == 'TPR']['label'].values[0]
-
-        # add automatic CSR QC flag to the profile if it is not a test canister
+    # add institute information, should be in here from the previous section
+    # if nco.Agency is an attribute, use the value otherwise warn user we are setting agency to 'AD'
+    if hasattr(nco, 'Agency'):
+        institute_code = nco.Agency
+    else:
+        LOGGER.warning('Agency code not found in the input file, setting to AD')
+        institute_code = 'AD'
+    # get the list from the config file
+    institute_list = read_section_from_xbt_config('INSTITUTE')
+    # match the institute code to the second value in the list and derive the agency code
+    for institute in institute_list:
+        if institute_list[institute].split(',')[1] == institute_code:
+            dfprofile['Institution'] = institute_list[institute].split(',')[0]
         else:
-            # create a dataframe with the codes and their integer representation
-            df = read_qc_config()
-            # get the CSR code
-            csr_code = df[df['code'] == 'CSR']['byte_value'].values[0]
-            # get an index of the depths that are less than or equal to 3.6m
-            depths_index = np.where(nco.depth.data <= 3.6)[0]
-            # add the CSR code to the XBT_accept_code
-            output_netcdf_obj.variables['XBT_reject_code'][depths_index] = csr_code
-            # change the TEMP_quality_control to the CSR value
-            output_netcdf_obj.variables['TEMP_quality_control'][depths_index] = df[df['code'] == 'CSR']['tempqc'].values[0]
-            # update the HISTORIES
-            output_netcdf_obj.variables['HISTORY_INSTITUTION'][0] = 'CSIRO'
-            output_netcdf_obj.variables['HISTORY_SOFTWARE'][0] = 'TuroXBT2IMOSnc.py'
-            output_netcdf_obj.variables['HISTORY_SOFTWARE_RELEASE'][0] = 'V1.0'
-            output_netcdf_obj.variables['HISTORY_DATE'][0] = date2num(datetime.datetime.now(), output_netcdf_obj['HISTORY_DATE'].units,
-                                                                        output_netcdf_obj['HISTORY_DATE'].calendar)
-            output_netcdf_obj.variables['HISTORY_PARAMETER'][0] = df[df['code'] == 'CSR']['parameter'].values[0]
-            output_netcdf_obj.variables['HISTORY_START_DEPTH'][0] = nco.depth.data[0]
-            output_netcdf_obj.variables['HISTORY_STOP_DEPTH'][0] = depths_index[-1]
-            output_netcdf_obj.variables['HISTORY_QC_CODE'][0] = 'CSR'
-            output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][0] = df[df['code'] == 'CSR']['tempqc'].values[0]
-            output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][0] = df[df['code'] == 'CSR']['label'].values[0]
+            continue
+    if not isinstance(dfprofile['Institution'][0], str):
+        LOGGER.warning('Institute code %s is not defined. Please review' % institute)
+        dfprofile['Institution'] = 'Unknown'
+    # add the institute code to the global attributes
+    global_att['institution'] = dfprofile['Institution'][0]
 
-            # also add a WBR test here
-            # create a dataframe with the TEMP and DEPTH values to pass to the WBR test
-            wbr_df = pd.DataFrame({'TEMP': np.squeeze(nco.temperature.data), 'DEPTH': np.squeeze(nco.depth.data)})
-            # run the WBR test
-            wbr_point, wbr_result = wire_break(wbr_df)
-            # if the WBR test failed write the WBR code to the XBT_reject_code and add the WBR history
-            if wbr_result:
-                # get the WBR code from the dataframe
-                wbr_code = df[df['code'] == 'WBR']['byte_value'].values[0]
+    # ship name, IMO and callsign
+    dfprofile['Ship_name'] = ship_name
+    dfprofile['Ship_IMO'] = ship_IMO
+    dfprofile['Platform_code'] = callsign
 
-                # add the WBR code to the XBT_reject_code
-                output_netcdf_obj.variables['XBT_reject_code'][wbr_point] = wbr_code
-                # change the TEMP_quality_control to the WBR value
-                output_netcdf_obj.variables['TEMP_quality_control'][wbr_point:] = df[df['code'] == 'WBR']['tempqc'].values[0]
-                # update the HISTORIES
-                output_netcdf_obj.variables['HISTORY_INSTITUTION'][1] = 'CSIRO'
-                output_netcdf_obj.variables['HISTORY_SOFTWARE'][1] = 'TuroXBT2IMOSnc.py'
-                output_netcdf_obj.variables['HISTORY_SOFTWARE_RELEASE'][1] = 'V1.0'
-                output_netcdf_obj.variables['HISTORY_DATE'][1] = date2num(datetime.datetime.now(), output_netcdf_obj['HISTORY_DATE'].units,
-                                                                            output_netcdf_obj['HISTORY_DATE'].calendar)
-                output_netcdf_obj.variables['HISTORY_PARAMETER'][1] = df[df['code'] == 'WBR']['parameter'].values[0]
-                output_netcdf_obj.variables['HISTORY_START_DEPTH'][1] = wbr_df['DEPTH'].min()
-                output_netcdf_obj.variables['HISTORY_STOP_DEPTH'][1] = wbr_df['DEPTH'].max()
-                output_netcdf_obj.variables['HISTORY_QC_CODE'][1] = 'WBR'
-                output_netcdf_obj.variables['HISTORY_QC_CODE_VALUE'][1] = df[df['code'] == 'WBR']['tempqc'].values[0]
-                output_netcdf_obj.variables['HISTORY_QC_CODE_DESCRIPTION'][1] = df[df['code'] == 'WBR']['label'].values[0]
+    # add Launcher_type
+    dfprofile = add_launcher_variable(dfprofile)
 
-    # copy the file to the outfile_raw file using shutil.copy
-    if not os.path.exists(os.path.dirname(outfile_raw)):
-        os.makedirs(os.path.dirname(outfile_raw))
-    # copy the file to the outfile_raw file using shutil.copy
-    shutil.copy(outfile, outfile_raw)
+    # add some final global attributes
+    global_att['qc_completed'] = 'no'
+    global_att['geospatial_lat_min'] = dfprofile['LATITUDE'][0]
+    global_att['geospatial_lat_max'] = dfprofile['LATITUDE'][0]
+    global_att['geospatial_lon_min'] = dfprofile['LONGITUDE'][0]
+    global_att['geospatial_lon_max'] = dfprofile['LONGITUDE'][0]
+    global_att['geospatial_vertical_min'] = np.min(dfprofile['DEPTH'])
+    global_att['geospatial_vertical_max'] = np.max(dfprofile['DEPTH'])
+
+    # Convert time to a string
+    utctime = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
+    global_att['date_created'] = utctime
+
+    # add the line information
+    dfprofile['SOOP_line_description'] = line_info[1]
+
+    # add 0 to the QC_accept_code and QC_reject_code columns
+    dfprofile['QC_accept_code'] = 0
+    dfprofile['QC_reject_code'] = 0
+
+    # add automatic CSR QC flag to the profile if it is not a test canister
+    code = {'CSR': 0}
+
+    # also add a WBR test here
+    # run the WBR test
+    wbr_point, wbr_result = wire_break(dfprofile)
+    # if the WBR test failed write the WBR code to the QC_reject_code and add the WBR history
+    if wbr_result:
+        # append the WBR code to the code dictionary and the dep of 0
+        code['WBR'] = wbr_point
+
+    # if this is a test canister, add the TP code and associated information to the HISTORIES and update the QC and QC_reject_code
+    if test:
+        # CSR not applicable for test canisters, so add TP code
+        code = {'TPR': 0}
+
+    # create a dataframe for the history information
+    dfhist = pd.DataFrame(columns=['HISTORY_INSTITUTION',
+                           'HISTORY_SOFTWARE', 'HISTORY_SOFTWARE_RELEASE', 'HISTORY_DATE', 'HISTORY_PARAMETER', 'HISTORY_START_DEPTH',
+                            'HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_QC_CODE_DESCRIPTION'])
+    # add the history information
+    for c, dep in code.items():
+        # add the history information to the dataframe
+        dfhist, dfprofile = update_histories(dfprofile, c, 'TuroXBT2IMOSnc.py', 'v1.0', dfhist, dep)
+
+   # return the profile dataframe, the global attributes and history information
+    return dfprofile, global_att, dfhist
 
 
 if __name__ == '__main__':
@@ -633,5 +419,11 @@ if __name__ == '__main__':
                 callsign = calls
 
         # Write function
-        netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF_file)
-
+        profile, global_atts, history = netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF_file)
+        # write the output to a netCDF file
+        write_output_nc(vargs.output_folder, profile, history, global_atts, profile_raw=False)
+        # write the output to a netCDF file with the raw profile
+        output_folder = os.path.join(vargs.output_folder, 'non_qc')
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        write_output_nc(output_folder, profile, history, global_atts, profile_raw=True,historic_flags=False)

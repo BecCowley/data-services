@@ -1,4 +1,4 @@
-﻿name,historic_extra_code,old_code,code,full_code,depth,condition,rule_direction,XBT_reject_code,XBT_accept_code,TIME_quality_control,LATITUDE_quality_control,LONGITUDE_quality_control,PROBE_TYPE_quality control,TEMP_quality_control,DEPTH_quality_control,Parameter
+﻿name,historic_extra_code,old_code,code,full_code,depth,condition,rule_direction,QC_reject_code,QC_accept_code,TIME_quality_control,LATITUDE_quality_control,LONGITUDE_quality_control,PROBE_TYPE_quality control,TEMP_quality_control,DEPTH_quality_control,Parameter
 scientific_qc_applied,0,,QC,QCA,0,,down,,1,1,1,1,1,1,1,TEMP
 wire_stretch,0,,WS,WSA,,,down,,2,,,,,2,1,TEMP
 leakage,0,,LE,LEA,,,down,,4,,,,,2,1,TEMP
@@ -34,7 +34,7 @@ temperature_difference_at_depth,1,,TD,TDA,,,down,,134217728,,,,,2,1,TEMP
 unique_id_changed,1,,ID,IDA,0,,down,,268435456,,,,,1,1,TEMP
 bowing_BathySystems,1,,BO,BOA,0,,down,,536870912,,,,,2,1,TEMP
 cusping_BathySystems_leakage,1,,CU,CUA,,,down,,1073741824,,,,,2,1,TEMP
-sippicanMK_ timing_delay_driver_error,1,,DR,DRA,0,,down,,2147483648,,,,,2,1,TEMP
+sippicanMK_timing_delay_driver_error,1,,DR,DRA,0,,down,,2147483648,,,,,2,1,TEMP
 BathySystem_software_fault_modulo_10_spikes_filtered,1,,MO,MOA,,,down,,4294967296,,,,,2,1,TEMP
 protecho_systems_leakage_fault,1,,PF,PFA,0,,down,,8589934592,,,,,2,1,TEMP
 sippicanMK9_sticking_bit_19_point_filtered,1,,SB,SBA,,,down,,17179869184,,,,,2,1,TEMP
