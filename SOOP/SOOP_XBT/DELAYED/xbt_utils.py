@@ -87,7 +87,14 @@ def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
                 else:
                     return dt
         elif output == 'string':
-            return dt.strftime(format)
+            if isinstance(dt, pd.Series):
+                dt = dt.apply(lambda x: x.strftime(format) if not pd.isna(x) else None)
+                return dt
+            elif pd.isna(dt):
+                return None
+            elif isinstance(dt, pd.Timestamp):
+                dt = dt.strftime(format)
+                return dt
         else:
             return dt
     except:
