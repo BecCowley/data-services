@@ -711,14 +711,18 @@ def adjust_position_qc_flags(profile):
         # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
         if not np.isclose(float(profile.histories.loc[
                               profile.histories['HISTORY_QC_CODE'].str.contains(
-                                  'LAA'), 'HISTORY_PREVIOUS_VALUE'].values),
-                      profile.data['LATITUDE_RAW'], atol=1e-6).all():
+                                  'LAA'), 'HISTORY_PREVIOUS_VALUE'].values[0]),
+                      profile.data['LATITUDE_RAW'][0], atol=1e-6):
             LOGGER.error('LATITUDE_RAW not the same as the PREVIOUS_value! %s' % profile.Input_filename)
         if profile.data['LATITUDE_quality_control'].unique() != 5:
             # PEA on latitude
             profile.data['LATITUDE_quality_control'] = 5
             LOGGER.info('LATITUDE correction (PEA) in original file, changing LATITUDE flag to level 5. %s'
                         % profile.Input_filename)
+        # if there is no LOA code, make sure the LONGITUDE quality control is set to 1 as QPOS is applied to both lat/long
+        if not profile.histories['HISTORY_QC_CODE'].str.contains('LOA').any():
+            profile.data['LONGITUDE_quality_control'] = 1
+
         # change to flag 2 for temperature for all depths where qc is less than 2
         mask = df['TEMP_quality_control'] < 2
         df.loc[mask, 'TEMP_quality_control'] = 2
@@ -727,14 +731,18 @@ def adjust_position_qc_flags(profile):
         # check HISTORY_PREVIOUS_VALUE matches the LONGITUDE_RAW value within a tolerance
         if not np.isclose(float(profile.histories.loc[
                               profile.histories['HISTORY_QC_CODE'].str.contains(
-                                  'LOA'), 'HISTORY_PREVIOUS_VALUE'].values),
-                      profile.data['LONGITUDE_RAW'], atol=1e-6).all():
+                                  'LOA'), 'HISTORY_PREVIOUS_VALUE'].values[0]),
+                      profile.data['LONGITUDE_RAW'][0], atol=1e-6):
             LOGGER.error('LONGITUDE_RAW not the same as the PREVIOUS_value! %s' % profile.Input_filename)
         if profile.data['LONGITUDE_quality_control'].unique() != 5:
             # PEA on longitude
             profile.data['LONGITUDE_quality_control'] = 5
             LOGGER.info('LONGITUDE correction (PEA) in original file, changing LONGITUDE flag to level 5. %s'
                         % profile.Input_filename)
+        # if there is no LAA code, make sure the LATITUDE quality control is set to 1 as QPOS is applied to both lat/long
+        if not profile.histories['HISTORY_QC_CODE'].str.contains('LAA').any():
+            profile.data['LATITUDE_quality_control'] = 1
+
         # change to flag 2 for temperature for all depths where qc is less than 2
         mask = df['TEMP_quality_control'] < 2
         df.loc[mask, 'TEMP_quality_control'] = 2
@@ -764,7 +772,7 @@ def adjust_time_qc_flags(profile):
         return profile
 
     # change temperature QC codes
-    if profile.histories['HISTORY_QC_CODE'].str.contains('TEA').any() & profile.data['TIME_quality_control'] != 5:
+    if profile.histories['HISTORY_QC_CODE'].str.contains('TEA').any() & profile.data['TIME_quality_control'][0] != 5:
         # TEA
         profile.data['TIME_quality_control'] = 5
         LOGGER.info('TIME correction (TEA) in original file, changing TIME flag to level 5.%s'
@@ -772,11 +780,11 @@ def adjust_time_qc_flags(profile):
         # change to flag 2 for temperature for all depths where qc is less than 2
 
         profile.data.loc[profile.data['TEMP_quality_control'] < 2, 'TEMP_quality_control'] = 2
-        # check HISTORY_PREVIOUS_VALUE matches the LATITUDE_RAW value
+        # check HISTORY_PREVIOUS_VALUE matches the TIME_RAW value
         if convert_time_string(profile.histories.loc[
                               profile.histories['HISTORY_QC_CODE'].str.contains(
-                                  'TEA'), 'HISTORY_PREVIOUS_VALUE'].values, format='%Y%m%d%H%M%S') != \
-                profile.data['TIME_RAW']:
+                                  'TEA'), 'HISTORY_PREVIOUS_VALUE'].values[0], '%Y%m%d%H%M%S', 'datetime') != \
+                profile.data['TIME_RAW'][0]:
             LOGGER.error('TIME_RAW not the same as the PREVIOUS_VALUE! %s'
                          % profile.Input_filename)
 
@@ -886,7 +894,7 @@ def parse_histories_nc(profile):
 
     # change HISTORY_START_DEPTH and HISTORY_PREVIOUS_VALUE to float64
     df['HISTORY_START_DEPTH'] = df['HISTORY_START_DEPTH'].astype('float32')
-    df['HISTORY_PREVIOUS_VALUE'] = df['HISTORY_PREVIOUS_VALUE'].astype('object')
+    df['HISTORY_PREVIOUS_VALUE'] = df['HISTORY_PREVIOUS_VALUE'].astype('string')
     # change HISTORY_QC_CODE_VALUE to int32
     df['HISTORY_QC_CODE_VALUE'] = df['HISTORY_QC_CODE_VALUE'].astype('int8')
 
@@ -935,9 +943,6 @@ def parse_histories_nc(profile):
     df.loc[
         (df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'BDA', 2
 
-    # fix any 9999 etc values in HISTORY_PREVIOUS_VALUE where HISTORY_PARAMETER is TEMP to be 99.99 to match the data
-    df.loc[(df['HISTORY_PARAMETER'] == 'TEMP') & (df['HISTORY_PREVIOUS_VALUE'].values.astype('float') > 99), 'HISTORY_PREVIOUS_VALUE'] = 99.99
-
     # change CSA to CSR and the flag to 3 to match new format
     df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
     ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'CSR', 3
@@ -963,39 +968,85 @@ def parse_histories_nc(profile):
     # Also change just DATE TEA flags to TIME
     dfTEA = df[df['HISTORY_QC_CODE'] == 'TEA'].copy()
     if len(dfTEA) > 0:
-        # test here for both TIME and DATE in the TEA flags
-        if any(dfTEA['HISTORY_PARAMETER'].str.contains('TIME')) & any(dfTEA['HISTORY_PARAMETER'].str.contains('DATE')):
-            LOGGER.error('TEA flags contain both TIME and DATE. Please review %s' % profile.Input_filename)
-            exit(1)
-
-        # get the date value from the TIME variable
-        dtt = profile.data['TIME'].strftime('%Y%m%d')
-        # get the TIME value from the TIME variable
-        ti = profile.data['TIME'].strftime('%H%M%S')
-
+        # first tidy up the TIME variable and DATE variable
         # if any of timerows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
+        pattern = re.compile(r'^9{1,5}(?:\.\d+)?$')
         timeidx = df['HISTORY_PARAMETER'] == 'TIME'
-        pattern = re.compile(r'^9{1,5}(\.\d+)?$')
         if timeidx.any():
-            if df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern).any():
-                df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'] = 0
-            # include the date information
-            df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'] = df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'].apply(
-                lambda x: dtt + str(int(x)) + '00').astype(float)
+            if df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'].str.contains(pattern).any():
+                df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'] = '000000'
+            # remove any colons in the HISTORY_PREVIOUS_VALUE
+            dfTEA['HISTORY_PREVIOUS_VALUE'] = dfTEA['HISTORY_PREVIOUS_VALUE'].str.replace(':', '', regex=False)
+            # use zfill to ensure the HISTORY_PARAMETER=='TIME' is 6 digits long
+            dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'] = \
+                dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'].str.zfill(6)
 
-        # now check for any 'DATE' parameter in the TEA flags
+        # tidy the DATE variable
         dateidx = df['HISTORY_PARAMETER'] == 'DATE'
         if dateidx.any():
+            # if any of date rows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
             if df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(str).str.contains(pattern).any():
-                df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'] = 0
-            # allow for dates to be YYYYMMDD or DDMMYYYY
-            date1 = convert_time_string(df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), '%Y%m%d', 'string').astype(float)
-            date2 = convert_time_string(df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'].astype(int).astype(str), '%d%m%Y', 'string').astype(float)
-            df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'] = date1.fillna(date2)
+                df.loc[dateidx, 'HISTORY_PREVIOUS_VALUE'] = '00000000'
+            else:
+                # allow for dates to be YYYYMMDD or DDMMYYYY
+                date1 = convert_time_string(
+                    dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'].values[0],
+                    '%Y%m%d', 'string')
+                date2 = convert_time_string(
+                    dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'].values[0],
+                    '%d%m%Y', 'string')
+                # use date1 if it is not None, otherwise use date2
+                if date1 is not None:
+                    df.loc[df['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = date1
+                elif date2 is not None:
+                    df.loc[df['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = date2
+                else:
+                    LOGGER.error('DATE format not recognised in %s. Please review the file.' % profile.Input_filename)
+                    exit(1)
+        # test here for both TIME and DATE in the TEA flags
+        if any(dfTEA['HISTORY_PARAMETER'].str.contains('TIME')) & any(dfTEA['HISTORY_PARAMETER'].str.contains('DATE')):
+            # if there are more than two rows, break with error for now
+            if len(dfTEA) > 2:
+                LOGGER.error('Multiple TEA flags found for TIME and DATE in %s. Please review the file.' % profile.Input_filename)
+                exit(1)
+            # if both TIME and DATE are present, combine them into a single row for TIME
+            # combine the HISTORY_PREVIOUS_VALUE TIME with DATE into a single string called dati
+            dati = dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'].values[0] + \
+                   dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'].values[0]
+            # replace the TIME and DATE rows with a single row for TIME
+            df = df.loc[df['HISTORY_PARAMETER'] != 'DATE']
+            df.loc[df['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'] = dati
+            # reset index
+            df = df.reset_index(drop=True)
+            # change the nhist to the new length
+            nhist = len(df)
+        else:
+            # get the date value from the TIME variable
+            dtt = profile.data['TIME'].dt.strftime('%Y%m%d')[0]
+            # get the TIME value from the TIME variable
+            ti = profile.data['TIME'].dt.strftime('%H%M%S')[0]
 
-        # change the 'DATE' label to TIME  and update the TEA PREVIOUS_VALUE to the new datetime value
-        df.loc[((df['HISTORY_PARAMETER'].str.contains('DATE') | df['HISTORY_PARAMETER'].str.contains('TIME')) &
-                (df['HISTORY_QC_CODE'].str.contains('TEA'))), ['HISTORY_PARAMETER']] = 'TIME'
+            # if there is a TIME variable, add the dtt to the HISTORY_PREVIOUS_VALUE and convert to datetime
+            if any(dfTEA['HISTORY_PARAMETER'] == 'TIME'):
+                # get the TIME value from the TIME variable
+                ti = dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'].values[0]
+                # combine the dtt and ti into a single string called dati
+                dati = str(dtt) + str(ti)
+                # replace the TIME row with the new datetime value
+                df.loc[df['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'] = dati
+
+            # now check for any 'DATE' parameter in the TEA flags
+            if any(dfTEA['HISTORY_PARAMETER'] == 'DATE'):
+                # get the DATE value from the DATE variable
+                dt = dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'].values[0]
+                # combine the dtt and dt into a single string called dati
+                dati = str(dt) + str(ti)
+                # replace the DATE row with the new datetime value
+                df.loc[df['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = dati
+
+            # change the 'DATE' label to TIME  and update the TEA PREVIOUS_VALUE to the new datetime value
+            df.loc[((df['HISTORY_PARAMETER'].str.contains('DATE') | df['HISTORY_PARAMETER'].str.contains('TIME')) &
+                    (df['HISTORY_QC_CODE'].str.contains('TEA'))), ['HISTORY_PARAMETER']] = 'TIME'
 
     # update institute names to be more descriptive
     names = read_section_from_xbt_config('INSTITUTE')
@@ -1063,16 +1114,16 @@ def combine_histories(profile_qc, profile_noqc):
     if any(combined_histories['HISTORY_QC_CODE'].str.contains('TER')):
         # does the HISTORY_PREVIOUS_VALUE match the TIME_RAW value?
         if not combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('TER'),
-            'HISTORY_PREVIOUS_VALUE'].values == profile_qc.data['TIME_RAW'].timestamp():
+            'HISTORY_PREVIOUS_VALUE'].values == profile_qc.data['TIME_RAW'][0].strftime('%Y%m%d%H%M%S'):
             # does the previous value contain 9's?
             if any(combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('TER'),
-                'HISTORY_PREVIOUS_VALUE'].astype(str).str.contains('9{1,5}')):
+                'HISTORY_PREVIOUS_VALUE'].astype(str).str.contains('0{1,5}')):
                 LOGGER.warning('HISTORY: Previous value does not match TIME_RAW value. %s' % profile_qc.Input_filename)
                 # use the TIME_RAW value and update previous value
                 combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('TER'),
-                    'HISTORY_PREVIOUS_VALUE'] = int(profile_qc.data['TIME_RAW'].strftime('%Y%m%d%H%M%S'))
+                    'HISTORY_PREVIOUS_VALUE'] = profile_qc.data['TIME_RAW'][0].strftime('%Y%m%d%H%M%S')
                 # now are the TIME and TIME_RAW values the same?
-                if profile_qc.data['TIME'] != profile_qc.data['TIME_RAW']:
+                if profile_qc.data['TIME'][0] != profile_qc.data['TIME_RAW'][0]:
                     # update TER to TEA and change the flag to 2
                     combined_histories.loc[
                         combined_histories['HISTORY_QC_CODE'].str.contains('TER'), ['HISTORY_QC_CODE',
@@ -1127,7 +1178,7 @@ def combine_histories(profile_qc, profile_noqc):
                 # convert the previous value to a datetime object
                 prevval = convert_time_string(non_temp_codes[dup_idx]['HISTORY_PREVIOUS_VALUE'], format='%Y%m%d%H%M%S')
                 # identify the rows where the previous value is not the same as the TIME_RAW value and remove them
-                idx = non_temp_codes[dup_idx][~(prevval == profile_qc.data['TIME_RAW'])].index
+                idx = non_temp_codes[dup_idx][~(prevval == profile_qc.data['TIME_RAW'][0])].index
                 if len(idx) > 0:
                     LOGGER.warning('Duplicated PREVIOUS_VALUE is not the same as the TIME_RAW value, removed %s'
                                    % profile_qc.Input_filename)
@@ -1147,27 +1198,29 @@ def combine_histories(profile_qc, profile_noqc):
 
         # copy this information to the PARAMETER_RAW value if it isn't the same, check only where the parameter exactly matches vv
         if vv in ['LATITUDE', 'LONGITUDE']:
-            if np.round(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
-            'HISTORY_PREVIOUS_VALUE'].values, 6) != np.round(
-                profile_qc.data[var], 6):
+            # is the previous_value within 0.01 of the LATITUDE or LONGITUDE_RAW value?
+            if not np.allclose(np.round(float(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+                'HISTORY_PREVIOUS_VALUE'].values[0]), 6), np.round(profile_qc.data[var][0], 6), atol=0.01):
                 LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
                                % (vv, profile_qc.Input_filename))
-                profile_qc.data[var] = non_temp_codes.loc[
-                    non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'].values[0]
+                exit(1)
+                # TODO: if this situation happens, check which value to use, the previous value or the raw value
+                profile_qc.data[var] = float(non_temp_codes.loc[
+                    non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'].values[0])
         elif vv in ['TIME']:
-            # TIME_RAW is in datetime format and HISTORY_PREVIOUS_VALUE is in float format
-            # if the HISTORY_PREVIOUS_VALUE is not NaN, then it is a valid date
-            if not pd.isna(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
-                'HISTORY_PREVIOUS_VALUE'].values[0]):
-                # convert the HISTORY_PREVIOUS_VALUE to a datetime object
-                prevval = convert_time_string(str(int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
-                    'HISTORY_PREVIOUS_VALUE'].values[0])), '%Y%m%d%H%M%S', 'string')
+            # TIME_RAW is in datetime format and HISTORY_PREVIOUS_VALUE is in string format
+            # if the HISTORY_PREVIOUS_VALUE is not zeros, then it is a valid date
+            if not int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+                'HISTORY_PREVIOUS_VALUE'].values[0]) == 0:
+                # convert the HISTORY_PREVIOUS_VALUE to a datetime object if it is not already
+                prevval = convert_time_string(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+                    'HISTORY_PREVIOUS_VALUE'].values[0], '%Y%m%d%H%M%S', 'datetime')
                 # check the previous value is the same as the TIME_RAW value
-                if not prevval == profile_qc.data[var]:
-                    LOGGER.info('HISTORY: Updating %s_RAW to match the previous value in *raw.nc file. %s'
+                if not prevval == profile_qc.data[var][0]:
+                    LOGGER.info('HISTORY: Updating previous value to match the %s_RAW value in *raw.nc file. %s'
                                    % (vv, profile_qc.Input_filename))
                     # for time, keep TIME_RAW as the previous value
-                    non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'] = int(profile_qc.data['TIME_RAW'].strftime('%Y%m%d%H%M%S'))
+                    non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'] = profile_qc.data['TIME_RAW'][0].strftime('%Y%m%d%H%M%S')
 
     # Filter the rows where HISTORY_PARAMETER is TEMP
     temp_codes = combined_histories[combined_histories['HISTORY_PARAMETER'] == 'TEMP']
@@ -1782,7 +1835,7 @@ if __name__ == '__main__':
     globsall = pd.DataFrame()
 
     for f in keys.data['station_number']:
-        # if f != 61024487:
+        # if f != 89019703:
         #     continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)
