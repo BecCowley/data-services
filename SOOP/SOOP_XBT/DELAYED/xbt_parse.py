@@ -195,7 +195,7 @@ def get_recorder_type(df):
     rct_list = read_section_from_xbt_config('RCT$')
     syst_list = read_section_from_xbt_config('SYST')
 
-    item_val = str(df['RECORDER_type'].unique().item())
+    item_val = str(df['RECORDER_type'][0])
     #        if item_val in list(syst_list.keys()):
     #            item_val = syst_list[item_val].split(',')[0]
 
@@ -204,39 +204,44 @@ def get_recorder_type(df):
     else:
         LOGGER.warning(
             '{item_val} missing from recorder type part in xbt_config file, using unknown for recorder. %s'.format(
-                item_val=item_val) % df['Input_filename'].unique().item())
+                item_val=item_val) % df['Input_filename'][0])
         item_val = '99'
         return item_val, rct_list[item_val].split(',')[0]
 
 
 def parse_extra_vars(profile_qc, profile_noqc):
     """
-    retrieve global attributes from input NetCDF file object
+    retrieve surface codes and some additional variables from input NetCDF file object
     """
-    dataf = profile_qc.data
-    vars_list = read_section_from_xbt_config('VARIABLES')
+    dataf = profile_qc.data.copy()
+    vars_list = read_variables_config()
+    # remove variable_names in the dataframe where the 'mquest' column contains nan
+    vars_list = vars_list[~vars_list['mquest'].isna()]
+    # separate the dataframe into surface codes and other variables
+    # where surface codes are in the mquest column and have either 4 character codes or a ';' separator
+    srfc_code_list = vars_list[(vars_list['mquest'].str.contains(';')) | (vars_list['mquest'].str.len() == 4)]
+    # where the mquest column contains ';' separate the codes into a list
+    srfc_code_list.loc[:, 'mquest'] = srfc_code_list['mquest'].str.split(';')
+    # now explode the mquest column to have one row per code
+    srfc_code_list = srfc_code_list.explode('mquest')
+
+    # other variables are the ones remaining
+    vars_list = vars_list[~(vars_list['mquest'].str.contains(';')) & ~(vars_list['mquest'].str.len() == 4)]
+
+    # create a list of variables to be added to the dataframe
+    vars_list = vars_list.set_index('variable_name').to_dict()['mquest']
+
     ext = ['','_RAW']
     for ind, profile in enumerate([profile_qc, profile_noqc]):
-        for var in list(vars_list.keys()):
+        for key,var in vars_list.items():
             if var in list(profile.netcdf_file_obj.variables.keys()):
-                var_name = vars_list[var].split(',')[0]
-                var_type = vars_list[var].split(',')[1]
+                var_name = key
                 vv = decode_bytearray(profile.netcdf_file_obj[var][:])
                 if not vv or len(vv) == 0:
                     dataf[var_name  + ext[ind]] = ''
                 else:
                     data = remove_control_chars(vv).strip()
-                    try:
-                        if var_type == 'float':
-                            data = float(data.replace(' ', ''))
-                        elif var_type == 'int':
-                            data = int(data.replace(' ', ''))
-                        else:
-                            data = data.replace(' ', '')
-                    except ValueError:
-                        LOGGER.warning(
-                            '"%s = %s" could not be converted to %s(). Please review. %s' % (var_name, data, var_type.upper(),
-                                                                                          profile.Input_filename))
+                    data = data.replace(' ', '')
                     # if the variable is institution, create a dictionary of the institution codes
                     if var == 'Stream_Ident':
                         institute_list = read_section_from_xbt_config('INSTITUTE')
@@ -260,9 +265,6 @@ def parse_extra_vars(profile_qc, profile_noqc):
                         dataf[var_name + ext[ind]] = data
             else:
                 dataf[var_name + ext[ind]] = ''
-
-        # split the input filename and remove the _ed.nc or _raw.nc ending
-        dataf['Input_filename'] = re.split(r'ed\.nc|raw\.nc', profile.Input_filename)[0]
 
         # create global attributes
         # read the global_attributes config file
@@ -288,24 +290,22 @@ def parse_extra_vars(profile_qc, profile_noqc):
         srfc_parm = profile.netcdf_file_obj['SRFC_Parm'][:]
         nsrf_codes = int(profile.netcdf_file_obj['Nsurfc'][:])
 
-        srfc_code_list = read_section_from_xbt_config('SRFC_CODES')
-
-        # read a list of srfc code defined in the srfc_code conf file. Create a
-        # dictionary of matching values
+        # cycle through the surface codes and assign them to the dataframe
         missing_codes = []
         for i in range(nsrf_codes):
             srfc_code_iter = decode_bytearray(srfc_code_nc[i])
-            if srfc_code_iter in list(srfc_code_list.keys()):
-                att_name = srfc_code_list[srfc_code_iter].split(',')[0]
-                att_type = srfc_code_list[srfc_code_iter].split(',')[1]
+            # print(srfc_code_iter)
+            # check srfc_code_iter is in the mquest column of the srfc_code_list dataframe
+            if srfc_code_iter in srfc_code_list['mquest'].values:
+                # get the index of the srfc_code_iter in the srfc_code_list dataframe where the mquest column can have multiple values per row separated by ';'
+                srfc_code_index = srfc_code_list[srfc_code_list['mquest'] == srfc_code_iter].index[0]
+                # now get the attributes for this srfc_code_iter
+                att_name = srfc_code_list.loc[srfc_code_index, 'variable_name']
+                att_type = srfc_code_list.loc[srfc_code_index, 'variable_type']
                 att_val = decode_bytearray(srfc_parm[i])
                 try:
-                    if att_type == 'float':
+                    if 'float' in att_type:
                         dataf[att_name + ext[ind]] = float(att_val.replace(' ', ''))
-                    elif att_type == 'int':
-                        dataf[att_name + ext[ind]] = int(att_val.replace(' ', ''))
-                    elif att_type == 'date':
-                        dataf[att_name + ext[ind]] = datetime.strptime(att_val.replace(' ', ''), '%Y%m%d')
                     else:
                         dataf[att_name + ext[ind]] = att_val.replace(' ', '')
                 except ValueError:
@@ -318,12 +318,12 @@ def parse_extra_vars(profile_qc, profile_noqc):
                     missing_codes.append(srfc_code_iter)
 
         if missing_codes:
-                LOGGER.warning('%s codes not defined in srfc_code in xbt_config file. Please edit xbt_config %s'
+                LOGGER.warning('%s codes not defined in srfc_code in netcdfVars file. Please edit xbt_config %s'
                                % (missing_codes, profile.Input_filename))
 
         # if the platform code didn't come through, assign unknown type
-        if ('Platform_code' + ext[ind] not in dataf.columns) or not is_string_or_list_of_strings(dataf['Platform_code' + ext[ind]].unique().item()):
-            LOGGER.warning('PLATFORM_CODE is missing, GCLL has not been read or is missing. %s' % profile.Input_filename)
+        if ('Callsign' + ext[ind] not in dataf.columns) or not is_string_or_list_of_strings(dataf['Callsign' + ext[ind]].unique().item()):
+            LOGGER.warning('Callsign is missing, GCLL has not been read or is missing. %s' % profile.Input_filename)
             # assign unknown to the platform code
             dataf['Platform_code' + ext[ind]] = 'Unknown'
             dataf['Ship_name' + ext[ind]] = 'Unknown'
@@ -333,8 +333,7 @@ def parse_extra_vars(profile_qc, profile_noqc):
         # note that the callsign and ship name are filled from the original file values, but will be replaced here if they exist in the AODN vocabulary
         # for these older historical files, the Callsign and Platform_code are the same. In newer files, the platform_code
         # will be the GTSID or SOTID.
-        dataf['Callsign' + ext[ind]] = dataf[
-            'Platform_code' + ext[ind]]  # set here as can't have duplicate assignments in the config file
+        dataf['Platform_code' + ext[ind]] = dataf['Callsign' + ext[ind]]  # set here as can't have duplicate assignments in the config file
         ships = SHIP_CALL_SIGN_LIST
         calls = dataf['Platform_code' + ext[ind]].unique().item()
         if calls in ships:
@@ -388,7 +387,7 @@ def parse_extra_vars(profile_qc, profile_noqc):
             dataf['SOOP_line_description' + ext[ind]] = xbt_line_att[1]
         else:
             LOGGER.error(
-                'XBT line : "%s" is not defined in AODN vocabs.ands.org.au(contact AODN) %s' %
+                'SOOP line : "%s" is not defined in AODN vocabs.ands.org.au(contact AODN) %s' %
                 (line, profile.Input_filename))
 
     # check for differences in the extra variables between the qc and noqc files and remove redundant columns
@@ -396,7 +395,7 @@ def parse_extra_vars(profile_qc, profile_noqc):
     # if they are, we can remove the *_RAW columns
     for col in dataf.columns:
         # skip if the column contains TIME*, TEMP*, DEPTH*, LATITUDE*, LONGITUDE*, PROBE*
-        if re.match(r'TIME|TEMP|PSAL|SSPD|DEPTH|LATITUDE|LONGITUDE|PROBE', col):
+        if re.match(r'TIME|TEMP|PSAL|SSPD|DEPTH|LATITUDE|LONGITUDE|PROBE_TYPE', col):
             continue
         if '_RAW' in col:
             # check if the column exists without the _RAW and if it does, check if the data is the same
@@ -407,6 +406,10 @@ def parse_extra_vars(profile_qc, profile_noqc):
                     LOGGER.error('Column %s in *_RAW file is not the same as the non-RAW column. Please review %s' %
                                  (col, profile.Input_filename))
                     exit(1)
+
+    # split the input filename and remove the _ed.nc or _raw.nc ending
+    dataf['Input_filename'] = re.split(r'ed\.nc|raw\.nc', profile_qc.Input_filename)[0]
+
     # assign dataf to profile_qc.data
     profile_qc.data = dataf
 
@@ -417,11 +420,11 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     """ Parse variable data from all sources into a dictionary attached to the profile_qc structure
     """
     # create column headers from the variable names in generate_nc_file_att file
-    meta, variable_names = generate_table_att(os.path.join(os.path.dirname(__file__), 'generate_nc_file_att'))
-    # remove variable_names that contain 'HISTORY' as these are not data columns
-    variable_names = [x for x in variable_names if 'HISTORY' not in x]
-    # create profile_qc.data
-    profile_qc.data = pd.DataFrame(columns=variable_names)
+    variable_names = read_variables_config()
+    # remove variable_names in the dataframe that are not in the profile_qc.data
+    variable_names = variable_names[~variable_names['variable_name'].str.startswith('HISTORY_')]
+    # create profile_qc.data using the variable names as columns
+    profile_qc.data = pd.DataFrame(columns=variable_names['variable_name'].tolist())
 
     # Pressure/depth information from both noqc and qc files
     for s in [profile_qc, profile_noqc]:
@@ -1835,7 +1838,7 @@ if __name__ == '__main__':
     globsall = pd.DataFrame()
 
     for f in keys.data['station_number']:
-        # if f != 89019703:
+        # if f < 89019139:
         #     continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)
