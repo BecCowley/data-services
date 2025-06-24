@@ -13,10 +13,15 @@ Type in your shell ```./anmn_nrs_aims.py```
 ## Data debug
 A test is in place for each run of the script. We download a part of a channel, 
 run a md5 checksum and compare with what we should have. 
+
 If the md5 value is different, the script won't run. This test is necessary as 
 we had in the past unwanted changes from AIMS. 
-If this happens, go to $WIP_DIR/script_output_dir, and manually check the 
-vimdiff of the ncdump output of the nc_unittest_* files.
+
+If this happens: 
+1) go to $WIP_DIR/[script_output_dir],
+2) list the latest **nc_unittest_*** files ```ll -lrt nc_unittest_*```
+3) check the latest ```nc_unittest...nc``` content with vimdiff/ncdump to assure the new file is mostly the same (and is not introducing renamed variables/gatts ...)
+4) if the file is all good, grab the ```md5sum``` value from the filename (example: nc_unittest_**78c6386529faf9dc2272e9bed5ed7fa2**.nc) and replace it in https://github.com/aodn/data-services/blob/master/ANMN/NRS_AIMS/REALTIME/anmn_nrs_aims.py#L305
 
 ## Delete platform or channel for re-download/re-process
 ```bash

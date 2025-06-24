@@ -7,6 +7,9 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - freetype
+  - libpng
+  - pkg-config
   - python=3.8
   - pip>=20.0.2
   - numpy
@@ -16,6 +19,6 @@ dependencies:
   - pytest
   - gdal
   - pip:
-    - -r requirements.txt
-    - -c constraints.txt
-    - "git+https://github.com/aodn/cc-plugin-imos.git"
+      - -r requirements.txt
+      - -c constraints.txt
+      - "git+https://github.com/aodn/cc-plugin-imos.git"

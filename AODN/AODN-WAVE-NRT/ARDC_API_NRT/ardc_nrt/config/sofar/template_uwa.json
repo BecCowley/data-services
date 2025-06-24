@@ -177,8 +177,8 @@
   "references": "http://www.imos.org.au",
   "standard_name_vocabulary": "NetCDF Climate and Forecast CF Standard Name Table Version 78",
   "project":"Catching Oz Waves",
-  "principal_investigator": "Jeff Hansen",
-  "principal_investigator_email": "jeff.hansen@uwa.edu.au",
+  "principal_investigator": "Cuttler, Michael",
+  "principal_investigator_email": "michael.cuttler@uwa.edu.au",
   "geospatial_lat_units": "degrees_north",
   "geospatial_lon_units": "degrees-east",
   "cdm_data_type": "Station"

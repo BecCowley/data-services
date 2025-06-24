@@ -23,6 +23,12 @@ class bomWFS(object):
     @retry(wait=wait_exponential(multiplier=1, min=4, max=10))
     def wfs_query(self):
         wfs = WebFeatureService(url=self.url_prefix, version='1.1.0', timeout=30)
+        # for some reason the getfeature function defaults to http:// instead of https://, which bom doesn't support anymore
+        get_feature_op = wfs.getOperationByName('GetFeature')
+        for method in get_feature_op.methods:
+            if method['type'].lower() == 'get':
+                method['url'] = method['url'].replace('http://', 'https://')
+
         response = wfs.getfeature(typename=self.typename)
         res = response.read()
 

@@ -1,0 +1,46 @@
+name: data-services
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      # ARDC NRT module unittests
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: data_services_3.8
+          environment-file: environment.yml
+          auto-activate-base: false  # Prevent activating base env
+
+      - name: Install dependencies
+        shell: bash -el {0}
+        run: |
+          conda install --yes mamba
+          mamba env create --name data_services_3.8 --file environment.yml || true  # Create only if not exists
+          conda activate data_services_3.8
+          mamba env update --name data_services_3.8 --file environment.yml
+
+      - name: Activate Conda environment
+        shell: bash -el {0}
+        run: |
+          conda init
+          conda activate data_services_3.8
+
+      - name: Run pytest and coverage
+        run: |
+          export PYTHONPATH=lib/python
+          pytest lib/test/python

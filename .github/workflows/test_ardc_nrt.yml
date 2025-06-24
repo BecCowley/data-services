@@ -1,0 +1,45 @@
+name: ardc_nrt module
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      # ARDC NRT module unittests
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: ardc_nrt
+          environment-file: AODN/AODN-WAVE-NRT/ARDC_API_NRT/environment.yml
+          auto-activate-base: false  # Prevent activating base env
+
+      - name: Install dependencies
+        shell: bash -el {0}
+        run: |
+          conda install --yes mamba
+          mamba env create --name ardc_nrt --file environment.yml || true  # Create only if not exists
+          conda activate ardc_nrt
+          mamba env update --name ardc_nrt --file AODN/AODN-WAVE-NRT/ARDC_API_NRT/environment.yml
+
+      - name: Activate Conda environment
+        shell: bash -el {0}
+        run: |
+          conda init
+          conda activate ardc_nrt
+
+      - name: Run pytest and coverage
+        run: |
+          pytest AODN/AODN-WAVE-NRT/ARDC_API_NRT

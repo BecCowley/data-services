@@ -67,6 +67,7 @@ def process_wave_source_id(source_id, incoming_path=None):
             return
 
         if data is not None:
+            data = data.dropna(subset = ['latitude', 'longitude'], how = 'all') # Remove rows associated with NAs for lat/long columns
             template_dirpath = config.conf_dirpath
             process_wave_dataframe(data, source_id, template_dirpath, OUTPUT_PATH, incoming_path)
 
