@@ -825,14 +825,19 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
             # this is not an XBT
             return profile_qc
         elif item_val not in list(fre_list.keys()):
-            # record the original value
-            profile_qc.global_atts['PROBE_TYPE_original_name'] = item_val
-            # try fuzzy matching here
-            imatch = difflib.get_close_matches(item_val[0:4], list(ptyp_list.keys()), n=1, cutoff=0.5)
-            if imatch:
-                LOGGER.warning('PROBE_TYPE %s not found in WMO1770, using closest match %s %s'
-                               % (item_val, imatch[0], profile_qc.Input_filename))
-                item_val = ptyp_list[imatch[0]]
+            # check if this is a test probe in the histories
+            if profile_qc.histories['HISTORY_QC_CODE'].str.contains('TPR').any():
+                # assign a test probe type
+                item_val = '104'
+            else:
+                # record the original value
+                profile_qc.global_atts['PROBE_TYPE_original_name'] = item_val
+                # try fuzzy matching here
+                imatch = difflib.get_close_matches(item_val[0:4], list(ptyp_list.keys()), n=1, cutoff=0.5)
+                if imatch:
+                    LOGGER.warning('PROBE_TYPE %s not found in WMO1770, using closest match %s %s'
+                                   % (item_val, imatch[0], profile_qc.Input_filename))
+                    item_val = ptyp_list[imatch[0]]
 
         # use the code we have extracted to get the fall rate equation and name of probe
         if item_val in list(fre_list.keys()):
