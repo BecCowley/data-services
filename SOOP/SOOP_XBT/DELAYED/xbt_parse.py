@@ -311,7 +311,7 @@ def parse_extra_vars(profile_qc, profile_noqc):
                 except ValueError:
                     LOGGER.warning(
                         '"%s = %s" could not be converted to %s(). Please review. %s' % (
-                        att_name, att_val, att_type.upper()), profile.Input_filename)
+                        att_name, att_val, att_type.upper(), profile.Input_filename))
             else:
                 if srfc_code_iter != '' and srfc_code_iter != 'IOTA':
                     # collect the code in a list for the user to review
@@ -425,13 +425,15 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     variable_names = variable_names[~variable_names['variable_name'].str.startswith('HISTORY_')]
     # create profile_qc.data using the variable names as columns
     profile_qc.data = pd.DataFrame(columns=variable_names['variable_name'].tolist())
+    # check both raw and edited ndeps and return profile_qc.data with the maximum number of depths
+    profile_qc = check_profile_lengths(profile_qc, profile_noqc)
+    # record the ndeps in the profile_qc dataframe for later use
+    ndeps = profile_qc.data['DEPTH'].size
 
     # Pressure/depth information from both noqc and qc files
     for s in [profile_qc, profile_noqc]:
         # assign '_RAW' if s is profile_noqc, otherwise assign ''
         raw = '_RAW' if s == profile_noqc else ''
-        # get the number of depths
-        ndeps = s.netcdf_file_obj.variables['No_Depths'][:][0]
         # cycle through the variables identified in the file, for XBT files, this should only be TEMP:
         data_vars = temp_prof_info(s.netcdf_file_obj)
         # assign the data_vars to the profile object
@@ -452,9 +454,20 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             # resize the arrays to eliminate empty values
             dep = np.ma.masked_array(dep.compressed())
 
-            # if the size of the depth array is not the same as ndeps, change ndeps
+            # if the size of the depth array is not the same as ndeps, pad the array or pad the dataframe
             if len(dep) != ndeps:
-                ndeps = len(dep)
+                if len(dep) < ndeps:
+                    LOGGER.warning(
+                        'Resizing %s and %s arrays to the number of depths recorded in MQNC file. %s' % (var, var, s.Input_filename))
+                    # Create a new array of the desired size filled with NaN
+                    resized_dep = np.full(ndeps, np.nan)
+                    resized_dep[:len(dep)] = dep
+                    dep = resized_dep
+                else:
+                    # dep is bigger than the number of depths, so resize the profile_qc.data dataframe by adding new rows
+                    profile_qc.data = profile_qc.data.reindex(range(len(dep)))
+                    ndeps = len(dep)
+
             depth_press_flag = s.netcdf_file_obj.variables['DepresQ'][ivar, :, 0].flatten()
             # resize the arrays to eliminate empty values
             depth_press_flag = np.ma.masked_array(depth_press_flag.compressed())
@@ -475,17 +488,19 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             # resize the arrays to eliminate empty values
             prof = np.ma.masked_array(prof.compressed())
             # Is there a mismatch in DEPTH and TEMP lengths?
-            if ndeps < len(prof):
-                # check the extra length contains valid data
-                prof_rem = prof[ndeps:]
-                if np.isnan(prof_rem).all() or np.all(prof_rem > 99) or prof_rem.mask.all():
-                    # keep the valid data
-                    prof = prof[:ndeps]
-                    print('Check this bit of code!! %s' % s.Input_filename)
-                    exit(1)
+            if ndeps != len(prof):
+                if len(prof) < ndeps:
+                    LOGGER.warning(
+                        'Resizing %s and %s arrays to the number of depths recorded in MQNC file. %s' % (var, var, s.Input_filename))
+                    # Create a new array of the desired size filled with NaN
+                    resized_prof = np.full(ndeps, np.nan)
+                    resized_prof[:len(prof)] = prof
+                    prof = resized_prof
                 else:
-                    LOGGER.error('Profile %s has %s depths but %s values for %s' % (s.Input_filename, ndeps, len(prof), var))
-                    exit(1)
+                    # prof is bigger than the number of depths, so resize the profile_qc.data dataframe by adding new rows
+                    profile_qc.data = profile_qc.data.reindex(range(len(prof)))
+                    ndeps = len(prof)
+
             # if the size of the variable isn't equal to the number of depths, exit
             if (len(prof) != ndeps):
                 LOGGER.error('Profile %s has %s depths but %s values for %s' % (s.Input_filename, ndeps, len(prof), var))
@@ -494,9 +509,6 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             # make any values >99 equal to 99.99. Some profiles have different values for invalid data
             if 'TEMP' in var:
                 prof[prof > 99] = 99.99
-            # TODO: consider other variables that might have different invalid values
-            prof = np.ma.masked_invalid(prof)  # mask nan and inf values
-            prof.set_fill_value(999999)
 
             prof_flag = s.netcdf_file_obj.variables['ProfQP'][ivar, 0, :, 0, 0].flatten()
             # resize the arrays to eliminate empty values
@@ -504,14 +516,12 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             prof_flag = np.ma.masked_array(
                 invalid_to_ma_array(prof_flag, fillvalue=99))  # replace masked values for IMOS IODE flags
 
+            # if the size of the array isn't equal to the number of depths, adjust here
             if len(prof_flag) != ndeps:
                 if len(prof_flag) < ndeps:
                     LOGGER.warning(
                         'Resizing %s and %s arrays to the number of depths recorded in MQNC file. %s' % (var, var, s.Input_filename))
                     # Create a new array of the desired size filled with NaN
-                    resized_prof = np.full(ndeps, np.nan)
-                    resized_prof[:len(prof)] = prof
-                    prof = resized_prof
                     resized_prof_flag = np.full(ndeps, np.nan)
                     resized_prof_flag[:len(prof_flag)] = prof_flag
                     prof_flag = resized_prof_flag
@@ -527,11 +537,12 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     # if DEPTH and DEPTH_RAW are not the same, apply fixes
     if not np.array_equal(profile_qc.data['DEPTH'], profile_qc.data['DEPTH_RAW']):
         # check the depth columns for consistency and match the variables based on DEPTH and DEPTH_RAW matches
-        df_raw = profile_qc.data.filter(regex='RAW$', axis=1)
-        df_qc = profile_qc.data.filter(regex='^((?!RAW).)*$', axis=1)
+        raw_columns = [col for col in profile_qc.data.columns if 'RAW' in col]
+        df_raw = profile_qc.data[raw_columns]
+        df_qc = profile_qc.data[[col for col in profile_qc.data.columns if col not in raw_columns]]
         # remove any nan rows from the dataframes
-        df_raw = df_raw.dropna(how='all')
-        df_qc = df_qc.dropna(how='all')
+        df_raw = df_raw.dropna(subset=['DEPTH_RAW', 'TEMP_RAW'], how='all')
+        df_qc = df_qc.dropna(subset=['DEPTH', 'TEMP'], how='all')
 
         # check the lengths of the arrays
         if len(df_raw) != len(df_qc):
@@ -583,7 +594,6 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
         if not np.isclose(df['DEPTH_RAW'].values, df['DEPTH'].values, atol=1e-6).all() and \
                 not np.isclose(df['DEPTH_RAW'].values * 1.0336, df['DEPTH'].values, atol=1e-6).all():
             LOGGER.error('DEPTH_RAW and DEPTH values do not match in %s' % profile_qc.Input_filename)
-            exit(1)
 
         # save the dataframe of DEPTH dimensioned data to the profile object
         profile_qc.data = df
@@ -1276,6 +1286,20 @@ def combine_histories(profile_qc, profile_noqc):
     profile_qc.histories = profile_qc.histories.reset_index(drop=True)
     return profile_qc
 
+def check_profile_lengths(profile_qc, profile_noqc):
+    # Check the lengths of the edited and raw profiles and amend the qc profile if necessary
+
+    if profile_qc.netcdf_file_obj.variables['No_Depths'][:][0] != profile_noqc.netcdf_file_obj.variables['No_Depths'][:][0]:
+        LOGGER.warning('Raw and edited profiles are different lengths.')
+        # make the dataframe the length of the maximum number of depths in either profile
+        max_depths = max(profile_qc.netcdf_file_obj.variables['No_Depths'][:][0],
+                         profile_noqc.netcdf_file_obj.variables['No_Depths'][:][0])
+        profile_qc.data = profile_qc.data.reindex(index=range(max_depths))
+    else:
+        # return the profile.data dataframe with rows indexed to the same length as the qc profile
+        profile_qc.data = profile_qc.data.reindex(index=range(profile_qc.netcdf_file_obj.variables['No_Depths'][:][0]))
+
+    return profile_qc
 
 def restore_temp_val(profile):
     """
@@ -1838,7 +1862,7 @@ if __name__ == '__main__':
     globsall = pd.DataFrame()
 
     for f in keys.data['station_number']:
-        # if f < 89019139:
+        # if f != 89018475:
         #     continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)
