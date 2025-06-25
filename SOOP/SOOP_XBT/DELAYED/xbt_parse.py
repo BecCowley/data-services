@@ -1239,7 +1239,7 @@ def combine_histories(profile_qc, profile_noqc):
     temp_codes = combined_histories[combined_histories['HISTORY_PARAMETER'] == 'TEMP']
     # get the index of the rows to drop for TEMP variables only
     idx = temp_codes[(temp_codes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)) &
-                        (temp_codes['HISTORY_PREVIOUS_VALUE'].values.astype('float') > 90)].index
+                        (temp_codes['HISTORY_PREVIOUS_VALUE'].values.astype('float32') > 90)].index
     if len(idx) > 0:
         LOGGER.warning(
             'HISTORY: Duplicate QC code encountered and removed in create_flag_feature: %s. Please review. %s'
@@ -1312,8 +1312,8 @@ def restore_temp_val(profile):
 
     # index of CS flags in histories:
     idx = profile.histories['HISTORY_QC_CODE'] == 'CSR'
-    depths = profile.histories['HISTORY_START_DEPTH'][idx].values.astype('float')
-    temps = profile.histories['HISTORY_PREVIOUS_VALUE'][idx].values.astype('float')
+    depths = profile.histories['HISTORY_START_DEPTH'][idx].values.astype('float32')
+    temps = profile.histories['HISTORY_PREVIOUS_VALUE'][idx].values.astype('float32')
 
     # check if the temperature values are missing & replace with previous value if they are:
     # do for both TEMP and TEMP_RAW
@@ -1370,7 +1370,7 @@ def restore_temp_val(profile):
                 depths2 = profile.histories.loc[idx2, 'HISTORY_START_DEPTH'].values
                 # find the depths in the profile data
                 ind2 = np.in1d(np.round(df['DEPTH'], 2), np.round(depths2, 2)).nonzero()[0]
-                temps = profile.histories['HISTORY_PREVIOUS_VALUE'][ind2].values.astype('float')
+                temps = profile.histories['HISTORY_PREVIOUS_VALUE'][ind2].values.astype('float32')
                 # is the first value of ind2 only one different from last value of ind?
                 if (ind2[0] - ind[-1]) == 1:
                     LOGGER.info('Restoring 99.99 values for SPA, IPA or HFA flags and changing flag to CSR. %s'
@@ -1862,8 +1862,8 @@ if __name__ == '__main__':
     globsall = pd.DataFrame()
 
     for f in keys.data['station_number']:
-        # if f != 89018475:
-        #     continue
+        if f != 89019479:
+            continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)
         # make input_filename here
