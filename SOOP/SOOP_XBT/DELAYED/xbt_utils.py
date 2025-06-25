@@ -106,7 +106,7 @@ def add_launcher_variable(df):
 
     # if profile_qc.data['Ship_name'].unique().item() contains 'Astrolabe' and date is > 2020-11-01, assign 'LM-4A Thru-Hull'
     if 'Astrolabe' in df['Ship_name'].unique().item() and \
-            df['TIME'].unique().item() > datetime(2020, 11, 1):
+            df['TIME'][0] > datetime(2020, 11, 1):
         df['Launcher_type'] = 'LM-4A Thru-Hull'
     else:
         df['Launcher_type'] = 'LM-3A Hand-Held'
