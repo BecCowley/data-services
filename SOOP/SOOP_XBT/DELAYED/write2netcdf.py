@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from netCDF4 import Dataset, date2num
 
-from generate_netcdf_att import get_imos_parameter_info, generate_netcdf_att
 from xbt_parse import read_section_from_xbt_config
 from xbt_utils import read_flag_quality_table, read_variables_config, read_globals_config
 
