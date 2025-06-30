@@ -1908,12 +1908,12 @@ if __name__ == '__main__':
     # add table metadata to the dfall dataframe
     dfall = set_metadata(dfall, tbl_meta={'Parent file':keys.dbase_name})
     # write the dataframe to a parquet file
-    pq_filename = os.path.join(os.path.dirname(keys.dbase_name), os.path.basename(keys.dbase_name) + '.parquet')
+    pq_filename = os.path.join(vargs.output_folder, os.path.basename(keys.dbase_name) + '.parquet')
     pq.write_table(dfall, pq_filename)
-    pq_filename = os.path.join(os.path.dirname(keys.dbase_name),
+    pq_filename = os.path.join(vargs.output_folder,
                                os.path.basename(keys.dbase_name) + '_histories.parquet')
     dfhist.to_parquet(pq_filename, index=False)
-    pq_filename = os.path.join(os.path.dirname(keys.dbase_name), os.path.basename(keys.dbase_name) + '_globals.parquet')
+    pq_filename = os.path.join(vargs.output_folder, os.path.basename(keys.dbase_name) + '_globals.parquet')
     globsall.to_parquet(pq_filename, index=False)
 
     print('All done')
