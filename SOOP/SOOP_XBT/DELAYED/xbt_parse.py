@@ -1,18 +1,10 @@
 #!/usr/bin/python3
 
 import argparse
-import os
 import sys
 import tempfile
-import re
-from datetime import datetime
-from netCDF4 import Dataset, date2num
-import numpy as np
-import numpy.ma as ma
-import pandas as pd
+from netCDF4 import Dataset
 import difflib
-
-from numpy.ma.core import is_string_or_list_of_strings
 
 from imos_logging import IMOSLogging
 from ship_callsign import ship_callsign_list
@@ -234,8 +226,8 @@ def parse_extra_vars(profile_qc, profile_noqc):
     ext = ['','_RAW']
     for ind, profile in enumerate([profile_qc, profile_noqc]):
         for key,var in vars_list.items():
+            var_name = key
             if var in list(profile.netcdf_file_obj.variables.keys()):
-                var_name = key
                 vv = decode_bytearray(profile.netcdf_file_obj[var][:])
                 if not vv or len(vv) == 0:
                     dataf[var_name  + ext[ind]] = ''
@@ -404,7 +396,7 @@ def parse_extra_vars(profile_qc, profile_noqc):
                     dataf = dataf.drop(col, axis=1)
                 else:
                     LOGGER.error('Column %s in *_RAW file is not the same as the non-RAW column. Please review %s' %
-                                 (col, profile.Input_filename))
+                                 (col, profile_qc.Input_filename))
                     exit(1)
 
     # split the input filename and remove the _ed.nc or _raw.nc ending
@@ -1457,6 +1449,8 @@ def create_flag_feature(profile):
     # set the fields to zeros to start
     df_data['QC_accept_code'] = 0
     df_data['QC_reject_code'] = 0
+    # where the TEMP is NaN, set the QC_accept_code and QC_reject_code to NaN
+    df_data.loc[df_data['TEMP'].isna(), ['QC_accept_code', 'QC_reject_code']] = np.nan
 
     # perform the flag mapping on the original flags and create the two new variables
     codes = profile.histories
@@ -1867,7 +1861,7 @@ if __name__ == '__main__':
     globsall = pd.DataFrame()
 
     for f in keys.data['station_number']:
-        # if f != 89019479:
+        # if f != 89019055:
         #     continue
         fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
         fname = os.path.join(keys.dbase_name, fpath)

@@ -163,7 +163,9 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=Fa
 
                 # Ensure the data from profile[v] matches the shape of the NetCDF variable
                 if profile[v].shape == var_shape:
-                        output_netcdf_obj[v][:] = profile[v]
+                    # fill any NaN values with the fill value for this variable
+                    data = profile[v].fillna(output_netcdf_obj[v]._FillValue)
+                    output_netcdf_obj[v][:] = data
                 else:
                     if isinstance(output_netcdf_obj[v][:], str):
                         output_netcdf_obj[v][0] = str(profile[v].values[0])

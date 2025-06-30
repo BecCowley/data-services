@@ -296,6 +296,17 @@ def add_uncertainties(df):
     df['DEPTH_uncertainty'] = np.round(unc, 2)
     df['TEMP_uncertainty'] = np.round(temp_uncertainty, 2)
 
+    # if the DEPTH or TEMP columns contain NaN values, fill the corresponding TEMP_quality_control,
+    # DEPTH_quality control, TEMP_uncertainty and DEPTH_uncertainty rows with NaN
+    idx = df['DEPTH'].isna()
+    if idx.any():
+        df.loc[idx, 'DEPTH_quality_control'] = np.nan
+        df.loc[idx, 'DEPTH_uncertainty'] = np.nan
+    idx = df['TEMP'].isna()
+    if idx.any():
+        df.loc[idx, 'TEMP_quality_control'] = np.nan
+        df.loc[idx, 'TEMP_uncertainty'] = np.nan
+
     return df
 
 def update_histories(dfprofile, code, software, release, dfhist, dep=0):
@@ -355,3 +366,11 @@ def update_histories(dfprofile, code, software, release, dfhist, dep=0):
         dfhist.loc[len(dfhist)] = row_data
 
     return dfhist, dfprofile
+
+
+def is_string_or_list_of_strings(obj):
+    if isinstance(obj, str):
+        return True
+    if isinstance(obj, (list, tuple)):
+        return all(isinstance(x, str) for x in obj)
+    return False
