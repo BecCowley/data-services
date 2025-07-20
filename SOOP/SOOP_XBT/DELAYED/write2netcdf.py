@@ -20,7 +20,7 @@ def create_filename_output(prof, hist, profile_raw=False):
 
     filename = 'XBT_T_%s_%s_%s_ID-%s' % (
         prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line'], fv,
-        prof['Institution_uniqueid'])
+        prof['Institution_unique_identifier'])
 
     # decide what prefix is required
     names = read_section_from_xbt_config('VARIOUS')
@@ -54,6 +54,8 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=Fa
 
     # read the variables config file
     vars = read_variables_config()
+    # remove rows where the variable_name starts with 'att_extra'
+    vars = vars[~vars['variable_name'].str.startswith('att_extra')]
     # Identify attribute columns starting with 'att_'
     att_cols = [col for col in vars.columns if col.startswith('att_')]
     # remove the 'att_' prefix from the attribute columns
@@ -116,7 +118,6 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=Fa
                             row[att_name] = np.array([np.byte(x.strip().strip(',')) for x in row[att_name].split(' ')])
                     # set the attribute on the variable
                     setattr(output_netcdf_obj.variables[vv], att, row[att_name])
-
         # read the flag quality tables
         dfa, dfr = read_flag_quality_table(historic_flags)
 
@@ -144,12 +145,11 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=Fa
                 print(f"Variable {v} not found in profile or history data, skipping.")
                 continue
             if v in ['TIME', 'TIME_RAW','PROBE_manufacture_date', 'SAMPLE_TIME']:
-                # if the profile[v] is None, skip it
-                if profile[v].isnull().all():
-                    continue
-                time_val_dateobj = date2num(pd.to_datetime(profile[v].values[0]), output_netcdf_obj[v].units,
-                                            output_netcdf_obj[v].calendar)
-                output_netcdf_obj[v][:] = time_val_dateobj
+                # if the profile[v] is None or contains a string, skip it
+                if not ((profile[v].isnull().all()) or (isinstance(profile[v].values[0], str))):
+                    time_val_dateobj = date2num(pd.to_datetime(profile[v].values[0]), output_netcdf_obj[v].units,
+                                                output_netcdf_obj[v].calendar)
+                    output_netcdf_obj[v][:] = time_val_dateobj
                 if v == 'TIME':
                     # set the time_coverage_start and time_coverage_end
                     output_netcdf_obj.time_coverage_start = pd.to_datetime(profile[v].values[0]).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -184,6 +184,52 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=Fa
                         count += 1
                 else:
                     output_netcdf_obj[v][:] = history[v].values
+            # append the non-cf complaint attributes to PROBE_TYPE, PROBE_TYPE_RAW, PROBE_manufacture_date and RECORDER_TYPE variables
+            if v in ['PROBE_TYPE', 'PROBE_TYPE_RAW']:
+                # the profile['att_extra_probe_type'*] columns are the attributes for the PROBE_TYPE variable
+                if v == 'PROBE_TYPE':
+                    att_labels = [col for col in profile.columns if col.startswith('att_extra_probe_type_') and not col.endswith('_RAW')]
+                else:
+                    att_labels = [col for col in profile.columns if col.startswith('att_extra_probe_type_') and col.endswith('_RAW')]
+                for att in att_labels:
+                    att_name = att.replace('att_extra_', '')
+                    if att_name in output_netcdf_obj.variables[v].ncattrs():
+                        # if the attribute already exists, skip it
+                        continue
+                    # set the attribute on the variable
+                    setattr(output_netcdf_obj.variables[v], att_name, profile[att].values[0])
+            if v in ['RECORDER_TYPE']:
+                # the profile['att_extra_recorder_type_*'] columns are the attributes for the RECORDER_TYPE variable
+                att_labels = [col for col in profile.columns if col.startswith('att_extra_recorder')]
+                for att in att_labels:
+                    att_name = att.replace('att_extra_', '')
+                    if att_name in output_netcdf_obj.variables[v].ncattrs():
+                        # if the attribute already exists, skip it
+                        continue
+                    # set the attribute on the variable
+                    setattr(output_netcdf_obj.variables[v], att_name, profile[att].values[0])
+            if v in ['PROBE_manufacture_date']:
+                # the profile['att_extra_probe_manufacture_date_*'] columns are the attributes for the PROBE_MANUFACTURE_DATE variable
+                att_labels = [col for col in profile.columns if col.startswith('att_extra_probe_') and not col.startswith('att_extra_probe_type_')]
+                for att in att_labels:
+                    att_name = att.replace('att_extra_', '')
+                    if att_name in output_netcdf_obj.variables[v].ncattrs():
+                        # if the attribute already exists, skip it
+                        continue
+                    # set the attribute on the variable
+                    setattr(output_netcdf_obj.variables[v], att_name, profile[att].values[0])
+            # and the SOOP_line variable
+            if v == 'SOOP_line':
+                # the profile['att_extra_soop_line_*'] columns are the attributes for the SOOP_LINE variable
+                att_labels = [col for col in profile.columns if col.startswith('att_extra_SOOP_line_')]
+                for att in att_labels:
+                    att_name = att.replace('att_extra_', '')
+                    if att_name in output_netcdf_obj.variables[v].ncattrs():
+                        # if the attribute already exists, skip it
+                        continue
+                    # set the attribute on the variable
+                    setattr(output_netcdf_obj.variables[v], att_name, profile[att].values[0])
+
 
         # Add date created to the global attributes
         utctime = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
@@ -191,6 +237,9 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=Fa
 
         # set the global attributes where the index is the attribute name
         for att_name, att_value in global_atts.items():
+            # if the global_att[att_name] is None, replace with 'Unknown'
+            if pd.isna(att_value):
+                att_value = 'Unknown'
             output_netcdf_obj.setncattr(att_name, att_value)
 
 # main function

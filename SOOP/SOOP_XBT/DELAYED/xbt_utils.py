@@ -24,9 +24,16 @@ def read_globals_config():
     # fill any empty cells and strings with NaN
     df = df.fillna(value=pd.NA)
     df = df.replace(r'^\s*$', pd.NA, regex=True)
-    # convert the DataFrame to a dictionary
-    global_att = dict(zip(df.iloc[:, 0], df.iloc[:, 1]))
-    return global_att
+    # convert the DataFrame to a dictionary of 'Attribute Name': 'Attribute Value' pairs
+    global_att = {}
+    for index, row in df.iterrows():
+        # remove any leading or trailing whitespace from the attribute name
+        att_name = row['Attribute Name'].strip()
+        att_value = row['Attribute Value']
+        if pd.isna(att_value):
+            att_value = None
+        global_att[att_name] = att_value
+    return global_att, df
 
 def read_variables_config():
     """
@@ -100,18 +107,18 @@ def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
     except:
         _error('Time string not in a valid format')
 
-def add_launcher_variable(df):
+def add_launcher_variable(atts, df):
     # add Launcher variable and assign 'LM-3A Hand-Held' if the vessel is not l'Astrolabe and date is less than 2020-11-01
     # else assign 'LM-4A Thru-Hull'
 
     # if profile_qc.data['Ship_name'].unique().item() contains 'Astrolabe' and date is > 2020-11-01, assign 'LM-4A Thru-Hull'
-    if 'Astrolabe' in df['Ship_name'].unique().item() and \
+    if 'Astrolabe' in atts['Ship_name'] and \
             df['TIME'][0] > datetime(2020, 11, 1):
-        df['Launcher_type'] = 'LM-4A Thru-Hull'
+        atts['Launcher_type'] = 'LM-4A Thru-Hull'
     else:
-        df['Launcher_type'] = 'LM-3A Hand-Held'
+        atts['Launcher_type'] = 'LM-3A Hand-Held'
 
-    return df
+    return atts
 
 
 def invalid_to_ma_array(invalid_array, fillvalue=0):
@@ -309,7 +316,7 @@ def add_uncertainties(df):
 
     return df
 
-def update_histories(dfprofile, code, software, release, dfhist, dep=0):
+def update_histories(dfprofile, global_att, code, software, release, dfhist, dep=0):
     """
     update the histories of the XBT data with the given code
     """
@@ -353,7 +360,7 @@ def update_histories(dfprofile, code, software, release, dfhist, dep=0):
 
     # update the HISTORIES for each dep in dep_range
     for deps in dep_range:
-        row_data = {'HISTORY_INSTITUTION': dfprofile['Institution'].values[0] if 'Institution' in dfprofile.columns else 'Unknown',
+        row_data = {'HISTORY_INSTITUTION': global_att['Institution_name_from_WMO_BUFR_table'] if 'Institution_name_from_WMO_BUFR_table' in global_att.keys() else 'Unknown',
                     'HISTORY_SOFTWARE': software,
                     'HISTORY_SOFTWARE_RELEASE': release,
                     'HISTORY_DATE': datetime.now().replace(microsecond=0),

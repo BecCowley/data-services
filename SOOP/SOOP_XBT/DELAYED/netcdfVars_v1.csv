@@ -27,7 +27,7 @@ PROBE_TYPE_name,,,,0,1,str,          ,,,probe_type_name,,,, ,        ,WMO code t
 PROBE_TYPE_quality_control,,,,0,1,int8,999999,,,probe_type quality_flag,,,,0,9,,,,GTSPP data quality codes,0 1 2 3 4 5 6 7 8 9,No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value,
 PROBE_TYPE_coeff_a,,,,0,1,float32,999999,,,probe_fall_rate_coefficient_a,,,,,,WMO code table 1770,,,,,,
 PROBE_TYPE_coeff_b,,,,0,1,float32,999999,,,probe_fall_rate_coefficient_b,,,,,,WMO code table 1770,,,,,,
-PROBE_TYPE_RAW,,,,0,1,str,,,,probe_type_raw,,,,,,WMO code table 1770,,PROBE_TYPE_name_RAW PROBE_TYPE_coeff_a_RAW PROBE_TYPE_coeff_b_RAW,,,,
+PROBE_TYPE_RAW,Code,,,0,1,str,,,,probe_type_raw,,,,,,WMO code table 1770,,PROBE_TYPE_name_RAW PROBE_TYPE_coeff_a_RAW PROBE_TYPE_coeff_b_RAW,,,,
 PROBE_TYPE_name_RAW,,,,0,1,str,,,,probe_type_name_raw,,,,,,WMO code table 1770,,,,,,
 PROBE_TYPE_coeff_a_RAW,,,,0,1,float32,999999,,,probe_fall_rate_coefficient_a_raw,,,,,,WMO code table 1770,,,,,,
 PROBE_TYPE_coeff_b_RAW,,,,0,1,float32,999999,,,probe_fall_rate_coefficient_b_raw,,,,,,WMO code table 1770,,,,,,

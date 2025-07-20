@@ -131,7 +131,7 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
     unique_id = create_out_filename(nco, line_info[0], crid, n, test)
 
     # create a global_atts dataframe
-    global_att = read_globals_config()
+    global_att, df_turo = read_globals_config()
 
     # build the profile dataframe
     # First, get a list of variables mapped between nco and output_netcdf_obj
@@ -195,13 +195,13 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             # if vname is TIME, output the TIME_RAW variable as it is the same as TIME
             if vname == 'TIME':
                 dfprofile['TIME_RAW'] = data
-        elif vname == 'RECORDER_type':
+        elif vname == 'RECORDER_TYPE':
             # get the recorder type information
             rct = get_recorder_type(nco)
-            dfprofile['RECORDER_type'] = str(rct[0])
-            dfprofile['RECORDER_type_name'] = str(rct[1])
+            dfprofile['RECORDER_TYPE'] = str(rct[0])
+            dfprofile['att_extra_recorder_name'] = str(rct[1])
             continue
-        elif vname == 'RECORDER_software_version':
+        elif vname == 'att_extra_recorder_software_version':
             # remove 'Version:' and any trailing spaces from the string
             dfprofile[vname] = str(data).split('Version:')[1].strip()
             continue
@@ -211,11 +211,11 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                 dfprofile['PROBE_TYPE' + probe] = data
                 # get the probe type name
                 probe_type_name = read_section_from_xbt_config('PEQ$')[data].split(',')[0]
-                dfprofile['PROBE_TYPE_name' + probe] = str(probe_type_name)
+                dfprofile['att_extra_probe_type_name' + probe] = str(probe_type_name)
                 # get the probe type coefficients
                 probe_type_coef = read_section_from_xbt_config('FRE')[data].split(',')
-                dfprofile['PROBE_TYPE_coeff_a' + probe] = float(probe_type_coef[0])
-                dfprofile['PROBE_TYPE_coeff_b' + probe] = float(probe_type_coef[1]) * 1e-3
+                dfprofile['att_extra_probe_type_coefficient_a' + probe] = float(probe_type_coef[0])
+                dfprofile['att_extra_probe_type_coefficient_b' + probe] = float(probe_type_coef[1]) * 1e-3
             # add quality control for the probe type
             dfprofile['PROBE_TYPE_quality_control'] = 0
             continue
@@ -238,54 +238,37 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
     dfprofile = add_uncertainties(dfprofile)
 
     # add the extra variables
-    dfprofile['Input_filename'] = raw_netCDF_file
-    dfprofile['Cruise_ID'] = crid
+    global_att['Input_filename'] = raw_netCDF_file
     # Profile Id
-    dfprofile['Institution_uniqueid'] = unique_id
+    dfprofile['Institution_unique_identifier'] = unique_id
 
-    # read from the controlled list of global attributes in the config file
-    globals_list = read_section_from_xbt_config('Turo_globals')
+    # Update the global_att dictionary where the value is None with information from df_turo['Turo']
+    for key in global_att.keys():
+        # get the row with the key in 'Attribute Name' column
+        row = df_turo[df_turo['Attribute Name'] == key]
+        # if the row['Turo'].values[0] is nan, skip it
+        if not pd.isna(row['Turo'].values[0]):
+            # if row['Turo'].values[0] is in locals(), use that value
+            if row['Turo'].values[0] in locals():
+                global_att[key] = locals()[row['Turo'].values[0]]
+            else:
+                # the value comes frmo the nco object
+                global_att[key] = getattr(nco, row['Turo'].values[0], None)
 
-    # read a list of code defined in the Turo_codes conf file. Create a
-    # dictionary of matching values
-    for att_name, att_name_out in globals_list.items():
-        try:
-            # Get the attribute value from the output_netcdf_obj
-            att_val = getattr(nco, att_name, None)
-            # add the attribute to the global_atts dataframe
-            if att_val is not None:
-                    global_att[att_name_out] = att_val
-        except:
-            LOGGER.warning('Attribute %s not found in the input file' % att_name)
-
-    # add institute information, should be in here from the previous section
-    # if nco.Agency is an attribute, use the value otherwise warn user we are setting agency to 'AD'
-    if hasattr(nco, 'Agency'):
-        institute_code = nco.Agency
-    else:
-        LOGGER.warning('Agency code not found in the input file, setting to AD')
-        institute_code = 'AD'
     # get the list from the config file
     institute_list = read_section_from_xbt_config('INSTITUTE')
     # match the institute code to the second value in the list and derive the agency code
     for institute in institute_list:
-        if institute_list[institute].split(',')[1] == institute_code:
-            dfprofile['Institution'] = institute_list[institute].split(',')[0]
+        if institute_list[institute].split(',')[1] == global_att['Institution_code_from_WMO_BUFR_table']:
+            global_att['Institution_name_from_WMO_BUFR_table'] = institute_list[institute].split(',')[0]
         else:
             continue
-    if not isinstance(dfprofile['Institution'][0], str):
+    if global_att['Institution_name_from_WMO_BUFR_table'] is None:
         LOGGER.warning('Institute code %s is not defined. Please review' % institute)
-        dfprofile['Institution'] = 'Unknown'
-    # add the institute code to the global attributes
-    global_att['institution'] = dfprofile['Institution'][0]
-
-    # ship name, IMO and callsign
-    dfprofile['Ship_name'] = ship_name
-    dfprofile['Ship_IMO'] = ship_IMO
-    dfprofile['Platform_code'] = callsign
+        global_att['Institution_name_from_WMO_BUFR_table'] = 'Unknown'
 
     # add Launcher_type
-    dfprofile = add_launcher_variable(dfprofile)
+    global_att = add_launcher_variable(global_att, dfprofile)
 
     # add some final global attributes
     global_att['qc_completed'] = 'no'
@@ -301,7 +284,7 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
     global_att['date_created'] = utctime
 
     # add the line information
-    dfprofile['SOOP_line_description'] = line_info[1]
+    dfprofile['att_extra_SOOP_line_description'] = line_info[1]
 
     # add 0 to the QC_accept_code and QC_reject_code columns
     dfprofile['QC_accept_code'] = 0
@@ -330,7 +313,7 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
     # add the history information
     for c, dep in code.items():
         # add the history information to the dataframe
-        dfhist, dfprofile = update_histories(dfprofile, c, 'TuroXBT2IMOSnc.py', 'v1.0', dfhist, dep)
+        dfhist, dfprofile = update_histories(dfprofile, global_att, c, 'TuroXBT2IMOSnc.py', 'v1.0', dfhist, dep)
 
    # return the profile dataframe, the global attributes and history information
     return dfprofile, global_att, dfhist
@@ -350,6 +333,8 @@ if __name__ == '__main__':
     first = True # to handle the test* files which also start at 1
 
     for file in files:  # read/write loop
+        if  'TEST' not in file and 'test' not in file:
+            continue
         nco = xr.open_dataset(file)
         raw_netCDF_file = os.path.join(os.path.basename(vargs.input_xbt_path),os.path.basename(file))
         print(raw_netCDF_file)
