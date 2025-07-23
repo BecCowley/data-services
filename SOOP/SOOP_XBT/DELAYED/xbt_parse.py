@@ -1287,7 +1287,7 @@ def restore_temp_val(profile):
     # do for both TEMP and TEMP_RAW
     df = profile.data
     # find the depths in the profile data
-    ind = np.in1d(np.round(df['DEPTH'], 2), np.round(depths, 2)).nonzero()[0]
+    ind = np.isin(np.round(df['DEPTH'], 2), np.round(depths, 2)).nonzero()[0]
     # does this profile have a PLA flag? if so, use the previous values to replace the TEMP values
     if 'PLA' in profile.histories['HISTORY_QC_CODE'].values:
         LOGGER.info('Restoring TEMP values for CS flags where PLA exists %s' % profile.Input_filename)
