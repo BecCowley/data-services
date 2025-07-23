@@ -33,7 +33,7 @@ def read_globals_config():
         if pd.isna(att_value):
             att_value = None
         global_att[att_name] = att_value
-    return global_att, df
+    return global_att
 
 def read_variables_config():
     """
@@ -107,18 +107,18 @@ def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
     except:
         _error('Time string not in a valid format')
 
-def add_launcher_variable(atts, df):
+def add_launcher_variable(df):
     # add Launcher variable and assign 'LM-3A Hand-Held' if the vessel is not l'Astrolabe and date is less than 2020-11-01
     # else assign 'LM-4A Thru-Hull'
 
     # if profile_qc.data['Ship_name'].unique().item() contains 'Astrolabe' and date is > 2020-11-01, assign 'LM-4A Thru-Hull'
-    if 'Astrolabe' in atts['Ship_name'] and \
+    if 'Astrolabe' in df['Ship_name'] and \
             df['TIME'][0] > datetime(2020, 11, 1):
-        atts['Launcher_type'] = 'LM-4A Thru-Hull'
+        df['Launcher_type'] = 'LM-4A Thru-Hull'
     else:
-        atts['Launcher_type'] = 'LM-3A Hand-Held'
+        df['Launcher_type'] = 'LM-3A Hand-Held'
 
-    return atts
+    return df
 
 
 def invalid_to_ma_array(invalid_array, fillvalue=0):
@@ -316,7 +316,7 @@ def add_uncertainties(df):
 
     return df
 
-def update_histories(dfprofile, global_att, code, software, release, dfhist, dep=0):
+def update_histories(dfprofile, code, software, release, dfhist, dep=0):
     """
     update the histories of the XBT data with the given code
     """
@@ -360,7 +360,7 @@ def update_histories(dfprofile, global_att, code, software, release, dfhist, dep
 
     # update the HISTORIES for each dep in dep_range
     for deps in dep_range:
-        row_data = {'HISTORY_INSTITUTION': global_att['Institution_name_from_WMO_BUFR_table'] if 'Institution_name_from_WMO_BUFR_table' in global_att.keys() else 'Unknown',
+        row_data = {'HISTORY_INSTITUTION': dfprofile['Institution'][0] if 'Institution' in dfprofile.columns else 'Unknown',
                     'HISTORY_SOFTWARE': software,
                     'HISTORY_SOFTWARE_RELEASE': release,
                     'HISTORY_DATE': datetime.now().replace(microsecond=0),

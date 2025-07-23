@@ -39,12 +39,11 @@ def create_filename_output(prof, hist, profile_raw=False):
     return filename
 
 
-def write_output_nc(output_folder, profile, history, global_atts, profile_raw=False, historic_flags=False):
+def write_output_nc(output_folder, profile, history, profile_raw=False, historic_flags=False):
     """output the data to the IMOS format netcdf version
     :param output_folder: the folder to write the netcdf file to
     :param profile: the profile DataFrame
     :param history: the history DataFrame
-    :param global_atts: the global attributes dictionary
     :param profile_raw: if True, the create a FV00 file, if False create a FV01 file, default is False
     """
 
@@ -52,10 +51,24 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=Fa
     netcdf_filepath = os.path.join(output_folder, "%s.nc" % create_filename_output(profile.iloc[0], history, profile_raw))
     print('Creating output %s' % netcdf_filepath)
 
+    # reset the index of the profile DataFrame
+    profile = profile.reset_index(drop=True)
+    # reset the index of the history DataFrame
+    history = history.reset_index(drop=True)
     # read the variables config file
     vars = read_variables_config()
-    # remove rows where the variable_name starts with 'att_extra'
-    vars = vars[~vars['variable_name'].str.startswith('att_extra')]
+    # read the global attributes config file
+    globals_list = read_globals_config()
+    # first get a list of the attributes attached to the variables
+    extra_atts = vars[vars['is_var_att_global'] == 'att']
+    # create a list from extra_atts['variable_name'] to use as a list of variable names
+    extra_atts = extra_atts['variable_name'].tolist()
+    # get a list of the global attributes
+    extra_globals = vars[vars['is_var_att_global'] == 'global']
+    # create a list from extra_globals['variable_name'] to use as a list of global attributes
+    extra_globals = extra_globals['variable_name'].tolist()
+    # get a list of the variable attributes
+    vars = vars[vars['is_var_att_global'] == 'var']
     # Identify attribute columns starting with 'att_'
     att_cols = [col for col in vars.columns if col.startswith('att_')]
     # remove the 'att_' prefix from the attribute columns
@@ -140,7 +153,7 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=Fa
         # append the data to the file
         # qc'd
         for v in list(output_netcdf_obj.variables):
-            if v not in list(profile) and v not in list(history) and v not in list(global_atts.keys()):
+            if v not in list(profile) and v not in list(history):
                 # if the variable is not in the profile or history or global attributes, skip it, keep fill value
                 print(f"Variable {v} not found in profile or history data, skipping.")
                 continue
@@ -184,59 +197,65 @@ def write_output_nc(output_folder, profile, history, global_atts, profile_raw=Fa
                         count += 1
                 else:
                     output_netcdf_obj[v][:] = history[v].values
-            # append the non-cf complaint attributes to PROBE_TYPE, PROBE_TYPE_RAW, PROBE_manufacture_date and RECORDER_TYPE variables
+            att_extras = []
+            # append the non-cf compliant attributes to PROBE_TYPE, PROBE_TYPE_RAW, PROBE_manufacture_date and RECORDER_TYPE variables
             if v in ['PROBE_TYPE', 'PROBE_TYPE_RAW']:
-                # the profile['att_extra_probe_type'*] columns are the attributes for the PROBE_TYPE variable
+                # add attributes if they exist in the extra_atts list
                 if v == 'PROBE_TYPE':
-                    att_labels = [col for col in profile.columns if col.startswith('att_extra_probe_type_') and not col.endswith('_RAW')]
+                    # get the labels from extra_atts list that start with 'PROBE_TYPE'
+                    att_extras = [att for att in extra_atts if att.startswith('PROBE_TYPE') and not att.endswith('_RAW')]
                 else:
-                    att_labels = [col for col in profile.columns if col.startswith('att_extra_probe_type_') and col.endswith('_RAW')]
-                for att in att_labels:
-                    att_name = att.replace('att_extra_', '')
-                    if att_name in output_netcdf_obj.variables[v].ncattrs():
-                        # if the attribute already exists, skip it
-                        continue
-                    # set the attribute on the variable
-                    setattr(output_netcdf_obj.variables[v], att_name, profile[att].values[0])
+                    # get the labels from extra_atts list that start with 'PROBE_TYPE_RAW'
+                    att_extras = [att for att in extra_atts if att.startswith('PROBE_TYPE') and att.endswith('_RAW')]
+
             if v in ['RECORDER_TYPE']:
-                # the profile['att_extra_recorder_type_*'] columns are the attributes for the RECORDER_TYPE variable
-                att_labels = [col for col in profile.columns if col.startswith('att_extra_recorder')]
-                for att in att_labels:
-                    att_name = att.replace('att_extra_', '')
-                    if att_name in output_netcdf_obj.variables[v].ncattrs():
-                        # if the attribute already exists, skip it
-                        continue
-                    # set the attribute on the variable
-                    setattr(output_netcdf_obj.variables[v], att_name, profile[att].values[0])
+                # add attributes if they exist in the extra_atts list
+                att_extras = [att for att in extra_atts if att.startswith('RECORDER')]
+
             if v in ['PROBE_manufacture_date']:
-                # the profile['att_extra_probe_manufacture_date_*'] columns are the attributes for the PROBE_MANUFACTURE_DATE variable
-                att_labels = [col for col in profile.columns if col.startswith('att_extra_probe_') and not col.startswith('att_extra_probe_type_')]
-                for att in att_labels:
-                    att_name = att.replace('att_extra_', '')
-                    if att_name in output_netcdf_obj.variables[v].ncattrs():
-                        # if the attribute already exists, skip it
-                        continue
-                    # set the attribute on the variable
-                    setattr(output_netcdf_obj.variables[v], att_name, profile[att].values[0])
+                # add attributes if they exist in the extra_atts list
+                att_extras = [att for att in extra_atts if att.startswith('PROBE_') and not att.startswith('PROBE_TYPE')]
+
             # and the SOOP_line variable
             if v == 'SOOP_line':
-                # the profile['att_extra_soop_line_*'] columns are the attributes for the SOOP_LINE variable
-                att_labels = [col for col in profile.columns if col.startswith('att_extra_SOOP_line_')]
-                for att in att_labels:
-                    att_name = att.replace('att_extra_', '')
+                # add SOOP_line attributes if they exist in the extra_atts list
+                att_extras = [att for att in extra_atts if att.startswith('SOOP_line_')]
+
+            # if att_labels is not empty, set the attributes for the variable
+            if att_extras:
+                for att_name in att_extras:
                     if att_name in output_netcdf_obj.variables[v].ncattrs():
                         # if the attribute already exists, skip it
                         continue
-                    # set the attribute on the variable
-                    setattr(output_netcdf_obj.variables[v], att_name, profile[att].values[0])
+                    if att_name not in profile.columns:
+                        setattr(output_netcdf_obj.variables[v], att_name, '')
+                    else:
+                        # set the attribute on the variable
+                        setattr(output_netcdf_obj.variables[v], att_name, profile[att_name].values[0])
 
+        # add geospatial information to global attributes dictionary
+        globals_list['geospatial_lat_max'] = profile['LATITUDE'][0]
+        globals_list['geospatial_lat_min'] = profile['LATITUDE'][0]
+        globals_list['geospatial_lon_max'] = profile['LONGITUDE'][0]
+        globals_list['geospatial_lon_min'] = profile['LONGITUDE'][0]
+        globals_list['geospatial_vertical_max'] = max(profile['DEPTH'])
+        globals_list['geospatial_vertical_min'] = min(profile['DEPTH'])
+        # add time coverage information to global attributes dictionary
+        globals_list['time_coverage_start'] = profile['TIME'][0].strftime("%Y-%m-%dT%H:%M:%SZ")
+        globals_list['time_coverage_end'] = profile['TIME'][0].strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        # add extra global attributes from the extra_globals list
+        for att_name in extra_globals:
+            if att_name in profile.columns:
+                # if the attribute is in the profile DataFrame, use that value
+                globals_list[att_name] = profile[att_name].values[0]
 
         # Add date created to the global attributes
         utctime = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
-        global_atts['date_created'] = utctime
+        globals_list['date_created'] = utctime
 
         # set the global attributes where the index is the attribute name
-        for att_name, att_value in global_atts.items():
+        for att_name, att_value in globals_list.items():
             # if the global_att[att_name] is None, replace with 'Unknown'
             if pd.isna(att_value):
                 att_value = 'Unknown'
@@ -274,18 +293,12 @@ if __name__ == '__main__':
         # read the parquet file
         profiles = pd.read_parquet(data_file)
         histories = pd.read_parquet(data_file.replace(".parquet", "_histories.parquet"))
-        global_atts = pd.read_parquet(data_file.replace(".parquet", "_globals.parquet"))
 
         # there are multiple profiles in the profiles dataframe, loop through unique station numbers
         for station in profiles['station_number'].unique():
             # get the profile and history data for this station
             profile = profiles[profiles['station_number'] == station]
             profile_histories = histories[histories['station_number'] == station]
-            profile_global_atts = global_atts[global_atts['station_number'] == station]
-            # and remove the station_number column
-            profile_global_atts = profile_global_atts.drop(columns='station_number')
-            # convert the global attributes to a dictionary
-            profile_global_atts = profile_global_atts.to_dict(orient='records')[0]
 
             # write the profile to the netcdf file
-            write_output_nc(output_folder, profile, profile_histories, profile_global_atts,profile_raw=False, historic_flags=True)
+            write_output_nc(output_folder, profile, profile_histories,profile_raw=False, historic_flags=True)

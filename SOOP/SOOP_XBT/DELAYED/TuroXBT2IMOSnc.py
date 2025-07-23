@@ -130,9 +130,6 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
         test = True
     unique_id = create_out_filename(nco, line_info[0], crid, n, test)
 
-    # create a global_atts dataframe
-    global_att, df_turo = read_globals_config()
-
     # build the profile dataframe
     # First, get a list of variables mapped between nco and output_netcdf_obj
     varslist = read_variables_config()
@@ -188,9 +185,6 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                             dfprofile['PROBE_manufacture_date'] = data
                 else:
                     dfprofile[vname] = pd.to_datetime(data)
-                    # set the time_coverage_start and time_coverage_end in the global attributes dictionary
-                    global_att['time_coverage_start'] = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
-                    global_att['time_coverage_end'] = pd.to_datetime(data).strftime("%Y-%m-%dT%H:%M:%SZ")
 
             # if vname is TIME, output the TIME_RAW variable as it is the same as TIME
             if vname == 'TIME':
@@ -199,9 +193,9 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             # get the recorder type information
             rct = get_recorder_type(nco)
             dfprofile['RECORDER_TYPE'] = str(rct[0])
-            dfprofile['att_extra_recorder_name'] = str(rct[1])
+            dfprofile['RECORDER_TYPE_name'] = str(rct[1])
             continue
-        elif vname == 'att_extra_recorder_software_version':
+        elif vname == 'RECORDER_software_version':
             # remove 'Version:' and any trailing spaces from the string
             dfprofile[vname] = str(data).split('Version:')[1].strip()
             continue
@@ -211,11 +205,11 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                 dfprofile['PROBE_TYPE' + probe] = data
                 # get the probe type name
                 probe_type_name = read_section_from_xbt_config('PEQ$')[data].split(',')[0]
-                dfprofile['att_extra_probe_type_name' + probe] = str(probe_type_name)
+                dfprofile['PROBE_TYPE_name' + probe] = str(probe_type_name)
                 # get the probe type coefficients
                 probe_type_coef = read_section_from_xbt_config('FRE')[data].split(',')
-                dfprofile['att_extra_probe_type_coefficient_a' + probe] = float(probe_type_coef[0])
-                dfprofile['att_extra_probe_type_coefficient_b' + probe] = float(probe_type_coef[1]) * 1e-3
+                dfprofile['PROBE_TYPE_coefficient_a' + probe] = float(probe_type_coef[0])
+                dfprofile['PROBE_TYPE_coefficient_b' + probe] = float(probe_type_coef[1]) * 1e-3
             # add quality control for the probe type
             dfprofile['PROBE_TYPE_quality_control'] = 0
             continue
@@ -238,53 +232,30 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
     dfprofile = add_uncertainties(dfprofile)
 
     # add the extra variables
-    global_att['Input_filename'] = raw_netCDF_file
+    dfprofile['Input_filename'] = raw_netCDF_file
     # Profile Id
     dfprofile['Institution_unique_identifier'] = unique_id
-
-    # Update the global_att dictionary where the value is None with information from df_turo['Turo']
-    for key in global_att.keys():
-        # get the row with the key in 'Attribute Name' column
-        row = df_turo[df_turo['Attribute Name'] == key]
-        # if the row['Turo'].values[0] is nan, skip it
-        if not pd.isna(row['Turo'].values[0]):
-            # if row['Turo'].values[0] is in locals(), use that value
-            if row['Turo'].values[0] in locals():
-                global_att[key] = locals()[row['Turo'].values[0]]
-            else:
-                # the value comes frmo the nco object
-                global_att[key] = getattr(nco, row['Turo'].values[0], None)
 
     # get the list from the config file
     institute_list = read_section_from_xbt_config('INSTITUTE')
     # match the institute code to the second value in the list and derive the agency code
     for institute in institute_list:
-        if institute_list[institute].split(',')[1] == global_att['Institution_code_from_WMO_BUFR_table']:
-            global_att['Institution_name_from_WMO_BUFR_table'] = institute_list[institute].split(',')[0]
+        if institute_list[institute].split(',')[1] == dfprofile['Institution_code'][0]:
+            dfprofile['Institution'] = institute_list[institute].split(',')[0]
         else:
             continue
-    if global_att['Institution_name_from_WMO_BUFR_table'] is None:
+    if dfprofile['Institution'][0] is None:
         LOGGER.warning('Institute code %s is not defined. Please review' % institute)
-        global_att['Institution_name_from_WMO_BUFR_table'] = 'Unknown'
+        dfprofile['Institution'] = 'Unknown'
 
     # add Launcher_type
-    global_att = add_launcher_variable(global_att, dfprofile)
+    dfprofile = add_launcher_variable(dfprofile)
 
     # add some final global attributes
-    global_att['qc_completed'] = 'no'
-    global_att['geospatial_lat_min'] = dfprofile['LATITUDE'][0]
-    global_att['geospatial_lat_max'] = dfprofile['LATITUDE'][0]
-    global_att['geospatial_lon_min'] = dfprofile['LONGITUDE'][0]
-    global_att['geospatial_lon_max'] = dfprofile['LONGITUDE'][0]
-    global_att['geospatial_vertical_min'] = np.min(dfprofile['DEPTH'])
-    global_att['geospatial_vertical_max'] = np.max(dfprofile['DEPTH'])
-
-    # Convert time to a string
-    utctime = strftime("%Y-%m-%dT%H:%M:%SZ", gmtime())
-    global_att['date_created'] = utctime
+    dfprofile['qc_completed'] = 'no'
 
     # add the line information
-    dfprofile['att_extra_SOOP_line_description'] = line_info[1]
+    dfprofile['SOOP_line_description'] = line_info[1]
 
     # add 0 to the QC_accept_code and QC_reject_code columns
     dfprofile['QC_accept_code'] = 0
@@ -313,10 +284,10 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
     # add the history information
     for c, dep in code.items():
         # add the history information to the dataframe
-        dfhist, dfprofile = update_histories(dfprofile, global_att, c, 'TuroXBT2IMOSnc.py', 'v1.0', dfhist, dep)
+        dfhist, dfprofile = update_histories(dfprofile, c, 'TuroXBT2IMOSnc.py', 'v1.0', dfhist, dep)
 
    # return the profile dataframe, the global attributes and history information
-    return dfprofile, global_att, dfhist
+    return dfprofile, dfhist
 
 
 if __name__ == '__main__':
@@ -333,8 +304,6 @@ if __name__ == '__main__':
     first = True # to handle the test* files which also start at 1
 
     for file in files:  # read/write loop
-        if  'TEST' not in file and 'test' not in file:
-            continue
         nco = xr.open_dataset(file)
         raw_netCDF_file = os.path.join(os.path.basename(vargs.input_xbt_path),os.path.basename(file))
         print(raw_netCDF_file)
@@ -404,11 +373,11 @@ if __name__ == '__main__':
                 callsign = calls
 
         # Write function
-        profile, global_atts, history = netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF_file)
+        profile, history = netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF_file)
         # write the output to a netCDF file
-        write_output_nc(vargs.output_folder, profile, history, global_atts, profile_raw=False)
+        write_output_nc(vargs.output_folder, profile, history, profile_raw=False)
         # write the output to a netCDF file with the raw profile
         output_folder = os.path.join(vargs.output_folder, 'non_qc')
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
-        write_output_nc(output_folder, profile, history, global_atts, profile_raw=True,historic_flags=False)
+        write_output_nc(output_folder, profile, history, profile_raw=True,historic_flags=False)

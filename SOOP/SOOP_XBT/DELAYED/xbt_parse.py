@@ -148,16 +148,6 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
         # adjust date and time QC flags if required
         profile_qc = adjust_time_qc_flags(profile_qc)
 
-    # perform a check of the qc vs noqc global attributes and histories. Do any of these need reconciling?
-    if len(profile_qc.global_atts.keys() - profile_noqc.global_atts.keys()):
-        # if the difference in the global attributes is just the qc_completed key, continue
-        if len(profile_qc.global_atts.keys() - profile_noqc.global_atts) == 1:
-            if 'qc_completed' in profile_qc.global_atts.keys() - profile_noqc.global_atts:
-                pass
-            else:
-                LOGGER.error('%s GLOBAL attributes in RAW and ED files are not consistent. Please review.'
-                             % profile_qc.Input_filename)
-
     # Probe type goes into a variable with coefficients as attributes, and assign QC to probe types
     profile_qc = get_fallrate_eq_coef(profile_qc, profile_noqc)
     # if probetype is not XBT return empty profile_qc
@@ -187,7 +177,7 @@ def get_recorder_type(df):
     rct_list = read_section_from_xbt_config('RCT$')
     syst_list = read_section_from_xbt_config('SYST')
 
-    item_val = str(df['RECORDER_type'][0])
+    item_val = str(df['RECORDER_TYPE'][0])
     #        if item_val in list(syst_list.keys()):
     #            item_val = syst_list[item_val].split(',')[0]
 
@@ -206,27 +196,27 @@ def parse_extra_vars(profile_qc, profile_noqc):
     retrieve surface codes and some additional variables from input NetCDF file object
     """
     dataf = profile_qc.data.copy()
+    # read the variable names from the netcdfVars config file
     vars_list = read_variables_config()
-    # remove variable_names in the dataframe where the 'mquest' column contains nan
-    vars_list = vars_list[~vars_list['mquest'].isna()]
     # separate the dataframe into surface codes and other variables
     # where surface codes are in the mquest column and have either 4 character codes or a ';' separator
-    srfc_code_list = vars_list[(vars_list['mquest'].str.contains(';')) | (vars_list['mquest'].str.len() == 4)]
+    srfc_code_list = vars_list[(vars_list['Mquest'].str.contains(';')) | (vars_list['Mquest'].str.len() == 4)]
     # where the mquest column contains ';' separate the codes into a list
-    srfc_code_list.loc[:, 'mquest'] = srfc_code_list['mquest'].str.split(';')
+    srfc_code_list.loc[:, 'Mquest'] = srfc_code_list['Mquest'].str.split(';')
     # now explode the mquest column to have one row per code
-    srfc_code_list = srfc_code_list.explode('mquest')
+    srfc_code_list = srfc_code_list.explode('Mquest')
 
     # other variables are the ones remaining
-    vars_list = vars_list[~(vars_list['mquest'].str.contains(';')) & ~(vars_list['mquest'].str.len() == 4)]
+    vars_list = vars_list[~(vars_list['Mquest'].str.contains(';')) & ~(vars_list['Mquest'].str.len() == 4)]
 
-    # create a list of variables to be added to the dataframe
-    vars_list = vars_list.set_index('variable_name').to_dict()['mquest']
-
+    # transfer the non-surface code variables to the dataf dataframe
     ext = ['','_RAW']
     for ind, profile in enumerate([profile_qc, profile_noqc]):
-        for key,var in vars_list.items():
-            var_name = key
+        for index, row in vars_list.iterrows():
+            # var_name is either variable_name or Attribute Name, whichever is not NaN
+            var_name = row['variable_name']
+            # var is the Mquest code for the variable
+            var = row['Mquest']
             if var in list(profile.netcdf_file_obj.variables.keys()):
                 vv = decode_bytearray(profile.netcdf_file_obj[var][:])
                 if not vv or len(vv) == 0:
@@ -258,25 +248,6 @@ def parse_extra_vars(profile_qc, profile_noqc):
             else:
                 dataf[var_name + ext[ind]] = ''
 
-        # create global attributes
-        # read the global_attributes config file
-        global_list = read_globals_config()
-
-        # add geospatial information to global attributes dictionary
-        global_list['geospatial_lat_max'] = np.unique(dataf['LATITUDE']).item()
-        global_list['geospatial_lat_min'] = np.unique(dataf['LATITUDE']).item()
-        global_list['geospatial_lon_max'] = np.unique(dataf['LONGITUDE']).item()
-        global_list['geospatial_lon_min'] = np.unique(dataf['LONGITUDE']).item()
-        global_list['geospatial_vertical_max'] = max(dataf['DEPTH'])
-        global_list['geospatial_vertical_min'] = min(dataf['DEPTH'])
-        # add time coverage information to global attributes dictionary
-        global_list['time_coverage_start'] = dataf['TIME'].unique().strftime("%Y-%m-%dT%H:%M:%SZ").item()
-        global_list['time_coverage_end'] = dataf['TIME'].unique().strftime("%Y-%m-%dT%H:%M:%SZ").item()
-        # add the institution to the global attributes dictionary
-        global_list['institution'] = dataf['Institution'].unique().item()
-
-        # assign the global attributes to the profile object
-        profile.global_atts = global_list
         # Parse the surface codes into the variables too
         srfc_code_nc = profile.netcdf_file_obj['SRFC_Code'][:]
         srfc_parm = profile.netcdf_file_obj['SRFC_Parm'][:]
@@ -288,9 +259,9 @@ def parse_extra_vars(profile_qc, profile_noqc):
             srfc_code_iter = decode_bytearray(srfc_code_nc[i])
             # print(srfc_code_iter)
             # check srfc_code_iter is in the mquest column of the srfc_code_list dataframe
-            if srfc_code_iter in srfc_code_list['mquest'].values:
+            if srfc_code_iter in srfc_code_list['Mquest'].values:
                 # get the index of the srfc_code_iter in the srfc_code_list dataframe where the mquest column can have multiple values per row separated by ';'
-                srfc_code_index = srfc_code_list[srfc_code_list['mquest'] == srfc_code_iter].index[0]
+                srfc_code_index = srfc_code_list[srfc_code_list['Mquest'] == srfc_code_iter].index[0]
                 # now get the attributes for this srfc_code_iter
                 att_name = srfc_code_list.loc[srfc_code_index, 'variable_name']
                 att_type = srfc_code_list.loc[srfc_code_index, 'variable_type']
@@ -345,19 +316,19 @@ def parse_extra_vars(profile_qc, profile_noqc):
             dataf['Ship_IMO' + ext[ind]] = 'Unknown'
 
         # extract the information and assign correctly
-        if 'RECORDER_type' + ext[ind] in dataf.columns:
+        if 'RECORDER_TYPE' + ext[ind] in dataf.columns:
             recorder_val, recorder_type = get_recorder_type(dataf)
-            dataf['RECORDER_type' + ext[ind]] = recorder_val
-            dataf['RECORDER_type_name' + ext[ind]] = recorder_type
+            dataf['RECORDER_TYPE' + ext[ind]] = recorder_val
+            dataf['RECORDER_TYPE_name' + ext[ind]] = recorder_type
         else:
-            dataf['RECORDER_type_name' + ext[ind]] = 'Unknown'
-            dataf['RECORDER_type' + ext[ind]] = '99'
+            dataf['RECORDER_TYPE_name' + ext[ind]] = 'Unknown'
+            dataf['RECORDER_TYPE' + ext[ind]] = '99'
 
         # check deployment height
         if 'Height_launch_above_water' + ext[ind] in dataf.columns:
-            if dataf['Height_launch_above_water'].unique().item() > 50:
+            if dataf['Height_launch_above_water_meters'].unique().item() > 50:
                 LOGGER.warning('HTL$, xbt launch height attribute seems to be very high. Please review: %s meters %s' %
-                               (dataf['Height_launch_above_water'].unique().item(), profile.Input_filename))
+                               (dataf['Height_launch_above_water_meters'].unique().item(), profile.Input_filename))
 
         # some files don't have line information
         if 'SOOP_line' + ext[ind] in dataf.columns:
@@ -823,7 +794,7 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
                 item_val = '104'
             else:
                 # record the original value
-                profile_qc.global_atts['PROBE_TYPE_original_name'] = item_val
+                profile_qc.data['PROBE_TYPE_original_name'] = item_val
                 # try fuzzy matching here
                 imatch = difflib.get_close_matches(item_val[0:4], list(ptyp_list.keys()), n=1, cutoff=0.5)
                 if imatch:
@@ -839,15 +810,15 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
 
             profile_qc.data['PROBE_TYPE' + vv[ind]] = item_val
             profile_qc.data['PROBE_TYPE_name' + vv[ind]] = probetype
-            profile_qc.data['PROBE_TYPE_coeff_a' + vv[ind]] = coef_a
-            profile_qc.data['PROBE_TYPE_coeff_b' + vv[ind]] = coef_b
+            profile_qc.data['PROBE_TYPE_coefficient_a' + vv[ind]] = coef_a
+            profile_qc.data['PROBE_TYPE_coefficient_b' + vv[ind]] = coef_b
             if ind == 0:
                 profile_qc.data['PROBE_TYPE_quality_control'] = 1
         else:
             profile_qc.data['PROBE_TYPE' + vv[ind]] = '1023'
             profile_qc.data['PROBE_TYPE_name' + vv[ind]]  = 'Unknown'
-            profile_qc.data['PROBE_TYPE_coeff_a' + vv[ind]] = np.nan
-            profile_qc.data['PROBE_TYPE_coeff_b' + vv[ind]] = np.nan
+            profile_qc.data['PROBE_TYPE_coefficient_a' + vv[ind]] = np.nan
+            profile_qc.data['PROBE_TYPE_coefficient_b' + vv[ind]] = np.nan
             if ind == 0:
                 profile_qc.data['PROBE_TYPE_quality_control'] = 0
             LOGGER.error('PROBE_TYPE, PROBE_TYPE fallrate equation missing from %s' % profile_qc.Input_filename)
@@ -1549,11 +1520,11 @@ def create_flag_feature(profile):
     mapcodes = pd.merge(df, codes, how='right', left_on='full_code', right_on='HISTORY_QC_CODE')
 
     if mapcodes.empty:
-        profile.global_atts['qc_completed'] = 'no'
+        profile.data['qc_completed'] = 'no'
         return profile
     else:
         # adjust global attribute to say we have done scientific QC
-        profile.global_atts['qc_completed'] = 'yes'
+        profile.data['qc_completed'] = 'yes'
 
     # update the HISTORY_QC_CODE_DESCRIPTION to the df label
     mapcodes['HISTORY_QC_CODE_DESCRIPTION'] = mapcodes['name']
@@ -1697,9 +1668,6 @@ def make_dataframe(profile_ed, profile_raw, profile_turo):
                     # remove the _RAW column
                     profile_ed.data = profile_ed.data.drop(columns=[var])
                     # LOGGER.info('Removing %s from the dataframe as it is the same as %s' % (var, var_no_raw))
-                else:
-                    # keep the _RAW column but put it in the global attributes
-                    profile_ed.global_atts[var] = profile_ed.data[var].unique().tolist()
             elif var.endswith('_quality_control'):
                 # if the variable name ends with _quality_control and the values are zero or the same as the variable name without _quality_control, then remove the _quality_control
                 var_no_qc = var[:-16]  # remove _quality_control
@@ -1711,18 +1679,7 @@ def make_dataframe(profile_ed, profile_raw, profile_turo):
     # save the final dataframe to a
     df = profile_ed.data.copy(deep=True)
 
-    # make a global attributes dataframe
-    gdf = pd.DataFrame(profile_ed.global_atts, index=[0])
-
-    # add the raw global attributes to the dataframe
-    for key, value in profile_raw.global_atts.items():
-        # if the key and value are not already in the dataframe, skip them
-        if key in gdf.columns and gdf[key].equals(pd.Series([value])):
-            continue
-        else:
-            gdf[key + '_RAW'] = value
-
-    return df, gdf
+    return df
 
 
 def set_metadata(tbl, tbl_meta):
@@ -1888,13 +1845,11 @@ if __name__ == '__main__':
                 profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo)
                 if not profile_ed:
                     continue
-                profile_df, globals_df = make_dataframe(profile_ed, profile_raw, profile_turo)
+                profile_df = make_dataframe(profile_ed, profile_raw, profile_turo)
                 # add the station number to the dataframe
                 profile_df['station_number'] = f
-                globals_df['station_number'] = f
                 # add to the big dataframes
                 dfall = pd.concat([dfall, profile_df], ignore_index=True)
-                globsall = pd.concat([globsall, globals_df], ignore_index=True)
                 # add station number to the histories
                 profile_ed.histories['station_number'] = f
                 # add the histories to the big dataframe
@@ -1913,7 +1868,5 @@ if __name__ == '__main__':
     pq_filename = os.path.join(vargs.output_folder,
                                os.path.basename(keys.dbase_name) + '_histories.parquet')
     dfhist.to_parquet(pq_filename, index=False)
-    pq_filename = os.path.join(vargs.output_folder, os.path.basename(keys.dbase_name) + '_globals.parquet')
-    globsall.to_parquet(pq_filename, index=False)
 
     print('All done')
