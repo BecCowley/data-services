@@ -74,13 +74,13 @@ class XbtKeys(object):
 
     def __init__(self, filename):
         # record the keys file name and database filename
-        if filename.input_xbt_campaign_path.endswith('_keys.nc'):
-            self.keys_file_path = filename.input_xbt_campaign_path
+        if filename.endswith('_keys.nc'):
+            self.keys_file_path = filename.input_path
             self.dbase_name = self.keys_file_path.replace('_keys.nc', '')
         else:
-            self.dbase_name = filename.input_xbt_campaign_path
+            self.dbase_name = filename
             self.keys_file_path \
-                = '{campaign_path}_keys.nc'.format(campaign_path=filename.input_xbt_campaign_path.rstrip(os.path.sep))
+                = '{campaign_path}_keys.nc'.format(campaign_path=filename.rstrip(os.path.sep))
 
         if not os.path.exists(self.keys_file_path):
             msg = '{keys_file_path} does not exist%s\nProcess aborted'.format(keys_file_path=self.keys_file_path)
@@ -1742,8 +1742,8 @@ def set_metadata(tbl, tbl_meta):
 def args():
     """ define input argument"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input-xbt-campaign-path', type=str,
-                        help="path to *_keys.nc or campaign folder below the keys.nc file")
+    parser.add_argument('-i', '--input-xbt-campaign-path', type=str, nargs='+',
+                        help="paths to one or more database folders")
     parser.add_argument('-o', '--output-folder', nargs='?', default=1,
                         help="output directory of generated files")
     parser.add_argument('-l', '--log-file', nargs='?', default=1,
@@ -1761,10 +1761,18 @@ def args():
         if not os.path.exists(os.path.dirname(vargs.log_file)):
             os.makedirs(os.path.dirname(vargs.log_file))
 
-    if not os.path.exists(vargs.input_xbt_campaign_path):
-        msg = '%s not a valid path' % vargs.input_xbt_campaign_path
+    for i, path in enumerate(vargs.input_xbt_campaign_path):
+        if not os.path.exists(path):
+            msg = '%s not a valid path' % vargs.input_xbt_campaign_path
+            print(msg, file=sys.stderr)
+            # remove the path from the list
+            vargs.input_xbt_campaign_path.pop(i)
+    # if no input paths are provided, raise an error
+    if not vargs.input_xbt_campaign_path:
+        msg = 'No valid input paths provided. Please provide at least one valid path.'
         print(msg, file=sys.stderr)
-        sys.exit(1)
+        exit(1)
+
 
     if not os.path.exists(vargs.output_folder):
         os.makedirs(vargs.output_folder)
@@ -1807,66 +1815,66 @@ if __name__ == '__main__':
     output_folder='output_directory_pathname', 
     log_file='path_to_xbt.log'
     '''
+    for input_path in vargs.input_xbt_campaign_path:
+        keys = XbtKeys(input_path)
 
-    keys = XbtKeys(vargs)
+        # make an empty dataframe to collect all the data
+        dfall = pd.DataFrame()
+        # make a second dataframe to hold the histories
+        dfhist = pd.DataFrame()
+        # and another dataframe to hold the global attributes
+        globsall = pd.DataFrame()
 
-    # make an empty dataframe to collect all the data
-    dfall = pd.DataFrame()
-    # make a second dataframe to hold the histories
-    dfhist = pd.DataFrame()
-    # and another dataframe to hold the global attributes
-    globsall = pd.DataFrame()
+        for f in keys.data['station_number']:
+            # if f != 89019055:
+            #     continue
+            fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
+            fname = os.path.join(keys.dbase_name, fpath)
+            # make input_filename here
+            input_filename = os.path.join(os.path.basename(keys.dbase_name), fpath)
 
-    for f in keys.data['station_number']:
-        # if f != 89019055:
-        #     continue
-        fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
-        fname = os.path.join(keys.dbase_name, fpath)
-        # make input_filename here
-        input_filename = os.path.join(os.path.basename(keys.dbase_name), fpath)
+            # if the file exists, let's make a profile object with all the
+            # data and metadata attached.
 
-        # if the file exists, let's make a profile object with all the
-        # data and metadata attached.
+            if os.path.isfile(fname):
+                # read the edited profile
+                profile_ed = XbtProfile(fname, input_filename)
+                # read the raw profile
+                profile_raw = XbtProfile(fname.replace('ed.nc', 'raw.nc'), input_filename.replace('ed.nc', 'raw.nc'))
+                # TODO: check the keys data (date/time/lat/long etc) against what is in the data file
+                # TODO: find the matching TURO profile if it is available:
+                # profile_turo = turoProfile(profile_ed)
+                profile_turo = []
 
-        if os.path.isfile(fname):
-            # read the edited profile
-            profile_ed = XbtProfile(fname, input_filename)
-            # read the raw profile
-            profile_raw = XbtProfile(fname.replace('ed.nc', 'raw.nc'), input_filename.replace('ed.nc', 'raw.nc'))
-            # TODO: check the keys data (date/time/lat/long etc) against what is in the data file
-            # TODO: find the matching TURO profile if it is available:
-            # profile_turo = turoProfile(profile_ed)
-            profile_turo = []
+                # now write it out to the new netcdf format
+                if check_nc_to_be_created(profile_ed):
+                    print('Processing profile %s' % f)
+                    # for example where depths are different, metadata is different etc between the ed and raw files.
+                    profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo)
+                    if not profile_ed:
+                        continue
+                    profile_df = make_dataframe(profile_ed, profile_raw, profile_turo)
+                    # add the station number to the dataframe
+                    profile_df['station_number'] = f
+                    # add to the big dataframes
+                    dfall = pd.concat([dfall, profile_df], ignore_index=True)
+                    # add station number to the histories
+                    profile_ed.histories['station_number'] = f
+                    # add the histories to the big dataframe
+                    dfhist = pd.concat([dfhist, profile_ed.histories], ignore_index=True)
+            else:
+                LOGGER.warning('Profile not processed, file %s is in keys file, but does not exist' % f)
 
-            # now write it out to the new netcdf format
-            if check_nc_to_be_created(profile_ed):
-                print('Processing profile %s' % f)
-                # for example where depths are different, metadata is different etc between the ed and raw files.
-                profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo)
-                if not profile_ed:
-                    continue
-                profile_df = make_dataframe(profile_ed, profile_raw, profile_turo)
-                # add the station number to the dataframe
-                profile_df['station_number'] = f
-                # add to the big dataframes
-                dfall = pd.concat([dfall, profile_df], ignore_index=True)
-                # add station number to the histories
-                profile_ed.histories['station_number'] = f
-                # add the histories to the big dataframe
-                dfhist = pd.concat([dfhist, profile_ed.histories], ignore_index=True)
-        else:
-            LOGGER.warning('Profile not processed, file %s is in keys file, but does not exist' % f)
+        # Drop columns labelled *_RAW_quality_control if they contain all 0s
+        dfall = dfall.loc[:, ~(dfall.columns.str.contains('_RAW_quality_control') & (dfall == 0).all())]
 
-    # Drop columns labelled *_RAW_quality_control if they contain all 0s
-    dfall = dfall.loc[:, ~(dfall.columns.str.contains('_RAW_quality_control') & (dfall == 0).all())]
-
-    # add table metadata to the dfall dataframe
-    dfall = set_metadata(dfall, tbl_meta={'Parent file':keys.dbase_name})
-    # write the dataframe to a parquet file
-    pq_filename = os.path.join(vargs.output_folder, os.path.basename(keys.dbase_name) + '.parquet')
-    pq.write_table(dfall, pq_filename)
-    pq_filename = os.path.join(vargs.output_folder,
-                               os.path.basename(keys.dbase_name) + '_histories.parquet')
-    dfhist.to_parquet(pq_filename, index=False)
+        # add table metadata to the dfall dataframe
+        dfall = set_metadata(dfall, tbl_meta={'Parent file':keys.dbase_name})
+        # write the dataframe to a parquet file
+        pq_filename = os.path.join(vargs.output_folder, os.path.basename(keys.dbase_name) + '.parquet')
+        pq.write_table(dfall, pq_filename)
+        pq_filename = os.path.join(vargs.output_folder,
+                                   os.path.basename(keys.dbase_name) + '_histories.parquet')
+        dfhist.to_parquet(pq_filename, index=False)
 
     print('All done')
