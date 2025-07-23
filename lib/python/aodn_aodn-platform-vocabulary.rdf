@@ -256,7 +256,7 @@
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2012-12-10T00:00:00.000Z</dcterms:created>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-02-12T00:42:04.231Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-06-18T04:38:55.492Z</dcterms:modified>
 	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Finney.Kim_Admin"/>
 	<dc:rights rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Freely Available For Reuse</dc:rights>
 	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/Sebastien-Mancini"/>
@@ -717,8 +717,8 @@
 	<skos:hasTopConcept rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/76"/>
 	<skos:hasTopConcept rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/77"/>
 	<skos:hasTopConcept rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/22"/>
-	<dcterms:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2025-02-12</dcterms:issued>
-	<owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Version 6.2</owl:versionInfo>
+	<dcterms:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2025-06-27</dcterms:issued>
+	<owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Version 6.3</owl:versionInfo>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://purl.org/dc/terms/created">
@@ -8945,6 +8945,7 @@
 	<skos:narrower rdf:resource="http://vocab.nerc.ac.uk/collection/C17/current/09ZK"/>
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/360"/>
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/361"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/362"/>
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">British Oceanographic Data Centre (BODC)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(L061) SeaVoX Platform Categories</dc:source>
 	<skos:definition xml:lang="en">A platform for purpose of commerce of any size operating on the surface of the water column in unpredictable locations that regularly collects scientific (oceanographic and meteorological) data (e.g. an instrumented cargo vessel).</skos:definition>
@@ -10630,25 +10631,25 @@
 	<rdfs:subPropertyOf rdf:resource="http://xmlns.com/foaf/0.1/tipjar"/>
 </rdf:Description>
 
-<rdf:Description rdf:nodeID="genid-879b168309b5403f84b6e8e1614f4aa0-3DF6976E2C8F3D186F3344AC11FF0F6D">
+<rdf:Description rdf:nodeID="genid-70b84100eecb4dde87aa0cc2736867fb-3DF6976E2C8F3D186F3344AC11FF0F6D">
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
 	<rdfs:subClassOf rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
-	<rdfs:subClassOf rdf:nodeID="genid-879b168309b5403f84b6e8e1614f4aa0-3DF6976E2C8F3D186F3344AC11FF0F6D"/>
+	<rdfs:subClassOf rdf:nodeID="genid-70b84100eecb4dde87aa0cc2736867fb-3DF6976E2C8F3D186F3344AC11FF0F6D"/>
 </rdf:Description>
 
-<rdf:Description rdf:nodeID="genid-879b168309b5403f84b6e8e1614f4aa0-48195C667C9341E5E09944AEF92C2673">
+<rdf:Description rdf:nodeID="genid-70b84100eecb4dde87aa0cc2736867fb-48195C667C9341E5E09944AEF92C2673">
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
 	<rdfs:subClassOf rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
-	<rdfs:subClassOf rdf:nodeID="genid-879b168309b5403f84b6e8e1614f4aa0-48195C667C9341E5E09944AEF92C2673"/>
+	<rdfs:subClassOf rdf:nodeID="genid-70b84100eecb4dde87aa0cc2736867fb-48195C667C9341E5E09944AEF92C2673"/>
 </rdf:Description>
 
-<rdf:Description rdf:nodeID="genid-879b168309b5403f84b6e8e1614f4aa0-6345A6329B6A48D85F9765042D1D191E">
+<rdf:Description rdf:nodeID="genid-70b84100eecb4dde87aa0cc2736867fb-6345A6329B6A48D85F9765042D1D191E">
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
 	<rdfs:subClassOf rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
-	<rdfs:subClassOf rdf:nodeID="genid-879b168309b5403f84b6e8e1614f4aa0-6345A6329B6A48D85F9765042D1D191E"/>
+	<rdfs:subClassOf rdf:nodeID="genid-70b84100eecb4dde87aa0cc2736867fb-6345A6329B6A48D85F9765042D1D191E"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://purl.org/dc/elements/1.1/description">
@@ -13545,6 +13546,24 @@
 	<skos:hiddenLabel xml:lang="en">IMOS:9357951</skos:hiddenLabel>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
 	<skos:scopeNote xml:lang="en">built:2008</skos:scopeNote>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/362">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-06-18T04:38:55.465Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-06-18T04:42:29.866Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">NPDL Tahiti</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Registe</dc:source>
+	<skos:altLabel xml:lang="en">9V9419</skos:altLabel>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/32"/>
+	<skos:definition xml:lang="en">Container ship vessel, which is currently flying the flag of Singapore (June, 2025).</skos:definition>
+	<skos:hiddenLabel xml:lang="en">IMO:9675808</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:scopeNote xml:lang="en">built:2015</skos:scopeNote>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/863/">
