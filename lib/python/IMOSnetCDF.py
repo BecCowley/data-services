@@ -498,14 +498,10 @@ def attributesFromIMOSparametersFile(inAttr={}):
                 attr[var]['__data_type'] = 'd'
             elif dtype == 'char':
                 attr[var]['__data_type'] = 'c'
-            elif 'int' in dtype:
-                attr[var]['__data_type'] = dtype
+            elif dtype == 'int':
+                attr[var]['__data_type'] = 'i'
             elif dtype == 'byte':
                 attr[var]['__data_type'] = 'b'
-            elif dtype == 'str':
-                attr[var]['__data_type'] = 'str'
-            elif 'S' in dtype:
-                attr[var]['__data_type'] = dtype
             else:
                 print('Unknown data type in %s: %s' % (imosParametersFile, dtype), file=sys.stderr)
 

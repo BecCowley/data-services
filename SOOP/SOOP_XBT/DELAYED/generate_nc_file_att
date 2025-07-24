@@ -1,9 +1,9 @@
 [global_attributes]
-Conventions                  = CF-1.8,IMOS-1.4
-acknowledgement              = Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: Data was sourced from the Integrated Marine Observing System (IMOS) - IMOS is a national collaborative research infrastructure, supported by the Australian Government. If relevant, also credit other organisations involved in collection of this particular datastream (as listed in credit in the metadata record).
-author                       = Cowley, Rebecca; Krummel, Lisa; Besnard, Laurent; Walsh, Andrew; Thresher, Ann; Sprintall, Janet
-author_email                 = rebecca.cowley@csiro.au; laurent.besnard@utas.edu.au
-citation                     = The citation in a list of references is: IMOS [year-of-data-download], [Title], [data-access-url], accessed [date-of-access]
+Conventions                  = CF-1.6,IMOS-1.4
+acknowledgement              = Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: "Data was sourced from the Integrated Marine Observing System (IMOS) - IMOS is a national collaborative research infrastructure, supported by the Australian Government." If relevant, also credit other organisations involved in collection of this particular datastream (as listed in "credit" in the metadata record).
+author                       = Besnard, Laurent
+author_email                 = laurent.besnard@utas.edu.au
+citation                     = The citation in a list of references is: "IMOS [year-of-data-download], [Title], [data-access-url], accessed [date-of-access]"
 data_centre                  = Australian Ocean Data Network (AODN)
 data_centre_email            = info@aodn.org.au
 disclaimer                   = Data, products and services from IMOS are provided "as is" without any warranty as to fitness for a particular purpose.
@@ -13,16 +13,17 @@ file_version                 = Level 1 - Quality Controlled Data
 file_version_quality_control = Data in this file has been through a quality control procedure. Every data point in this file has an associated quality flag
 geospatial_vertical_positive = down
 geospatial_vertical_units    = metres
+institution                  = SOOP XBT
+institution_references       = http://www.imos.org.au/soop.html
 keywords                     = Oceans>Ocean Temperature>Sea Water Temperature; Oceans>Bathymetry/Seafloor Topography>Water Depth; Bathythermographs>Expendable Bathythermographs (XBT)
 license                      = http://creativecommons.org/licenses/by/4.0/
 naming_authority             = IMOS
 principal_investigator       = Cowley, Rebecca; CSIRO
 project                      = Integrated Marine Observing System (IMOS)
 quality_control_set          = 1.0
-references                   = https://doi.org/10.25919/3tm5-zn80, https://www.aoml.noaa.gov/phod/goos/xbtscience/index.php
+references                   = http://www.meds-sdmm.dfo-mpo.gc.ca/meds/Databases/OCEAN/wmocodes_e.htm; http://www.meds-sdmm.dfo-mpo.gc.ca/meds/Databases/OCEAN/GTSPPcodes_e.htm; http://woce.nodc.noaa.gov/woce_v3/wocedata_1/woce-uot/overview.htm; https://www.nodc.noaa.gov/GTSPP/document/codetbls/gtsppcode.html
 source                       = Expendable Bathythermograph (XBT)
 standard_name_vocabulary     = NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table 27
-title                        = Upper ocean temperature data collected on the transect in variable SOOP_line using XBT (expendable bathythermographs) on the vessel named in the Ship_name variable
 
 [TIME]
 calendar            = gregorian
@@ -32,7 +33,7 @@ axis                = T
 
 [TIME_quality_control]
 long_name                   = quality flags for time
-standard_name               = quality_flag
+standard_name               = time status_flag
 quality_control_conventions = IMOS standard flags
 
 [LATITUDE]
@@ -41,7 +42,7 @@ ancillary_variables = LATITUDE_quality_control
 axis                = Y
 
 [LATITUDE_quality_control]
-standard_name               = quality_flag
+standard_name               = latitude status_flag
 long_name                   = quality flags for latitude
 quality_control_conventions = IMOS standard flags
 
@@ -51,155 +52,9 @@ ancillary_variables = LONGITUDE_quality_control
 axis                = X
 
 [LONGITUDE_quality_control]
-standard_name               = quality_flag
+standard_name               = longitude status_flag
 long_name                   = quality flags for longitude
 quality_control_conventions = IMOS standard flags
-
-[TIME_RAW]
-calendar 		= gregorian
-units 			= days since 1950-01-01 00:00:00 UTC
-standard_name	= time
-long_name 		= time uncorrected
-valid_min 		= 0
-valid_max 		= 90000
-
-[LATITUDE_RAW]
-reference_datum 	= geographical coordinates, WGS84 projection
-standard_name 		= latitude
-long_name 		= latitude uncorrected
-units 			= degrees_north
-valid_min 		= -90
-valid_max 		= 90
-
-[LONGITUDE_RAW]
-reference_datum 	= geographical coordinates, WGS84 projection
-standard_name 		= longitude
-long_name 		= longitude uncorrected
-units 			= degrees_east
-valid_min 		= -180
-valid_max 		= 180
-
-[PROBE_TYPE]
-reference_datum 	= WMO code table 1770 
-ancillary_variables 	= PROBE_TYPE_quality_control, PROBE_TYPE_name, PROBE_TYPE_coeff_a, PROBE_TYPE_coeff_b
-long_name 		= XBT probe type
-
-[PROBE_TYPE_RAW]
-reference_datum 	= WMO code table 1770
-ancillary_variables 	= PROBE_TYPE_name_RAW, PROBE_TYPE_coeff_a_RAW, PROBE_TYPE_coeff_b_RAW
-long_name 		=  XBT probe type uncorrected
-
-[PROBE_TYPE_name]
-reference_datum 	= WMO code table 1770
-long_name 		= XBT probe type name
-
-[PROBE_TYPE_name_RAW]
-reference_datum 	= WMO code table 1770
-long_name 		=  XBT probe type uncorrected name
-
-[PROBE_TYPE_quality_control]
-quality_control_conventions 	= IMOS standard flags 
-long_name 			= quality flags for XBT probe type
-valid_min 			= 0
-valid_max 			= 9
-
-[PROBE_TYPE_coeff_a]
-reference_datum 	= WMO code table 1770
-long_name 		= PROBE_TYPE Fall Rate Equation coefficient a
-
-[PROBE_TYPE_coeff_b]
-reference_datum 	= WMO code table 1770
-long_name 		= PROBE_TYPE Fall Rate Equation coefficient b
-
-[PROBE_TYPE_coeff_a_RAW]
-reference_datum 	= WMO code table 1770
-long_name 		= PROBE_TYPE_RAW Fall Rate Equation coefficient a
-
-[PROBE_TYPE_coeff_b_RAW]
-reference_datum 	= WMO code table 1770
-long_name 		= PROBE_TYPE_RAW Fall Rate Equation coefficient b
-
-[PROBE_fall_rate_correction_factor]
-long_name 		= XBT fall rate correction factor applied to DEPTH
-
-[Institution_uniqueid]
-long_name 		= XBT unique identifier
-cf_role 		= profile_id
-
-[Institution_uniqueid_originator]
-long_name 		= XBT unique identifier from data originator
-
-[Input_filename]
-long_name 		= XBT input filename
-
-[RECORDER_type]
-long_name 		= XBT recorder type code
-reference_datum 	= WMO code table 4770
-
-[RECORDER_type_name]
-long_name 		= XBT recorder type name
-reference_datum 	= WMO code table 4770
-
-[RECORDER_serial_number]
-long_name 		= XBT recorder serial number
-
-[RECORDER_software_version]
-long_name 		= XBT recorder software version
-
-[PROBE_calibration_OFFSET]
-long_name 		= XBT calibration offset for temperature from the probe
-
-[PROBE_calibration_SCALE]
-long_name 		= XBT calibration scale for temperature from the probe
-
-[PROBE_serial_number]
-long_name 		= XBT probe serial number
-
-[PROBE_manufacture_date]
-long_name 		= XBT probe manufacture date
-calendar            = gregorian
-
-[Height_launch_above_water]
-long_name 		= XBT height of launch above water
-units 			= m
-valid_min 		= 0
-valid_max 		= 100
-
-[Cyclic_redundancy_code]
-long_name 		= XBT cyclic redundancy code
-
-[SOOP_line]
-long_name 		= XBT Ship Of Opportunity (SOOP) line identifier
-
-[SOOP_line_description]
-long_name 		= XBT Ship Of Opportunity (SOOP) line description
-
-[Cruise_ID]
-long_name 		= XBT cruise identifier
-
-[PROBE_box_number]
-long_name 		= XBT probe box number from manufacturer
-
-[Institution]
-long_name 		= Institute name
-
-[Institution_code]
-long_name 		= Global Telecommunications System (GTS) Institute code
-
-[SOT_ID]
-long_name 		= Ship Operations Team ID from oceanops.org
-
-[Ship_name]
-long_name 		= Deployment vessel name
-
-[Callsign]
-long_name 		= Deployment vessel callsign
-
-[Platform_code]
-long_name 		= Deployment vessel platform code
-
-[Ship_IMO]
-long_name 		= Deployment vessel IMO number
 
 [DEPTH]
 reference_datum     = sea surface
@@ -208,183 +63,79 @@ longname            = depth
 units               = m
 valid_min           = -5.
 valid_max           = 12000. 
-ancillary_variables = DEPTH_quality_control DEPTH_uncertainty
+ancillary_variables = DEPTH_quality_control
 axis                = Z
 positive            = down
 
 [DEPTH_quality_control]
 long_name                   = quality flags for depth
-standard_name               = quality_flag
+standard_name               = depth status_flag
 quality_control_conventions = IMOS standard flags
 
-[DEPTH_uncertainty]
-standard_name 		= depth standard_error
-units 			= m 
-long_name 		= depth uncertainty
-
-[DEPTH_RAW]
-reference_datum     = sea surface
-long_name           = depth raw
-standard_name       = depth
-units               = m
-ancillary_variables = DEPTH_RAW_quality_control
-positive            = down
-valid_min           = -5.
-valid_max           = 12000.
-
 [TEMP]
-long_name                 = seawater temperature
+long_name                 = sea_water_temperature
 standard_name             = sea_water_temperature
 units                     = Celsius
 valid_min                 = -2.5
 valid_max                 = 40. 
 coordinates               = TIME LATITUDE LONGITUDE DEPTH
-ancillary_variables       = TEMP_quality_control TEMP_uncertainty
+ancillary_variables       = TEMP_quality_control
+axis                      = Z
+positive                  = down
 
 [TEMP_quality_control]
-long_name                   = quality flag for seawater temperature
-standard_name               = quality_flag
+long_name                   = quality flag for sea_water_temperature
+standard_name               = sea_water_temperature status_flag
 quality_control_conventions = IMOS standard flags
-
-[TEMP_uncertainty]
-standard_name 		= sea_water_temperature standard_error
-units 			= Celsius
-long_name 		= seawater temperature uncertainty
-
-[TEMP_RAW]
-long_name                 = seawater temperature raw
-coordinates               = TIME LATITUDE LONGITUDE DEPTH_RAW
-units                     = Celsius
-valid_min                 = -2.5
-valid_max                 = 40
-
-[TEMP_RECORDING_SYSTEM]
-coordinates 		= TIME LATITUDE LONGITUDE DEPTH
-valid_max 		= 40
-long_name 		= seawater temperature from recording system
-units 			= Celsius
-ancillary_variables 	= TEMP_RECORDING_SYSTEM_quality_control
-standard_name		= sea_water_temperature
-valid_min 		= -2.5
-
-[TEMP_RECORDING_SYSTEM_quality_control]
-long_name 		= quality flag for seawater temperature from recording system
-quality_control_conventions 		= Data Quality Control Flags, Lindsay Pender, 2000,  https://www.marine.csiro.au/data/trawler/download.cfm?file_id=4716
-valid_min 		= -128
-valid_max 		= 127
-flag_values 		= -119, -86, -64, 0, 73, 79, 106
-flag_meanings 		= out_of_range spikes_bad no_qc_applied qc_applied_good_data suspect_data_out_of_climatology suspect_surface_data spike_filtered
-
-[RESISTANCE]
-coordinates 		= TIME LATITUDE LONGITUDE DEPTH
-long_name 		= thermistor resistance
-units 			= ohms
-
-[SAMPLE_TIME]
-coordinates 		= TIME LATITUDE LONGITUDE DEPTH
-calendar            = gregorian
-long_name 		= recorder sample time
-
-[QC_accept_code]
-long_name 		= XBT accept code
-valid_min 		= 0
-
-[QC_reject_code]
-long_name 		= XBT reject code
-valid_min 		= 0
 
 [HISTORY_INSTITUTION]
-long_name   = Institution which performed quality control action
-quality_control_conventions = GTSPP IDENT_CODE (Institute Identity code) table
+long_name   = Institution which performed action
+Conventions = GTSPP IDENT_CODE table
+
+[HISTORY_STEP]
+long_name   = Step in data processing
+Conventions = GTSPP PRC_CODE table
 
 [HISTORY_SOFTWARE]
-long_name   = Name of software which performed quality control action
-quality_control_conventions = Institution dependent
+long_name   = Name of software which performed action
+Conventions = Institution dependent
 
 [HISTORY_SOFTWARE_RELEASE]
-long_name  = Version/Release of software which performed quality control action
-quality_control_conventions = Institution dependent
+long_name  = Version/Release of software which performed action
+Conventions = Institution dependent
 
 [HISTORY_DATE]
-long_name           = Date the  quality control history record was created
+long_name           = Date the history record was created
 calendar            = gregorian
 units               = days since 1950-01-01 00:00:00 UTC
+axis                = T
 
 [HISTORY_PARAMETER]
-long_name   = Parameter that quality control action is performed on
-quality_control_conventions = GTSPP PC_PROF (Parameter Code Profile) table
+long_name   = Parameter that action is performed on
+Conventions = GTSPP PC_PROF table
 
 [HISTORY_START_DEPTH]
-long_name   = Shallowest depth quality control action applied to
+long_name   = Start depth action applied to
 units       = m
-valid_min   = -5.
-valid_max   = 12000.
+axis        = Z
+positive    = down
 
-[HISTORY_QC_CODE]
-long_name =  Quality control code applied
-quality_control_conventions = Australian XBT Cookbook v1.1 or v2.0, https://doi.org/10.25919/3tm5-zn80
+[HISTORY_STOP_DEPTH]
+long_name   = End depth action applied to
+units       = m
+axis        = Z
+positive    = down
 
-[HISTORY_QC_CODE_DESCRIPTION]
-long_name = Description of HISTORY_QC_CODE
-quality_control_conventions = Australian XBT Cookbook v1.1 or v2.0, https://doi.org/10.25919/3tm5-zn80
+[HISTORY_PREVIOUS_VALUE]
+long_name = Parameter previous value before action
+units     = 1
+axis      = Z
+positive  = down
 
-[HISTORY_QC_CODE_VALUE]
-long_name                   = quality flag applied to variable named in HISTORY_PARAMETER
-standard_name               = quality_flag
-quality_control_conventions = IMOS standard flags
+[HISTORY_QC_FLAG]
+long_name = QC flag applied
+Conventions = GTSPP ACT_CODE table and CSIRO XBT Cookbook
 
-[PSAL]
-long_name                 = sea_water_salinity
-standard_name             = sea_water_salinity
-units                     = 1
-valid_min                 = 2
-valid_max                 = 41.
-coordinates               = TIME LATITUDE LONGITUDE DEPTH
-ancillary_variables       = PSAL_quality_control PSAL_uncertainty
-
-[PSAL_quality_control]
-long_name                   = quality flag for sea_water_salinity
-standard_name               = quality_flag
-quality_control_conventions = IMOS standard flags
-
-[PSAL_uncertainty]
-standard_name 		= sea_water_salinity standard_error
-units 			= 1
-long_name 		= seawater salinity uncertainty
-
-[PSAL_RAW]
-long_name                 = seawater salinity raw
-coordinates               = TIME LATITUDE LONGITUDE DEPTH
-units                     = 1
-valid_min                 = 2
-valid_max                 = 41.
-
-[SSPD]
-long_name                 = speed_of_sound_in_sea_water
-standard_name             = speed_of_sound_in_sea_water
-ancillary_variables       = SSPD_quality_control SSPD_uncertainty
-units                     = m s-1
-coordinates               = TIME LATITUDE LONGITUDE DEPTH
-
-[SSPD_quality_control]
-long_name                   = quality flag for speed_of_sound_in_sea_water
-standard_name               = quality_flag
-quality_control_conventions = IMOS standard flags
-
-[SSPD_uncertainty]
-standard_name 		= speed_of_sound_in_sea_water standard_error
-units 			= 1
-long_name 		= speed_of_sound_in_sea_water uncertainty
-
-[SSPD_RAW]
-long_name                 = speed_of_sound_in_sea_water raw
-coordinates               = TIME LATITUDE LONGITUDE DEPTH
-units                     = 1
-valid_min                 = 2
-valid_max                 = 41.
-
-[Predrop_comments]
-long_name = XBT pre-drop comments
-
-[Postdrop_comments]
-long_name = XBT post-drop comments
+[HISTORY_QC_FLAG_DESCRIPTION]
+long_name = Description of HISTORY_QC_FLAG
+Conventions = GTSPP ACT_CODE table and CSIRO XBT Cookbook

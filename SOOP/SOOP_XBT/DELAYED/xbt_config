@@ -1,165 +1,120 @@
-#QC codes whose flags apply to the entire profile
+# SRFC CODES defined in https://www.nodc.noaa.gov/GTSPP/document/codetbls/gtsppcode.html
+# defined as
+# CODE_IN_ORIGINAL_FILE = GATT_IN_OUTPUT_NC,TYPE_OF_GATT
+[SRFC_CODES]
+IOTA = csiro_indian_ocean_temperature_archive_id,str
+GCLL = Platform_code,str
+CSID = XBT_uniqueid,int
+SER# = XBT_instrument_serialnumber,int
+PEQ$ = XBT_probetype_fallrate_equation,str
+PTYP = XBT_probetype_fallrate_equation,str
+RCT$ = XBT_recorder_type,str
+SYST = XBT_system_type,str
+OFFS = XBT_calibration_OFFSET,float
+SCAL = XBT_calibration_SCALE,float
+CRC$ = cyclic_redundancy_code,str
+TWI# = XBT_line,str
+SHP# = ship_name,str
+MFD# = XBT_manufacturer_date_yyyymmdd,str
+HTL$ = XBT_height_launch_above_water_in_meters,float
+SSPS = Sea_Surface_Practical_Salinity_(PSU),str
+VERS = Recorder_software_version,str
+FVRS = Recorder_firmware_version,str
+HVRS = Hardware_version,str
+SER1 = Hardware_serial_number,str
+UVRS = Graphical_User_Interface_Version,str
+WAIT = Recorder_system_wait_time_seconds_used_with_FREQ_to_calculate_depth,float
+FREQ = Recorder_system_frequency_Hz_used_with_WAIT_to_calculate_depth,float
+
+#QC codes that apply to the entire profile
 [ACT_CODES_FULL_PROFILE]
-QC=Scientific Quality Control applied
-EF=Eddy Front / Current
-RE=Repeat Drop
-PE=Profile position error or correction to latitude and/or longitude
-TE=Date-Time error or correction to date and/or time
-NT=No Trace
-ST=Step-like structure in temperature
-FS=Fine structure in temperature
-PS=Fine structure (step-like) Probable
-TP=Test probe
+QC = Scientific Quality Control applied
+EF = Eddy Front / Current
+RE = Repeat Drop
+PE = Profile position error or correction to latitude and/or longitude
+TE = Date-Time error or correction to date and/or time
+NT = No Trace
 
-#QC codes whose flags only apply to the place they are put
+#QC codes that only apply to the place they are put
 [ACT_CODES_SINGLE_POINT]
-CS=Surface Transient
+CS = Surface Spike
 
-#QC codes whose flags apply from where they are to the next flag or the bottom
+#QC codes that apply from where they are to the next flag or the bottom
 [ACT_CODES_TO_NEXT_FLAG]
-CT=Constant Temperature
-DO=Depth offset
-HB=Hit Bottom
-IV=Inversion confirmed
-PI=Inversion probable
-LE=Leakage
-NG=No good trace
-NU=Inversion in Mixed Layer Confirmed (nub)
-PL=Premature Launch
-SA=Temperature Surface Anomaly
-SO=Surface offset in temperature
-TD=Temperature Difference
-TO=Temperature offset
-WB=Wire Break
-WS=Wire Stretch
-SP=Spike
-IP=Insulation penetration
-HF=High Frequency Interference
+CT = Constant Temperature
+DO = Depth offset
+FS = Fine structure in temperature
+HB = Hit Bottom
+HF = High Frequency Interference
+IV = Inversion confirmed
+PI = Inversion probable
+LE = Leakage
+NG = No good trace
+NU = Inversion in Mixed Layer Confirmed (nub)
+PL = Premature Launch
+PS = Fine structure (step-like) Probable
+SA = Temperature Surface Anomaly
+SO = Surface offset in temperature
+ST = Step-like structure in temperature
+TD = Temperature Difference
+TO = Temperature offset
+WB = Wire Break
+WS = Wire Stretch
 
-#QC codes whose values could have been changed due to interpolation or filtering
-[ACT_CODES_CHANGED]
-SP=Spike
-IP=Insulation penetration
-HF=High Frequency Interference
-PE=Profile position error or correction to latitude and/or longitude
-TE=Date-Time error or correction to date and/or time
-
-#For older converter:
+#QC codes that can apply to where they are (ACCEPT flag 1/2 or REPLACE flag 5) or to the next flag/bottom (REJECT flag 3/4)
 [ACT_CODES_BOTH]
-SP=Spike
-IP=Insulation penetration
+SP = Spike
+IP = Insulation penetration
 
 # Probe types from WMO 1770 table
 [PEQ$]
-001=Sippican T-4
-002=Sippican T-4
-011=Sippican T-5
-021=Sippican Fast Deep
-031=Sippican T-6
-032=Sippican T-6
-041=Sippican T-7
-042=Sippican T-7
-051=Sippican Deep Blue
-052=Sippican Deep Blue
-061=Sippican T-10
-071=Sippican T-11
-081=Sippican AXBT (300 m probes)
-104=Test Canister
-201=TSK T-4
-202=TSK T-4
-211=TSK T-6
-212=TSK T-6
-221=TSK T-7
-222=TSK T-7
-231=TSK T-5
-241=TSK T-10
-251=TSK Deep Blue
-252=TSK Deep Blue
-261=TSK AXBT
-401=Sparton XBT-1
-411=Sparton XBT-3
-421=Sparton XBT-4
-431=Sparton XBT-5
-441=Sparton XBT-5DB
-451=Sparton XBT-6
-461=Sparton XBT-7
-462=Sparton XBT-7
-471=Sparton XBT-7DB
-481=Sparton XBT-10
-491=Sparton XBT-20
-501=Sparton XBT-20DB
-510=Sparton 536 AXBT
-700=Sippican XCTD Standard
-710=Sippican XCTD Deep
-720=Sippican AXCTD
-730=Sippican SXCTD
-741=TSK XCTD/XCTD-1
-742=TSK XCTD-2
-743=TSK XCTD-2F
-744=TSK XCTD-3
-745=TSK XCTD-4
-751=TSK AXCTD
-780=Sea-Bird SBE21 SEACAT Thermosalinograph
-781=Sea-Bird SBE45 MicroTSG Thermosalinograph
-800=Mechanical BT
-810=Hydrocast
-820=Thermistor chain
-825=Temperature (sonic) and pressure probes
-830=CTD
-831=CTD-P-ALACE float
-835=PROVOR-IV
-836=PROVOR-III
-837=ARVOR_C SBE conductivity sensor
-838=ARVOR_D SBE conductivity sensor
-839=PROVOR-II SBE conductivity sensor
-840=PROVOR no conductivity sensor
-841=PROVOR Sea-Bird conductivity sensor
-842=PROVOR FSI conductivity sensor
-843=Polar Ocean Profiling System (POPS) PROVOR SBE CTD
-844=Profiling float ARVOR, Sea-Bird conductivity sensor
-845=Webb Research no conductivity sensor
-846=Webb Research Sea-Bird conductivity sensor
-847=Webb Research FSI conductivity sensor
-848=APEX-EM SBE conductivity sensor
-849=APEX_D SBE conductivity sensor
-850=SOLO no conductivity sensor
-851=SOLO Sea-Bird conductivity sensor
-852=SOLO FSI conductivity sensor
-853=Profiling float SOLO2 (SCRIPPS), Sea-Bird conductivity sensor
-854=S2A SBE conductivity sensor
-855=Profiling float NINJA, no conductivity sensor
-856=Profiling float NINJA, SBE conductivity sensor
-857=Profiling float NINJA, FSI conductivity sensor
-858=Profiling float NINJA, TSK conductivity sensor
-859=Profiling float NEMO, no conductivity sensor
-860=Profiling float NEMO, SBE conductivity sensor
-861=Profiling float NEMO, FSI conductivity sensor
-862=SOLO_D SBE conductivity sensor
-863=NAVIS-A SBE conductivity sensor
-864=NINJA_D SBE conductivity sensor
-865=NOVA SBE conductivity sensor
-866=ALAMO no conductivity sensor
-867=ALAMO RBR conductivity sensor
-868=ALAMO SBE conductivity sensor
-870=HM2000
-871=COPEX
-872=S2X
-873=ALTO
-874=SOLO D MRV
-900=Sippican LMP-5 XBT 9.727 ?0.0473
-901=Ice-tethered Profiler (ITP), SBE CTD
-902=Brooke Ocean Moving Vessel Profiler (MVP)
-903=Sea-Bird CTD
-904=AML Oceanographic CTD
-905=Falmouth Scientific CTD
-906=Ocean Sensors CTD
-907=Valeport CTD
-908=Oceanscience MVP
-909=IDRONAUT CTD
-910=Sea-Bird SBE 38
-995=Instrument attached to marine mammals
-996=Instrument attached to animals other than marine mammals
-1023=Missing value
+001=Sippican T-4,str
+002=Sippican T-4,str
+011=Sippican T-5,str
+021=Sippican Fast Deep,str
+031=Sippican T-6,str
+032=Sippican T-6,str
+041=Sippican T-7,str
+042=Sippican T-7,str
+051=Sippican Deep Blue,str
+052=Sippican Deep Blue,str
+061=Sippican T-10,str
+071=Sippican T-11,str
+081=Sippican AXBT (300 m probes),str
+201=TSK T-4,str
+202=TSK T-4,str
+211=TSK T-6,str
+212=TSK T-6,str
+221=TSK T-7,str
+222=TSK T-7,str
+231=TSK T-5,str
+241=TSK T-10,str
+251=TSK Deep Blue,str
+252=TSK Deep Blue,str
+261=TSK AXBT,str
+401=Sparton XBT-1,str
+411=Sparton XBT-3,str
+421=Sparton XBT-4,str
+431=Sparton XBT-5,str
+441=Sparton XBT-5DB,str
+451=Sparton XBT-6,str
+461=Sparton XBT-7,str
+462=Sparton XBT-7,str
+471=Sparton XBT-7DB,str
+481=Sparton XBT-10,str
+491=Sparton XBT-20,str
+501=Sparton XBT-20DB,str
+510=Sparton 536 AXBT,str
+700=Sippican XCTD Standard,str
+710=Sippican XCTD Deep,str
+720=Sippican AXCTD,str
+730=Sippican SXCTD,str
+741=TSK XCTD/XCTD-1,str
+742=TSK XCTD-2,str
+743=TSK XCTD-2F,str
+744=TSK XCTD-3,str
+745=TSK XCTD-4,str
+751=TSK AXCTD,str
 
 #Fall rate equation coefficients to match the PEQ$
 [FRE]
@@ -176,7 +131,6 @@ IP=Insulation penetration
 061=6.301,-2.16
 071=1.779,-0.255
 081=1.52,0
-104=6.691,-2.25
 201=6.472,-2.16
 202=6.691,-2.25
 211=6.472,-2.16
@@ -205,14 +159,6 @@ IP=Insulation penetration
 743=3.43898,-0.31
 744=5.07598,-0.72
 745=3.68081,-0.47
-
-[DPC$]
-#codes from WOD depth correction table
-01=Known probe type, needs correction,
-02=Known probe type, no need to correct
-03=Unknown probe type, not enough information to make changes
-04=Known XBT probe type, correction was made
-05=Unknown probe type, correction was made
 
 #Recorder types from WMO table 4770
 [RCT$]
@@ -273,9 +219,9 @@ IP=Insulation penetration
 #5=Reformatted 2m or 5m (mership)
 #8=Franklin CTD 2 metre data
 #13=MK12 XCTD (mership,aurora,scripps)
-#16=Franklin CTD data - .6m res
-#17=BJ Indonesian .6m CTD data
-#18=Aurora CTD 2 metre data
+#16 = Franklin CTD data - .6m res
+#17 = BJ Indonesian .6m CTD data
+#18 = Aurora CTD 2 metre data
 
 #Probe types from pre-WMO table 1770 times
 [PTYP]
@@ -288,68 +234,175 @@ T-FD=021
 T-10=061
 T-11=071
 T-7 equiv=461
-T-04=001
-T-05=011
-T-06=031
-T-07=041
-T-07 equiv=461
 #1=??
 #2=undefined
 #3=undefined
 #9=undefined
-#12=CTD=C-7 (full res=.6m data)
-#13=CTD=C-13 (2m data)
+#12=CTD = C-7 (full res = .6m data)
+#13=CTD = C-13 (2m data)
 #14=undefined
-#21=XCTD=C-21
+#21=XCTD = C-21
 
-# institute codes, Agency number for GTS
-[INSTITUTE]
-AD=Australian Oceanographic Data Centre,
-AF=Argentina Fisheries (Fisheries Research and Development National Institute (INIDEP) Mar del Plata Argentina,
-AO=USA NOAA Atlantic Oceanographic and Meteorological Laboratories (AOML),840001
-AP=Asia-Pacific (International Pacific Research Center/ Asia-Pacific Data-Research Center),
-BI=BIO Bedford institute of Oceanography,
-BO=Australia Bureau of Meteorology (BoM),36001
-CF=Canada Department of National Defense,124174
-CS=Australia Commonwealth Scientific and Industrial Research Organization (CSIRO),36003
-DA=Dalhousie University,
-FN=FNOC in Monterey California,
-FR=France Institut de Recherche pour le Développement (IRD),250001
-FW=Fresh Water Institute (Winnipeg),
-GE=Germany Bundesamt fuer Seeschiffahrt und Hydrographie (BSH),276001
-IC=ICES,
-IE=Spain Instituto Español de Oceanografia,724001
-IF=France Institut Français de Recherche pour l'Exploitation de la mer (IFREMER),250002
-II=IIP,
-IK=Germany Institut fuer Meereskunde Kiel,276002
-IM=Canada Maurice Lamontagne Institute (IML),
-IO=Canada Institute of Ocean Sciences (IOS),124002
-JA=Japan Japan Marine Science and Technology Centre (JAMSTEC),392003
-JF=Japan Fisheries Agency,
-ME=Canada Marine Environmental Data Service (MEDS),124001
-MO=Moncton,
-MU=Memorial University,
-NA=NAFC,
-NI=India National Institute of Oceanography (NIO),356001
-NO=NODC (Washington),
-NW=US National Weather Service,
-OD=Old Dominion Univ USA,
-RU=Russian Federation State Oceanographic Institute of Roshydromet,643001
-SA=St Andrews,
-SI=USA Scripps Institution of Oceanography (SIO),840003
-SO=United Kingdom Southampton Oceanography Centre (SOC),826002
-TC=TOGA Subsurface Data Centre (France),
-TI=Tiberon lab US,
-UB=University of BC,
-UC=University of California San Diego,
-UQ=University of Quebec at Rimouski,
-UW=USA University of Washington,840005
-VL=Far Eastern Regional Hydromet. Res. Inst. of V,
-WH=USA Woods Hole Oceanographic Institution (WHOI),840004
+# lines description
+[IX1]
+title                = Upper Ocean Thermal Data collected on the line IX1 (Fremantle-Sunda Strait) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE transect IX1 from Fremantle to Sunda Strait has been collected since 1983 and are ongoing. The transect is repeated approximately 18 times a year, with profiles obtained approximately every 50-100 Km. The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Fremantle-Sunda-Strait
+
+[indian-ocean/Indian-Ocean]
+title                = Upper Ocean Thermal Data collected in the Indian Ocean using XBT (expendable bathythermographs)
+XBT_line             = indian-ocean
+XBT_line_description = Indian-Ocean
+
+[IX12]
+title                = Upper Ocean Thermal Data collected on the line IX12 (Fremantle-Red Sea) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE transect IX12 from Fremantle to the Red Sea has been collected since 1983 and are ongoing. The transect is repeated approximately 12-15 times a year, with profiles obtained approximately every 50-100 Km. The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Fremantle-Red-Sea
+
+[IX22/PX11]
+title                = Upper Ocean Thermal Data collected on the line IX22-PX11 (Port Hedland-Japan) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE transect IX22-PX11 from Port Hedland to Japan has been collected since 1983 and are ongoing. The transect is repeated approximately 12 times a year, with profiles obtained approximately every 50-100 Km. The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Port-Hedland-Japan
+XBT_line             = IX22-PX11
+
+[PX11/IX22]
+title                = Upper Ocean Thermal Data collected on the line IX22-PX11 (Port Hedland-Japan) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE transect IX22-PX11 from Port Hedland to Japan has been collected since 1983 and are ongoing. The transect is repeated approximately 12 times a year, with profiles obtained approximately every 50-100 Km. The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Port-Hedland-Japan
+XBT_line             = IX22-PX11
+
+
+[PX2]
+title                = Upper Ocean Thermal Data collected on the line PX2 (Across the Banda Sea) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE transect PX2 across the Banda Sea has been collected since 1983 and are ongoing. The transect is repeated approximately 12 times a year, with profiles obtained approximately every 50-100 Km. The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Flores-Sea-Torres-Strait
+
+[PX30/PX31]
+title                = Upper Ocean Thermal Data collected on the high density line PX30-31 (Brisbane-Noumea-Suva/Lautoka) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE transect PX30-31 across the Pacific Ocean has been collected since 1991 and are ongoing. The transect is repeated approximately 4 times a year, with profiles obtained approximately every 10-50 Km. The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Brisbane-Noumea-Suva
+XBT_line             = PX30-31
+
+[PX32]
+title                = Upper Ocean Thermal Data collected on the line PX32 (Sydney - Auckland) using XBT (expendable bathythermographs)
+XBT_line_description = Sydney-Auckland
+
+[PX34]
+title                = Upper Ocean Thermal Data collected on the high density line PX34 (Sydney-Wellington) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE transect PX34 across the Tasman Sea has been collected since 1991 and are ongoing. The transect is repeated approximately 4 times a year, with profiles obtained approximately every 10-50 Km. The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Sydney-Wellington
+
+[IX9]
+title                = Upper Ocean Thermal Data collected on the line IX9 (Fremantle-Persian Gulf) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE transect IX9 across the Indian Ocean, between Fremantle and the Persian Gulf has been collected since November 1985 and are ongoing. The transect is repeated approximately 12 times a year, with profiles obtained approximately every 60 Km. The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Fremantle-Persian-Gulf
+
+[Tasman-sea]
+title                = Upper Ocean Thermal Data collected in the Tasman Sea using XBT (expendable bathythermographs)
+XBT_line_description = Tasman-Sea
+
+[PM]
+title                = Upper Ocean Thermal Data collected in Port Moresby region using XBT (expendable bathythermographs)
+XBT_line_description = Port Moresby
+
+[NOLINE]
+title                = Upper Ocean Thermal Data collected using XBT (expendable bathythermographs)
+XBT_line_description = No XBT line
+
+[PX3]
+title                = Upper Ocean Thermal Data collected on the line PX3 (Coral Sea) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE line PX3 in the Coral Sea has been collected since August 1986 and are ongoing. The transect is repeated approximately monthly. The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Coral-Sea
+
+[IX28]
+title                = Upper Ocean Thermal Data collected on the high density line IX28 (Dumont d Urville-Hobart) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE transect IX28 across the SOuthern Ocean has been collected since 1992 and are ongoing. The transect is repeated approximately 6 times a year, with profiles obtained approximately every 10-50 Km. The data are obtained from XBTs (expendable bathythermographs) deployed by the French Antarctic resupply vessel Astrolabe, and are managed by the French Polar Institute (IPEV) and the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Dumont-d-Urville-Hobart
+
+[Southern-Ocean/SO]
+title                = Upper Ocean Thermal Data collected in the Southern Ocean using XBT (expendable bathythermographs)
+XBT_line             = SO
+XBT_line_description = Southern-Ocean
+
+[PX33]
+title                = Upper Ocean Thermal Data collected on the line PX33 (Hobart-Macquarie Island) using XBT (expendable bathythermographs)
+abstract             = This dataset contains temperature data from the TOGA/WOCE transect PX33 (=IX30) across the Southern Ocean, between Hobart and Macquarie Island. Data have been collected since December 1992 and are ongoing. The transect is repeated irregularly. The data are obtained from XBTs (expendable bathythermographs) deployed via the research/supply vessels of the Australian Antarctic program, and are now managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Hobart-Macquarie-Island
+
+[IX2]
+title                = Upper Ocean Thermal Data collected on the line IX2 (Cape of Good Hope - Fremantle) using XBT (expendable bathythermographs)
+XBT_line_description = Cape-of-Good-Hope-Fremantle
+
+[IX21]
+title                = Upper Ocean Thermal Data collected on the line IX21 (Cape of Good Hope - Mauritius) using XBT (expendable bathythermographs)
+XBT_line_description = Cape-of-Good-Hope-Mauritius
+
+[IX15]
+title                = Upper Ocean Thermal Data collected on the line IX15 (Mauritius - Fremantle) using XBT (expendable bathythermographs)
+XBT_line_description = Mauritius-Fremantle
+
+[IX15/IX31]
+title                = Upper Ocean Thermal Data collected on the line IX15-IX31 (Mauritius - Melbourne) using XBT (expendable bathythermographs)
+XBT_line_description = Mauritius-Melbourne
+XBT_line             = IX15-IX31
+
+[IX21/IX06]
+title                = Upper Ocean Thermal Data collected on the line IX21-IX06 (Cape of Good Hope - Mauritius - Malacca Strait) using XBT (expendable bathythermographs)
+XBT_line_description = Cape-of-Good-Hope-Mauritius-Malacca-Strait
+XBT_line             = IX21-IX06
+
+[PX13]
+title                = Upper Ocean Thermal Data collected on the line PX13 (New Zealand - California) using XBT (expendable bathythermographs)
+XBT_line_description = New-Zealand-California
+
+[PX05]
+title                = Upper Ocean Thermal Data collected on the line PX05 (Noumea - Auckland) using XBT (expendable bathythermographs)
+XBT_line_description = Noumea-Auckland
+
+[PX31]
+title                = Upper Ocean Thermal Data collected on the line PX31 (Noumea - Suva) using XBT (expendable bathythermographs)
+XBT_line_description = Noumea-Suva
+
+[PX06]
+title                = Upper Ocean Thermal Data collected on the line PX06 (Suva - Auckland) using XBT (expendable bathythermographs)
+XBT_line_description = Suva-Auckland
+
+[IX22]
+title                = Upper Ocean Thermal Data collected on the line IX22 (Fremantle-Flores Sea) using XBT (expendable bathythermographs)
+abstract             = Temperature data from the TOGA/WOCE transect IX22 from Fremantle to Flores Sea has been collected with profiles obtained approximately every 50-100 Km. The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).
+XBT_line_description = Fremantle-Flores-Sea
+
+[PX5]
+title                = Upper Ocean Thermal Data collected on the line PX5 (Brisbane-Japan) using XBT (expendable bathythermographs)
+XBT_line_description = Brisbane-Japan
+
+[IX8]
+title                = Upper Ocean Thermal Data collected on the line IX8 (Mauritius - Bombay) using XBT (expendable bathythermographs)
+XBT_line_description = Mauritius-Bombay
+
+[PX57]
+title                = Upper Ocean Thermal Data collected on the line PX57 (Brisbane-Wellington) using XBT (expendable bathythermographs)
+XBT_line_description = Brisbane-Wellington
+
+[PX28]
+title                = Upper Ocean Thermal Data collected on the line PX28 (Tahiti-Auckland) using XBT (expendable bathythermographs)
+XBT_line_description = Tahiti-Auckland
+
+[PX17]
+title                = Upper Ocean Thermal Data collected on the line PX17 (Tahiti-Panama) using XBT (expendable bathythermographs)
+XBT_line_description = Tahiti-Panama
+
+[PX35]
+title                = Upper Ocean Thermal Data collected on the line PX35 (Melbourne-Dunedin) using XBT (expendable bathythermographs)
+XBT_line_description = Melbourne-Dunedin
+
+[PX55]
+title                = Upper Ocean Thermal Data collected on the line PX55 (Melbourne-Wellington) using XBT (expendable bathythermographs)
+XBT_line_description = Melbourne-Wellington
 
 # Filename prefix to allow for different datasets, not just IMOS
 # IMOS_SOOP-
 # Cruise_ID (for other sources (eg, Investigator, Southern Surveyor))
 [VARIOUS]
-HISTORY_SOFTWARE=MQUEST
-FILENAME=IMOS_SOOP-
+HISTORY_SOFTWARE = MQUEST
+FILENAME = IMOS_SOOP-

@@ -168,22 +168,6 @@ def _setup_var_att(nc_varname, netcdf4_obj, parser, conf_file_point_of_truth):
             var_object.__setattr__('valid_max', np.byte(9))
             var_object.__setattr__('flag_values', np.byte(list(range(0, 10))))
             var_object.__setattr__('flag_meanings', 'No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value')
-        # set to byte type the valid_min and valid_max and flag_values attributes
-        else:
-            # check if each attribute exists in var_atts and if so, set it to byte type
-            att_types = ['valid_min', 'valid_max', 'flag_values', 'flag_masks']
-            for att in att_types:
-                if att in var_atts:
-                    try:
-                        # if this is a string of commas, convert to list of bytes
-                        if isinstance(var_atts[att], str) and ',' in var_atts[att]:
-                            byte_list = [np.byte(int(x.strip())) for x in var_atts[att].split(',')]
-                            var_object.__setattr__(att, np.array(byte_list, dtype=np.byte))
-                        else:
-                            var_object.__setattr__(att, np.byte(var_atts[att]))
-                    except ValueError:
-                        # if conversion fails, just set it as a string
-                        var_object.__setattr__(att, str(var_atts[att]))
 
 
 def _setup_gatts(netcdf_object, parser):
