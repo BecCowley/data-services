@@ -126,8 +126,8 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     # let's check if there are histories to parse and then handle
     profile_qc = parse_histories_nc(profile_qc)
     if int(profile_noqc.netcdf_file_obj['Num_Hists'][0].data) == 0:
-        # if there are no histories in the noqc file, apply an empty dataframe with the same columns as profile_qc.histories
-        profile_noqc.histories = pd.DataFrame(columns=profile_qc.histories.columns)
+        # if there are no histories in the noqc file, apply an empty dataframe with the same columns and data types as profile_qc
+        profile_noqc.histories = pd.DataFrame({col: pd.Series(dtype=profile_qc.histories[col].dtype) for col in profile_qc.histories.columns})
     else:
         # we need to carry the depths information into the history parsing, so copy the data array into profile_noqc
         profile_noqc.data = pd.DataFrame(columns=profile_qc.data.columns)
@@ -1091,6 +1091,9 @@ def combine_histories(profile_qc, profile_noqc):
     # have been positive. The *raw.nc previous value and *ed.nc previous value should be the same, update the LONG_RAW.
     #first merge all the histories
     combined_histories = pd.merge(profile_qc.histories, profile_noqc.histories, how='left')
+    # if the combined_histories is empty, return the profile_qc
+    if combined_histories.empty:
+        return profile_qc
     # check for TER where the date has been corrected and therefore should be a TEA, happens in some badly recorded flags in old files
     if any(combined_histories['HISTORY_QC_CODE'].str.contains('TER')):
         # does the HISTORY_PREVIOUS_VALUE match the TIME_RAW value?
@@ -1763,7 +1766,7 @@ def args():
 
     for i, path in enumerate(vargs.input_xbt_campaign_path):
         if not os.path.exists(path):
-            msg = '%s not a valid path' % vargs.input_xbt_campaign_path
+            msg = '%s not a valid path' % path
             print(msg, file=sys.stderr)
             # remove the path from the list
             vargs.input_xbt_campaign_path.pop(i)
@@ -1817,6 +1820,7 @@ if __name__ == '__main__':
     '''
     for input_path in vargs.input_xbt_campaign_path:
         keys = XbtKeys(input_path)
+        print('Processing database %s' % keys.dbase_name)
 
         # make an empty dataframe to collect all the data
         dfall = pd.DataFrame()
