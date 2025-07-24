@@ -678,7 +678,7 @@ def adjust_position_qc_flags(profile):
     """
 
     # exit this if we don't have a position code
-    if len(profile.histories[profile.histories['HISTORY_QC_CODE'].str.contains("LA|LO|PE")]) == 0:
+    if len(profile.histories[profile.histories['HISTORY_QC_CODE'].str.contains("LA|LO|PE|TP")]) == 0:
         return profile
 
     # get the temperature QC codes
@@ -736,8 +736,8 @@ def adjust_position_qc_flags(profile):
     # if there is  'TPR' code, assign a LATITUDE_quality_control of 3 and LONGITUDE_quality_control of 3
     if profile.histories['HISTORY_QC_CODE'].str.contains('TPR').any():
         # LATITUDE_quality_control and LONGITUDE_quality_control are set to 3 as this is a test probe
-        profile.data['LATITUDE_quality_control'] = 3
-        profile.data['LONGITUDE_quality_control'] = 3
+        profile.data['LATITUDE_quality_control'] = 4
+        profile.data['LONGITUDE_quality_control'] = 4
         LOGGER.info('Test Probe (TPR) in original file, changing LATITUDE & LONGITUDE flags to level 3. %s'
                     % profile.Input_filename)
     # update the temperature QC flags
