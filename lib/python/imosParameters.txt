@@ -191,3 +191,38 @@ WWPP,                0, sea_surface_wind_wave_period_at_variance_spectral_densit
 WWSH,                1, sea_surface_wind_wave_significant_height,                                               m,                                     W, 999999.0, 0.0,     100.0,    float
 XCO2_AIR,            1, mole_fraction_of_carbon_dioxide_in_air,                                                 ppm,                                   K, 999999.0, ,        ,         float
 XCO2_WATER,          0, mole_fraction_of_carbon_dioxide_in_sea_water,                                           ppm,                                   K, 999999.0, ,        ,         float
+PROBE_TYPE,          0, probe_type,                                                                             ,                                      ,          , ,        ,         str
+PROBE_TYPE_name,     0, probe_type_name,                                                                        ,                                      ,          , ,        ,         str
+PROBE_TYPE_coeff_a,    0, probe_type_coefficient_a,                                                              ,                                      ,999999.0, ,        ,         float
+PROBE_TYPE_coeff_b,    0, probe_type_coefficient_b,                                                              ,                                      ,999999.0, ,        ,         float
+QC_accept_code,     0, QC_accept_code,                                                                        ,                                      ,        0 , ,        ,         int64
+QC_reject_code,     0, QC_reject_code,                                                                        ,                                      ,        0 , ,        ,         int64
+PROBE_fall_rate_correction_factor, 0, Fall_rate_correction_factor_applied_to_DEPTH,                           ,                                      , 999999.0, ,        ,         float
+Input_filename,  0, input_filename,                                                                     ,                                      ,          , ,        ,         str
+Institute_uniqueid,        0, unique_identifier,                                                                  ,                                      ,          , ,        ,         str
+RECORDER_type,   0, RECORDER_type,                                                                      ,                                      ,          , ,        ,         S3
+RECORDER_type_name, 0, RECORDER_type_name,                                                              ,                                      ,          , ,        ,         str
+RECORDER_serial_number, 0, RECORDER_serial_number,                                                      ,                                      ,          , ,        ,         str
+RECORDER_software_version, 0, RECORDER_software_version,                                                ,                                      ,          , ,        ,         str
+PROBE_serial_number,   0, PROBE_serial_number,                                                           ,                                      ,          , ,        ,         str
+PROBE_manufacture_date,0, PROBE_manufacture_date,                                                                 days since 1950-01-01 00:00:00 UTC,    , 999999.0, 0.0,     90000.0,  double
+PROBE_box_number,      0, PROBE_box_number,                                                                         ,                                      ,          , ,        ,         str
+PROBE_calibration_OFFSET, 0, PROBE_calibration_offset_for_temperature_from_the_probe,                               ,                                      , 999999.0, ,        ,         float
+PROBE_calibration_SCALE, 0, PROBE_calibration_scale_for_temperature_from_the_probe,                                 ,                                      , 999999.0, ,        ,         float
+Height_launch_above_water, 1, height,                                             ,                                      , 999999.0, ,        ,         float
+Cyclic_redundancy_code, 0, Cyclic_redundancy_code,                                                      ,                                      ,          , ,        ,         str
+SOOP_line,             0, SOOP_line_identifier,                                                                   ,                                      ,          , ,        ,         str
+SOOP_line_description, 0, SOOP_line_description,                                                                  ,                                      ,          , ,        ,         str
+Cruise_ID,       0, Cruise_identifier,                                                                  ,                                      ,          , ,        ,         str
+Predrop_comments, 0, Predrop_comments,                                                                  ,                                      ,          , ,        ,         str
+Postdrop_comments, 0, Postdrop_comments,                                                                ,                                      ,          , ,        ,         str
+Ship_name,           0, Deployment_vessel_name,                                                                 ,                                      ,          , ,        ,         str
+Ship_IMO,            0, Deployment_vessel_IMO_number,                                                           ,                                      ,          , ,        ,         str
+Callsign,            0, Deployment_vessel_callsign,                                                             ,                                      ,          , ,        ,         str
+Platform_code,       0, Deployment_vessel_platform_code,                                                        ,                                      ,          , ,        ,         str
+SOT_ID,              0, Deployment_vessel_SOT_ID,                                                               ,                                      ,          , ,        ,         str
+Institution,      0, Institute_name,                                                                         ,                                      ,          , ,        ,         str
+Institution_code,      0, GTS_institute_code,                                                                     ,                                      ,          , ,        ,         int64
+TEMP_RECORDING_SYSTEM, 1, sea_water_temperature,                                                                Celsius,                              T, 999999.0, -2.5,    40.0,     float
+RESISTANCE,         0, XBT_thermistor_resistance,                                                               Ohms,                                 T, 999999.0, ,        ,         float
+SAMPLE_TIME,        0, XBT_recorder_sample_time,                                                                ,                                      ,          , ,        ,         double
