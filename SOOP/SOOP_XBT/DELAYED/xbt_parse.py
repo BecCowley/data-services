@@ -733,13 +733,6 @@ def adjust_position_qc_flags(profile):
         mask = df['TEMP_quality_control'] < 3
         df.loc[mask, 'TEMP_quality_control'] = 3
 
-    # if there is  'TPR' code, assign a LATITUDE_quality_control of 3 and LONGITUDE_quality_control of 3
-    if profile.histories['HISTORY_QC_CODE'].str.contains('TPR').any():
-        # LATITUDE_quality_control and LONGITUDE_quality_control are set to 3 as this is a test probe
-        profile.data['LATITUDE_quality_control'] = 4
-        profile.data['LONGITUDE_quality_control'] = 4
-        LOGGER.info('Test Probe (TPR) in original file, changing LATITUDE & LONGITUDE flags to level 3. %s'
-                    % profile.Input_filename)
     # update the temperature QC flags
     profile.data = df
 
@@ -886,34 +879,34 @@ def parse_histories_nc(profile):
     # change HISTORY_QC_CODE_VALUE to int32
     df['HISTORY_QC_CODE_VALUE'] = df['HISTORY_QC_CODE_VALUE'].astype('int8')
 
-    if nhist > 0:
-        # check that the history codes exist in our list
-        # read the set list of codes from the csv files
-        qc_dfa, qc_dfr = read_flag_quality_table(True)
-        # combine the two dataframes
-        qc_df = pd.concat([qc_dfa, qc_dfr], ignore_index=True)
-
-        # create list of acceptable parameter names
-        parm_names = {'DEPH': 'DEPTH', 'DATI': 'DATE, TIME', 'DATE': 'DATE', 'TIME': 'TIME', 'LATI': 'LATITUDE',
-                 'LONG': 'LONGITUDE', 'LALO': 'LATITUDE, LONGITUDE', 'TEMP': 'TEMP'}
-        # check that the history codes are in the list
-        if not df['HISTORY_QC_CODE'].isin(qc_df['code']).all():
-            missing = df.loc[~df['HISTORY_QC_CODE'].isin(qc_df['code']), 'HISTORY_QC_CODE']
-            LOGGER.warning('HISTORY_QC_CODE values %s not found in the QC code list. Please review output for this file %s'
-                           % (missing.values, profile.Input_filename))
-            # remove any codes that are not in the list and where PARAMETER is not in names list
-            df = df.loc[df['HISTORY_QC_CODE'].isin(qc_df['code']) & df['HISTORY_PARAMETER'].isin(parm_names.keys())]
-            # reset nhist to the new length
-            nhist = len(df)
-
-        # allow for history dates to be YYYYMMDD or DDMMYYYY
-        date1 = convert_time_string(df['HISTORY_DATE'], '%Y%m%d')
-        date2 = convert_time_string(df['HISTORY_DATE'],'%d%m%Y')
-        df['HISTORY_DATE'] = date1.fillna(date2)
-    else:
+    if nhist == 0:
         # no history records
         profile.histories = df
         return profile
+
+    # check that the history codes exist in our list
+    # read the set list of codes from the csv files
+    qc_dfa, qc_dfr = read_flag_quality_table(True)
+    # combine the two dataframes
+    qc_df = pd.concat([qc_dfa, qc_dfr], ignore_index=True)
+
+    # create list of acceptable parameter names
+    parm_names = {'DEPH': 'DEPTH', 'DATI': 'DATE, TIME', 'DATE': 'DATE', 'TIME': 'TIME', 'LATI': 'LATITUDE',
+             'LONG': 'LONGITUDE', 'LALO': 'LATITUDE, LONGITUDE', 'TEMP': 'TEMP'}
+    # check that the history codes are in the list
+    if not df['HISTORY_QC_CODE'].isin(qc_df['code']).all():
+        missing = df.loc[~df['HISTORY_QC_CODE'].isin(qc_df['code']), 'HISTORY_QC_CODE']
+        LOGGER.warning('HISTORY_QC_CODE values %s not found in the QC code list. Please review output for this file %s'
+                       % (missing.values, profile.Input_filename))
+        # remove any codes that are not in the list and where PARAMETER is not in names list
+        df = df.loc[df['HISTORY_QC_CODE'].isin(qc_df['code']) & df['HISTORY_PARAMETER'].isin(parm_names.keys())]
+        # reset nhist to the new length
+        nhist = len(df)
+
+    # allow for history dates to be YYYYMMDD or DDMMYYYY
+    date1 = convert_time_string(df['HISTORY_DATE'], '%Y%m%d')
+    date2 = convert_time_string(df['HISTORY_DATE'],'%d%m%Y')
+    df['HISTORY_DATE'] = date1.fillna(date2)
 
     # append the 'A' or 'R' to each code
     for idx, row in df.iterrows():
@@ -1420,8 +1413,7 @@ def create_flag_feature(profile):
     # create a dataframe with the codes and their integer representation
     dfa, dfr = read_flag_quality_table(all=True)
     # combine the two dataframes, combining the 'QC_accept_code' and 'QC_reject_code' columns into one column labelled 'byte_value'
-    df = pd.concat([dfa[['name','code', 'full_code', 'TEMP_quality_control', 'Parameter', 'QC_accept_code']],
-                    dfr[['name','code', 'full_code', 'TEMP_quality_control', 'Parameter','QC_reject_code']]], ignore_index=True)
+    df = pd.concat([dfa, dfr], ignore_index=True)
     # combine the 'QC_accept_code' and 'QC_reject_code' columns into one column labelled 'byte_value'
     df['byte_value'] = df['QC_accept_code'].fillna(0).astype(int) + df['QC_reject_code'].fillna(0).astype(int)
 
@@ -1561,7 +1553,8 @@ def create_flag_feature(profile):
 
     # create a df with the same number of columns as the number of rows in the mapcodes table and number of rows is number of depths
     tempdf = pd.DataFrame(np.zeros((len(df_data), len(mapcodes))) * np.zeros(len(mapcodes)), columns=mapcodes['full_code'])
-
+    # do the same for DEPTH
+    depdf = tempdf.copy()
     # iterate over the mapcodes table and fill a column in tempdf with QC values from the tempqc field
     for idx, row in mapcodes.iterrows():
         # get the index of the depth in the data
@@ -1569,9 +1562,11 @@ def create_flag_feature(profile):
         # if this is a CSR flag, just fill the depth with the tempqc value
         if row['HISTORY_QC_CODE'] == 'CSR':
             tempdf.loc[ii, row['full_code']] = row['TEMP_quality_control']
+            depdf.loc[ii, row['full_code']] = row['DEPTH_quality_control']
         else:
             # fill the tempdf from the depth index to the maximum index
             tempdf.loc[ii:, row['full_code']] = row['TEMP_quality_control']
+            depdf.loc[ii:, row['full_code']] = row['DEPTH_quality_control']
         # for flags that have been interpolated or filtered, these are 5 and 2 deeper. Change the flag at these depths to 5
         if row['HISTORY_QC_CODE'] in ['SPA', 'HFA', 'IPA', 'EIA']:
             # 2 should have been assigned above, now just overwriting with 5
@@ -1584,14 +1579,35 @@ def create_flag_feature(profile):
     # overwrite the tempqc value with 5 where there is a 5 in the tempdf
     tempdf.loc[idx, 'tempqc'] = 5
 
+    # repeat for the depdf dataframe
+    idx = depdf.eq(5).any(axis=1)
+    # calculate the maximum depthqc value for each depth
+    depdf['depthqc'] = depdf.max(axis=1)
+    # overwrite the depthqc value with 5 where there is a 5 in the depdf
+    depdf.loc[idx, 'depthqc'] = 5
+
     # find any depths where the tempqc value is less than the TEMP_quality_control value not including the 5 values
     # and ignore where LOA has changed the QC to 2 from 1
     idx = (df_data['TEMP_quality_control'] > tempdf['tempqc']) & (df_data['TEMP_quality_control'] != 5)
     if idx.any() & ~(codes['HISTORY_QC_CODE'].str.contains('LOA')).any():
         LOGGER.warning('TEMP_quality_control values are greater than the tempqc values. %s' % profile.Input_filename)
+    idx = (df_data['DEPTH_quality_control'] > depdf['depthqc']) & (df_data['DEPTH_quality_control'] != 5)
+    if idx.any():
+        LOGGER.warning('DEPTH_quality_control values are greater than the depthqc values. %s' % profile.Input_filename)
 
     # update the TEMP_quality_control field with the tempdf values
     df_data['TEMP_quality_control'] = tempdf['tempqc']
+    # update the DEPTH_quality_control field with the depdf values
+    df_data['DEPTH_quality_control'] = depdf['depthqc']
+
+    # get the maximum value of all the *_quality_control columns except for TEMP_quality_control
+    max_qc = mapcodes.filter(like='_quality_control').max(axis=0)
+    # loop through the max_qc values and update the df_data with the maximum value
+    for col in max_qc.index:
+        if col != 'TEMP_quality_control' and col != 'DEPTH_quality_control' and pd.notna(max_qc[col]):
+            # update the df_data with the maximum value of the column
+            df_data[col] = max_qc[col]
+
 
     # Iterate over the history table.
     for idx, row in mapcodes.iterrows():
@@ -1608,8 +1624,8 @@ def create_flag_feature(profile):
 
     # update the histories with the correct tempqc values from mapcodes
     mapcodes['HISTORY_QC_CODE_VALUE'] = mapcodes['TEMP_quality_control']
-    # drop unwanted columns
-    mapcodes = mapcodes.drop(columns=['TEMP_quality_control', 'byte_value', 'name', 'full_code', 'Parameter'])
+    # drop unwanted columns from mapcodes keeping only 'HISTORY*' columns
+    mapcodes = mapcodes.filter(like='HISTORY_')
 
     # update the histories
     profile.histories = mapcodes
