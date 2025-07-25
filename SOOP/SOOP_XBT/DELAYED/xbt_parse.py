@@ -748,7 +748,7 @@ def adjust_time_qc_flags(profile):
         return profile
 
     # change temperature QC codes
-    if profile.histories['HISTORY_QC_CODE'].str.contains('TEA').any() & profile.data['TIME_quality_control'][0] != 5:
+    if profile.histories['HISTORY_QC_CODE'].str.contains('TEA').any() and profile.data['TIME_quality_control'][0] != 5:
         # TEA
         profile.data['TIME_quality_control'] = 5
         LOGGER.info('TIME correction (TEA) in original file, changing TIME flag to level 5.%s'
