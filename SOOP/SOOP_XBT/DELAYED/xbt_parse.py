@@ -165,7 +165,7 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw):
     profile_qc.data = add_launcher_variable(profile_qc.data)
 
     # remove columns that are all NaN
-    profile_qc.data = profile_qc.data.dropna(axis=1, how='all')
+    # profile_qc.data = profile_qc.data.dropna(axis=1, how='all')
 
     return profile_qc
 
@@ -372,6 +372,13 @@ def parse_extra_vars(profile_qc, profile_noqc):
 
     # split the input filename and remove the _ed.nc or _raw.nc ending
     dataf['Input_filename'] = re.split(r'ed\.nc|raw\.nc', profile_qc.Input_filename)[0]
+
+    # convert the 'PROBE_manufacture_date' to a timestamp
+    if 'PROBE_manufacture_date' in dataf.columns:
+        date1 = convert_time_string(dataf['PROBE_manufacture_date'], '%Y%m%d')
+        date2 = convert_time_string(dataf['PROBE_manufacture_date'], '%m%d%Y')
+        # if date1 is not NaT, assign it to the column, otherwise assign date2
+        dataf['PROBE_manufacture_date'] = date1 if not date1.isna().all() else date2
 
     # assign dataf to profile_qc.data
     profile_qc.data = dataf
@@ -1853,7 +1860,7 @@ if __name__ == '__main__':
         globsall = pd.DataFrame()
 
         for f in keys.data['station_number']:
-            # if f != 89019055:
+            # if f != 89019568:
             #     continue
             fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
             fname = os.path.join(keys.dbase_name, fpath)

@@ -61,8 +61,6 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
     globals_list = read_globals_config()
     # first get a list of the attributes attached to the variables
     extra_atts = vars[vars['is_var_att_global'] == 'att']
-    # create a list from extra_atts['variable_name'] to use as a list of variable names
-    extra_atts = extra_atts['variable_name'].tolist()
     # get a list of the global attributes
     extra_globals = vars[vars['is_var_att_global'] == 'global']
     # create a list from extra_globals['variable_name'] to use as a list of global attributes
@@ -78,6 +76,10 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
         # Create the dimensions
         output_netcdf_obj.createDimension('DEPTH', len(profile['DEPTH']))
         output_netcdf_obj.createDimension('N_HISTORY', 0) #make this unlimited
+        output_netcdf_obj.createDimension('str3', 3)  # for three character strings
+        output_netcdf_obj.createDimension('str20', 20)  # for twenty character strings
+        output_netcdf_obj.createDimension('str60', 60)  # for sixty character strings
+        output_netcdf_obj.createDimension('str150', 150)  # for one hundred and fifty character strings
 
         # Create the variables from the vars Dataframe by looping through the rows
         for index, row in vars.iterrows():
@@ -85,6 +87,12 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
             # print(vv)
             # check if there is data in the profile DataFrame for this variable. Required variables must be kept in the output netcdf file
             if vv not in profile.columns and vv not in history.columns and row['variable optional/required (1=required 0=optional)'] == 0:
+                continue
+            # if vv is optional and all values in profile[vv] are NaN, skip it
+            if vv in profile.columns and profile[vv].isnull().all() and row['variable optional/required (1=required 0=optional)'] == 0:
+                continue
+            # if vv is optional and all values in history[vv] are NaN, skip it
+            if vv in history.columns and history[vv].isnull().all() and row['variable optional/required (1=required 0=optional)'] == 0:
                 continue
             # get the datatype as specified in the att_variable_type column
             dt = row['variable_type']
@@ -101,10 +109,10 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
                 output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue)
             elif not pd.isna(dimensions) and pd.isna(fillvalue):
                 # create the variable in the netcdf file with dimensions
-                output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=dimensions)
+                output_netcdf_obj.createVariable(vv, datatype=dt, dimensions=dimensions.split(','))
             else:
                 # create the variable in the netcdf file with dimensions and fill value
-                output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue, dimensions=dimensions)
+                output_netcdf_obj.createVariable(vv, datatype=dt, fill_value=fillvalue, dimensions=dimensions.split(','))
             # set the attributes for the variable
             for att in att_labels:
                 # the column is labelled att_<att_name> in the vars DataFrame
@@ -168,22 +176,21 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
                     output_netcdf_obj.time_coverage_start = pd.to_datetime(profile[v].values[0]).strftime("%Y-%m-%dT%H:%M:%SZ")
                     output_netcdf_obj.time_coverage_end = pd.to_datetime(profile[v].values[0]).strftime("%Y-%m-%dT%H:%M:%SZ")
             elif v in list(profile):
-                # if all the values of profile[v] are NaN, skip it
-                if profile[v].isnull().all():
-                    continue
-                # Check the shape of the NetCDF variable
-                var_shape = output_netcdf_obj[v].shape
+                # if all the values of profile[v] are NaN, output the fill value
+                if not profile[v].isnull().all():
+                    # Check the shape of the NetCDF variable
+                    var_shape = output_netcdf_obj[v].shape
 
-                # Ensure the data from profile[v] matches the shape of the NetCDF variable
-                if profile[v].shape == var_shape:
-                    # fill any NaN values with the fill value for this variable
-                    data = profile[v].fillna(output_netcdf_obj[v]._FillValue)
-                    output_netcdf_obj[v][:] = data
-                else:
-                    if isinstance(output_netcdf_obj[v][:], str):
-                        output_netcdf_obj[v][0] = str(profile[v].values[0])
+                    # Ensure the data from profile[v] matches the shape of the NetCDF variable
+                    if profile[v].shape == var_shape:
+                        # fill any NaN values with the fill value for this variable
+                        data = profile[v].fillna(output_netcdf_obj[v]._FillValue)
+                        output_netcdf_obj[v][:] = data
                     else:
-                        output_netcdf_obj[v][:] = profile[v].values[0]
+                        if isinstance(output_netcdf_obj[v][:], str):
+                            output_netcdf_obj[v][0] = str(profile[v].values[0])
+                        else:
+                            output_netcdf_obj[v][:] = profile[v].values[0]
             else:
                 # histories
                 if v == 'HISTORY_DATE':
@@ -196,42 +203,42 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
                         output_netcdf_obj[v][count] = history_date_obj
                         count += 1
                 else:
-                    output_netcdf_obj[v][:] = history[v].values
-            att_extras = []
-            # append the non-cf compliant attributes to PROBE_TYPE, PROBE_TYPE_RAW, PROBE_manufacture_date and RECORDER_TYPE variables
-            if v in ['PROBE_TYPE', 'PROBE_TYPE_RAW']:
-                # add attributes if they exist in the extra_atts list
-                if v == 'PROBE_TYPE':
-                    # get the labels from extra_atts list that start with 'PROBE_TYPE'
-                    att_extras = [att for att in extra_atts if att.startswith('PROBE_TYPE') and not att.endswith('_RAW')]
-                else:
-                    # get the labels from extra_atts list that start with 'PROBE_TYPE_RAW'
-                    att_extras = [att for att in extra_atts if att.startswith('PROBE_TYPE') and att.endswith('_RAW')]
+                    # if the number of dimensions of the variable is 1, we can directly assign the values
+                    if len(output_netcdf_obj[v].shape) == 1:
+                        output_netcdf_obj[v][:] = history[v].values
+                    else:
+                        # reshape the history[v] to match the output_netcdf_obj[v] shape and pad with empty spaces if necessary
+                        # get the shape of the variable in the netcdf file
+                        var_shape = output_netcdf_obj[v].shape
+                        # create a padded array with the fill value
+                        padded_shape = (len(history[v]),) + var_shape[1:]  # keep the first dimension as the length of history[v]
+                        padded_array = np.full(padded_shape, '', dtype=output_netcdf_obj[v].dtype)
+                        # fill the padded array with the history[v] values
+                        for i, s in enumerate(history[v].values):
+                            padded_array[i, :len(s)] = list(s)
+                            # assign the padded values to the variable
+                        output_netcdf_obj[v][:] = padded_array
 
-            if v in ['RECORDER_TYPE']:
-                # add attributes if they exist in the extra_atts list
-                att_extras = [att for att in extra_atts if att.startswith('RECORDER')]
-
-            if v in ['PROBE_manufacture_date']:
-                # add attributes if they exist in the extra_atts list
-                att_extras = [att for att in extra_atts if att.startswith('PROBE_') and not att.startswith('PROBE_TYPE')]
-
-            # and the SOOP_line variable
-            if v == 'SOOP_line':
-                # add SOOP_line attributes if they exist in the extra_atts list
-                att_extras = [att for att in extra_atts if att.startswith('SOOP_line_')]
-
-            # if att_labels is not empty, set the attributes for the variable
-            if att_extras:
-                for att_name in att_extras:
-                    if att_name in output_netcdf_obj.variables[v].ncattrs():
-                        # if the attribute already exists, skip it
+            # if v is in extra_atts['attached_var'] then we need to add the attributes to the variable
+            if v in extra_atts['attached_var'].values:
+                # get the attributes for this variable from the extra_atts DataFrame
+                att_extras = extra_atts[extra_atts['attached_var'] == v]
+                # loop through the attributes and set them on the variable
+                for ind, row in att_extras.iterrows():
+                    att_name = row['variable_name']
+                    # if the attribute is not in the profile DataFrame, skip it
+                    if row['variable optional/required (1=required 0=optional)'] == 0 and profile[att_name].isnull().all():
                         continue
-                    if att_name not in profile.columns:
+                    if att_name not in profile.columns or pd.isna(profile[att_name].values[0]):
                         setattr(output_netcdf_obj.variables[v], att_name, '')
                     else:
+                        # if the profile[att_name] is a timestamp, convert it to a string
+                        if pd.api.types.is_datetime64_any_dtype(profile[att_name]):
+                            att_value = pd.to_datetime(profile[att_name].values[0]).strftime("%Y-%m-%d")
+                        else:
+                            att_value = profile[att_name].values[0]
                         # set the attribute on the variable
-                        setattr(output_netcdf_obj.variables[v], att_name, profile[att_name].values[0])
+                        setattr(output_netcdf_obj.variables[v], att_name, att_value)
 
         # add geospatial information to global attributes dictionary
         globals_list['geospatial_lat_max'] = profile['LATITUDE'][0]

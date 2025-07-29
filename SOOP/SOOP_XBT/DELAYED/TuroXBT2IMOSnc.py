@@ -182,7 +182,7 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                             dfprofile['PROBE_manufacture_date'] = None
                         else:
                             # put the datetime object in the profile dataframe
-                            dfprofile['PROBE_manufacture_date'] = data
+                            dfprofile['PROBE_manufacture_date'] = pd.to_datetime(data)
                 else:
                     dfprofile[vname] = pd.to_datetime(data)
 
