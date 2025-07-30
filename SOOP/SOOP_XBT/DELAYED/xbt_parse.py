@@ -331,16 +331,16 @@ def parse_extra_vars(profile_qc, profile_noqc):
                                (dataf['Height_launch_above_water_meters'].unique().item(), profile.Input_filename))
 
         # some files don't have line information
-        if 'SOOP_line' + ext[ind] in dataf.columns:
-            line = dataf['SOOP_line' + ext[ind]].unique().item()
+        if 'SOOP_line_label' + ext[ind] in dataf.columns:
+            line = dataf['SOOP_line_label' + ext[ind]].unique().item()
             if not line:
                 line = 'NOLINE'
-                dataf['SOOP_line' + ext[ind]] = 'NOLINE'
+                dataf['SOOP_line_label' + ext[ind]] = 'NOLINE'
                 LOGGER.warning('XBT line is not recorded, assigning NOLINE %s' %
                                profile.Input_filename)
         else:
             line = 'NOLINE'
-            dataf['SOOP_line' + ext[ind]] = 'NOLINE'
+            dataf['SOOP_line_label' + ext[ind]] = 'NOLINE'
             LOGGER.warning('XBT line is not recorded, assigning NOLINE %s' %
                            profile.Input_filename)
 

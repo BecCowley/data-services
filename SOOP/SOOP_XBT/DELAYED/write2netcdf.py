@@ -19,7 +19,7 @@ def create_filename_output(prof, hist, profile_raw=False):
         fv = 'FV01'
 
     filename = 'XBT_T_%s_%s_%s_ID-%s' % (
-        prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line'], fv,
+        prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line_label'], fv,
         prof['Institution_unique_identifier'])
 
     # decide what prefix is required
@@ -57,6 +57,13 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
     history = history.reset_index(drop=True)
     # read the variables config file
     vars = read_variables_config()
+    # if probe_type_raw is optional: if the PROBE_TYPE*_RAW columns are the same as the PROBE_TYPE* columns, put None in the PROBE_TYPE*_RAW columns
+    if vars.loc[vars['variable_name'] == 'PROBE_TYPE_RAW', 'variable optional/required (1=required 0=optional)'].values[0] == 0:
+        probe_types = [col for col in profile.columns if col.startswith('PROBE_TYPE') and '_RAW' not in col]
+        for pt in probe_types:
+            raw_col = pt + '_RAW'
+            if raw_col in profile.columns and profile[pt].equals(profile[raw_col]):
+                profile[raw_col] = None
     # read the global attributes config file
     globals_list = read_globals_config()
     # first get a list of the attributes attached to the variables
@@ -187,11 +194,20 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
                         data = profile[v].fillna(output_netcdf_obj[v]._FillValue)
                         output_netcdf_obj[v][:] = data
                     else:
-                        if isinstance(output_netcdf_obj[v][:], str):
-                            output_netcdf_obj[v][0] = str(profile[v].values[0])
-                        else:
+                        # just outputting the first value of profile[v] to the netcdf variable
+                        # test the shape of the profile[v][0] and the shape of the netcdf variable
+                        if not isinstance(profile[v][0], str):
+                            # if the profile[v] is a 1D array and the netcdf variable is also a 1D array, assign the first value
                             output_netcdf_obj[v][:] = profile[v].values[0]
-            else:
+                        else:
+                            # this is a 1D string variable pad profile[v][0] with empty spaces to match the shape of the netcdf variable
+                            padded_shape = output_netcdf_obj[v].shape
+                            padded_array = np.full(padded_shape, '', dtype=output_netcdf_obj[v].dtype)
+                            # fill the padded array with the profile[v][0] values
+                            padded_array[:len(profile[v][0])] = list(profile[v][0])
+                            # assign the padded values to the variable
+                            output_netcdf_obj[v][:] = padded_array
+            elif v in list(history):
                 # histories
                 if v == 'HISTORY_DATE':
                     # fix history date time field
