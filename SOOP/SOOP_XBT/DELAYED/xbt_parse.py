@@ -457,6 +457,11 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             prof = np.round(s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0], 4)
             # mask any nan values from the profile
             prof = np.ma.masked_invalid(prof)
+            # special case where values > 90 are invalid where depth is > 4m
+            if 'TEMP' in var and (prof > 90).any():
+                # replace values > 90 with NaN where they occur after ndeps
+                prof[ndeps:] = np.where(prof[ndeps:] > 90, np.nan, prof[ndeps:])
+                prof = np.ma.masked_invalid(prof)
             # resize the arrays to eliminate empty values
             prof = np.ma.masked_array(prof.compressed())
             # Is there a mismatch in DEPTH and TEMP lengths?
@@ -1870,7 +1875,7 @@ if __name__ == '__main__':
         globsall = pd.DataFrame()
 
         for f in keys.data['station_number']:
-            # if f != 88118197:
+            # if f != 88118198:
             #     continue
             fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
             fname = os.path.join(keys.dbase_name, fpath)
