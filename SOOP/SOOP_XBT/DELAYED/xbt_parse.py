@@ -1862,8 +1862,8 @@ if __name__ == '__main__':
         globsall = pd.DataFrame()
 
         for f in keys.data['station_number']:
-            if f != 88118197:
-                continue
+            # if f != 88118197:
+            #     continue
             fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
             fname = os.path.join(keys.dbase_name, fpath)
             # make input_filename here
