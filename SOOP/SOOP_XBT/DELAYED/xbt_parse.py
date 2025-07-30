@@ -1268,7 +1268,8 @@ def combine_histories(profile_qc, profile_noqc):
         # check these rows to see if the HISTORY_PREVIOUS_VALUE is the same as the TEMP_RAW value
         for idx, row in different_previous_value_rows.iterrows():
             # get the index of the row in the profile data
-            ii = np.where(np.round(profile_qc.data['DEPTH'], 2) == np.round(row['HISTORY_START_DEPTH'], 2))[0]
+            ii = np.where(np.isclose(np.round(profile_qc.data['DEPTH'], 2), np.round(row['HISTORY_START_DEPTH'], 2),
+                            atol=0.01))[0]
             # check the previous value is the same as the TEMP_RAW value
             if not np.isclose(round(float(row['HISTORY_PREVIOUS_VALUE']), 2), np.round(profile_qc.data['TEMP_RAW'][ii], 2).item(), atol=0.01):
                 # remove this row from the dataframe
