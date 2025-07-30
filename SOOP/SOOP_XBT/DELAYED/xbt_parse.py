@@ -1200,8 +1200,8 @@ def combine_histories(profile_qc, profile_noqc):
             if not np.allclose(np.round(float(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
                 'HISTORY_PREVIOUS_VALUE'].values[0]), 6), np.round(profile_qc.data[var][0], 6), atol=0.01):
                 # if the previous value is the negative of the raw value, then it is a valid value, change the profile_qc.data[var] to the previous value
-                if abs(float(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
-                        'HISTORY_PREVIOUS_VALUE'].values[0])) == profile_qc.data[var][0]:
+                if np.allclose(abs(float(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+                        'HISTORY_PREVIOUS_VALUE'].values[0])), profile_qc.data[var][0], 6, atol=0.01):
                     profile_qc.data[var] = float(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
                         'HISTORY_PREVIOUS_VALUE'].values[0])
                     LOGGER.info('HISTORY: Updating %s to match the negative longitude in *raw.nc file. %s'
@@ -1210,9 +1210,6 @@ def combine_histories(profile_qc, profile_noqc):
                     LOGGER.error('HISTORY: Previous value for %s is not the same as the %s_RAW value. %s'
                                    % (vv, vv, profile_qc.Input_filename))
                     exit(1)
-                # TODO: if this situation happens, check which value to use, the previous value or the raw value
-                profile_qc.data[var] = float(non_temp_codes.loc[
-                    non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'].values[0])
         elif vv in ['TIME']:
             # TIME_RAW is in datetime format and HISTORY_PREVIOUS_VALUE is in string format
             # if the HISTORY_PREVIOUS_VALUE is not zeros, then it is a valid date
