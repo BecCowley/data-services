@@ -64,6 +64,13 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
             raw_col = pt + '_RAW'
             if raw_col in profile.columns and profile[pt].equals(profile[raw_col]):
                 profile[raw_col] = None
+
+    # add the WIGOS_ID to the profile DataFrame and set it to '0-22000-0-' + profile['SOT_ID'].astype(str)
+    if 'SOT_ID' in profile.columns and not profile['SOT_ID'].isnull().all():
+            profile['WIGOS_ID'] = '0-22000-0-' + profile['SOT_ID'].astype(str)
+    else:
+        profile['SOT_ID'] = None  # default value if SOT_ID is not present
+        profile['WIGOS_ID'] = None  # default value if SOT_ID is not present
     # read the global attributes config file
     globals_list = read_globals_config()
     # first get a list of the attributes attached to the variables
