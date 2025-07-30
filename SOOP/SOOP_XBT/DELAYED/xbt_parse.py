@@ -460,7 +460,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             # special case where values > 90 are invalid where depth is > 4m
             if 'TEMP' in var and (prof > 90).any():
                 # replace values > 90 with NaN where they occur after ndeps
-                prof[ndeps:] = np.where(prof[ndeps:] > 90, np.nan, prof[ndeps:])
+                prof[ndeps:] = np.where(abs(prof[ndeps:]) > 90, np.nan, prof[ndeps:])
                 prof = np.ma.masked_invalid(prof)
             # resize the arrays to eliminate empty values
             prof = np.ma.masked_array(prof.compressed())
@@ -485,7 +485,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
 
             # make any values >99 equal to 99.99. Some profiles have different values for invalid data
             if 'TEMP' in var:
-                prof[prof > 99] = 99.99
+                prof[abs(prof) > 99] = 99.99
 
             prof_flag = s.netcdf_file_obj.variables['ProfQP'][ivar, 0, :, 0, 0].flatten()
             # resize the arrays to eliminate empty values
