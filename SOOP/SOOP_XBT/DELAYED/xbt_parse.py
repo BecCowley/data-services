@@ -1270,9 +1270,11 @@ def combine_histories(profile_qc, profile_noqc):
             # get the index of the row in the profile data
             ii = np.where(np.round(profile_qc.data['DEPTH'], 2) == np.round(row['HISTORY_START_DEPTH'], 2))[0]
             # check the previous value is the same as the TEMP_RAW value
-            if not np.round(row['HISTORY_PREVIOUS_VALUE'], 2).item() == np.round(profile_qc.data['TEMP_RAW'][ii], 2).item():
+            if not np.isclose(round(float(row['HISTORY_PREVIOUS_VALUE']), 2), np.round(profile_qc.data['TEMP_RAW'][ii], 2).item(), atol=0.01):
                 # remove this row from the dataframe
                 profile_qc.histories = profile_qc.histories.drop(idx)
+                # reset the index
+                profile_qc.histories = profile_qc.histories.reset_index(drop=True)
                 # log the error
                 LOGGER.warning('HISTORY: Duplicate QC code removed: %s. Please review. %s' % (row['HISTORY_QC_CODE'], profile_qc.Input_filename))
         if profile_qc.histories.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_START_DEPTH']).any():
