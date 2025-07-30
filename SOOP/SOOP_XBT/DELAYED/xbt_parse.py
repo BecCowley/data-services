@@ -1227,6 +1227,12 @@ def combine_histories(profile_qc, profile_noqc):
 
     # Filter the rows where HISTORY_PARAMETER is TEMP
     temp_codes = combined_histories[combined_histories['HISTORY_PARAMETER'] == 'TEMP']
+    # index any temp_codes['HISTORY_PREVIOUS_VALUE'].values that cannot be converted to float32
+    bad_idx = temp_codes[pd.to_numeric(temp_codes['HISTORY_PREVIOUS_VALUE'], errors='coerce').isna()].index
+    if len(bad_idx) > 0:
+        # replace the bad values with None
+        temp_codes.loc[bad_idx, 'HISTORY_PREVIOUS_VALUE'] = None
+
     # get the index of the rows to drop for TEMP variables only
     idx = temp_codes[(temp_codes.duplicated(subset=['HISTORY_QC_CODE', 'HISTORY_START_DEPTH'], keep=False)) &
                         (temp_codes['HISTORY_PREVIOUS_VALUE'].values.astype('float32') > 90)].index
