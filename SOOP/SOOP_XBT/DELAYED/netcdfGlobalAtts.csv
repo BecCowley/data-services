@@ -1,7 +1,7 @@
 ﻿Attribute Name,Attribute Value
 Conventions,"CF-1.8,IMOS-1.4"
 citation,"The citation in a list of references is: IMOS [year-of-data-download], [Title], [data-access-url], accessed [date-of-access]"
-title,Upper ocean temperature data collected on the transect in variable SOOP_line using XBT (expendable bathythermographs)
+title,Ocean Temperature profile data from XBT (expendable bathythermographs)
 cdm_data_type,profile
 date_created,
 data_centre,Australian Ocean Data Network (AODN)
