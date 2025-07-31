@@ -177,7 +177,7 @@ def get_recorder_type(df):
     rct_list = read_section_from_xbt_config('RCT$')
     syst_list = read_section_from_xbt_config('SYST')
 
-    item_val = str(df['RECORDER_TYPE'][0])
+    item_val = str(int(df['RECORDER_TYPE'][0]))
     #        if item_val in list(syst_list.keys()):
     #            item_val = syst_list[item_val].split(',')[0]
 
@@ -275,6 +275,7 @@ def parse_extra_vars(profile_qc, profile_noqc):
                     LOGGER.warning(
                         '"%s = %s" could not be converted to %s(). Please review. %s' % (
                         att_name, att_val, att_type.upper(), profile.Input_filename))
+                    continue
             else:
                 if srfc_code_iter != '' and srfc_code_iter != 'IOTA':
                     # collect the code in a list for the user to review
@@ -333,7 +334,7 @@ def parse_extra_vars(profile_qc, profile_noqc):
         # some files don't have line information
         if 'SOOP_line_label' + ext[ind] in dataf.columns:
             line = dataf['SOOP_line_label' + ext[ind]].unique().item()
-            if not line:
+            if not line or pd.isna(line):
                 line = 'NOLINE'
                 dataf['SOOP_line_label' + ext[ind]] = 'NOLINE'
                 LOGGER.warning('XBT line is not recorded, assigning NOLINE %s' %
@@ -457,10 +458,15 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
             prof = np.round(s.netcdf_file_obj.variables['Profparm'][ivar, 0, :, 0, 0], 4)
             # mask any nan values from the profile
             prof = np.ma.masked_invalid(prof)
-            # special case where values > 90 are invalid where depth is > 4m
-            if 'TEMP' in var and (prof > 90).any():
-                # replace values > 90 with NaN where they occur after ndeps
-                prof[ndeps:] = np.where(abs(prof[ndeps:]) > 90, np.nan, prof[ndeps:])
+            # special case where values == 99.99 or a similar value are invalid where depth is > 4m
+            if 'TEMP' in var and (abs(prof) > 90).any():
+                # first change any values that might be 99.99 or 99999 or -99.99 or -99999  or similar to 99.99
+                # identify variations on 99.99 by converting to string and matching the pattern
+                pattern = re.compile(r'^[+-]?9{2,5}(\.9{2})?$')
+                prof = np.where(np.vectorize(lambda x: bool(pattern.match(x)))(prof.astype(str)), 99.99, prof)
+                # replace values == 99.99 with NaN where they occur after 4 m depth
+                idepth = np.where(dep < 4.0)[0]
+                prof[idepth[-1]+1:] = np.where(abs(prof[idepth[-1]+1:]) == 99.99, np.nan, prof[idepth[-1]+1:])
                 prof = np.ma.masked_invalid(prof)
             # resize the arrays to eliminate empty values
             prof = np.ma.masked_array(prof.compressed())
@@ -483,10 +489,6 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                 LOGGER.error('Profile %s has %s depths but %s values for %s' % (s.Input_filename, ndeps, len(prof), var))
                 exit(1)
 
-            # make any values >99 equal to 99.99. Some profiles have different values for invalid data
-            if 'TEMP' in var:
-                prof[abs(prof) > 99] = 99.99
-
             prof_flag = s.netcdf_file_obj.variables['ProfQP'][ivar, 0, :, 0, 0].flatten()
             # resize the arrays to eliminate empty values
             prof_flag = np.ma.masked_array(prof_flag.compressed())
@@ -507,9 +509,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
                     prof_flag = prof_flag[:ndeps]
 
             profile_qc.data['DEPTH' + raw] = dep.astype('float32')
-            profile_qc.data['DEPTH' + raw +'_quality_control'] = pd.to_numeric(qc, errors='coerce').astype('int8')
+            profile_qc.data['DEPTH' + raw +'_quality_control'] = pd.to_numeric(qc, errors='coerce')
             profile_qc.data[var + raw] = prof.astype('float32')
-            profile_qc.data[var + raw + '_quality_control'] = pd.to_numeric(prof_flag, errors='coerce').astype('int8')
+            profile_qc.data[var + raw + '_quality_control'] = pd.to_numeric(prof_flag, errors='coerce')
 
     # if DEPTH and DEPTH_RAW are not the same, apply fixes
     if not np.array_equal(profile_qc.data['DEPTH'], profile_qc.data['DEPTH_RAW']):
@@ -1093,6 +1095,9 @@ def parse_histories_nc(profile):
         exit(1)
         df = df[~mask4]
 
+    # remove any rows where HISTORY_QC_CODE is 'WBR' and has a HISTORY_START_DEPTH of NAN
+    df.dropna(subset=['HISTORY_START_DEPTH'], inplace=True)
+
     # assign the dataframe back to profile at this stage
     profile.histories = df.reset_index(drop=True)
 
@@ -1309,14 +1314,16 @@ def restore_temp_val(profile):
     and TEMP_RAW (from the *raw.nc file).
     """
 
+    df = profile.data
     # index of CS flags in histories:
     idx = profile.histories['HISTORY_QC_CODE'] == 'CSR'
     depths = profile.histories['HISTORY_START_DEPTH'][idx].values.astype('float32')
     temps = profile.histories['HISTORY_PREVIOUS_VALUE'][idx].values.astype('float32')
+    # get the depths where the TEMP values are greater than 90 and the depth is less than 4
+    missing_depths = df.loc[(df['TEMP'] == 99.99) & (df['DEPTH'] < 4), 'DEPTH'].values.astype('float32')
 
     # check if the temperature values are missing & replace with previous value if they are:
     # do for both TEMP and TEMP_RAW
-    df = profile.data
     # find the depths in the profile data
     ind = np.isin(np.round(df['DEPTH'], 2), np.round(depths, 2)).nonzero()[0]
     # does this profile have a PLA flag? if so, use the previous values to replace the TEMP values
@@ -1326,6 +1333,38 @@ def restore_temp_val(profile):
         df.loc[ind, 'TEMP'] = temps
     # makes sure we have the same number of CS flags in the profile data as in the histories before proceeding
     elif (len(ind) > 0) & (len(temps) == len(ind)):
+        # check the depths and missing_depths are the same
+        if len(depths) != len(missing_depths):
+            LOGGER.error('Depths in CS flags do not match the missing depths in the profile data. Updating CS flags with missing depths. %s'
+                         % profile.Input_filename)
+            # if there are more depths than missing depths, exit with error
+            if len(depths) < len(missing_depths):
+                # update the profile.histories with the missing depths by adding another row to the histories
+                for depth in missing_depths:
+                    # check if the depth is already in the histories
+                    if not np.isin(np.round(depth, 2), np.round(profile.histories['HISTORY_START_DEPTH'], 2)):
+                        # add a new row to the histories with the depth and previous value
+                        new_row = {
+                            'HISTORY_START_DEPTH': depth,
+                            'HISTORY_PREVIOUS_VALUE': df.loc[df['DEPTH'] == depth, 'TEMP_RAW'].values[0],
+                            'HISTORY_QC_CODE': 'CSR',
+                            'HISTORY_QC_CODE_DESCRIPTION': 'surface_transient',
+                            'HISTORY_QC_CODE_VALUE': 3,
+                            'HISTORY_PARAMETER': 'TEMP',
+                            'HISTORY_DATE': pd.Timestamp.now(),
+                            'HISTORY_INSTITUTION': profile.histories['HISTORY_INSTITUTION'].values[0],
+                            'HISTORY_SOFTWARE_RELEASE': '2.1',
+                            'HISTORY_SOFTWARE': 'Australian XBT Quality Control Cookbook Version 2.1'
+                        }
+                        profile.histories = pd.concat([profile.histories, pd.DataFrame([new_row])], ignore_index=True)
+                        # reset the index
+                        profile.histories = profile.histories.reset_index(drop=True)
+                        # re-get the depths and temps
+                        idx = profile.histories['HISTORY_QC_CODE'] == 'CSR'
+                        depths = profile.histories['HISTORY_START_DEPTH'][idx].values.astype('float32')
+                        temps = profile.histories['HISTORY_PREVIOUS_VALUE'][idx].values.astype('float32')
+                        ind = np.isin(np.round(df['DEPTH'], 2), np.round(depths, 2)).nonzero()[0]
+
         # temps should be equal to df['TEMP_RAW'][ind], let's check they are equal and there are no missing values
         if (temps != df['TEMP_RAW'][ind]).all() and (temps.max() <= 99) and (df['TEMP_RAW'][ind].max() <= 99):
             # check they are within 0.01 of each other
@@ -1336,12 +1375,12 @@ def restore_temp_val(profile):
                                  % profile.Input_filename)
                     return profile
 
-        # update the TEMP values with the TEMP_RAW values if they do not contain values > 99
-        if not (df['TEMP_RAW'][ind] > 99).any():
+        # update the TEMP values with the TEMP_RAW values if they do not contain values == 99.99
+        if not (df['TEMP_RAW'][ind] == 99.99).any():
             df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
         # update the TEMP_RAW values with the HISTORY_PREVIOUS_VALUE values if the TEMP_RAW values have values > 99 and the
         # HISTORY_PREVIOUS_VALUE values do not
-        elif not (temps > 99).any() and (df['TEMP_RAW'][ind] > 99).any():
+        elif not (temps == 99.99).any() and (df['TEMP_RAW'][ind] == 99.99).any():
             df.loc[ind, 'TEMP_RAW'] = temps
             df.loc[ind, 'TEMP'] = temps
         else:
@@ -1355,10 +1394,10 @@ def restore_temp_val(profile):
                      % profile.Input_filename)
 
     # find any depths with 99.99 values that are flagged with SPA or IPA or HFA
-    idx = (df['TEMP'] > 99)
-    if idx.any() and ind.any():
+    idx_temp = (df['TEMP'] == 99.99)
+    if idx_temp.any() and ind.any():
         # check if there are any SPA, IPA or HFA flags at the same depth
-        idx2 = profile.histories['HISTORY_START_DEPTH'].isin(df.loc[idx, 'DEPTH'])
+        idx2 = profile.histories['HISTORY_START_DEPTH'].isin(df.loc[idx_temp, 'DEPTH'])
         if idx2.any():
             # get the flags
             flags = profile.histories.loc[idx2, 'HISTORY_QC_CODE']
@@ -1374,16 +1413,16 @@ def restore_temp_val(profile):
                 if (ind2[0] - ind[-1]) == 1:
                     LOGGER.info('Restoring 99.99 values for SPA, IPA or HFA flags and changing flag to CSR. %s'
                                 % profile.Input_filename)
-                    # update the TEMP values with the TEMP_RAW values if they do not contain values > 99
-                    if not (df['TEMP_RAW'][ind2] > 99).any():
+                    # update the TEMP values with the TEMP_RAW values if they do not contain values == 99.99
+                    if not (df['TEMP_RAW'][ind2] == 99.99).any():
                         df.loc[ind2, 'TEMP'] = df.loc[ind2, 'TEMP_RAW']
-                    # update the TEMP_RAW values with the HISTORY_PREVIOUS_VALUE values if the TEMP_RAW values have values > 99 and the
+                    # update the TEMP_RAW values with the HISTORY_PREVIOUS_VALUE values if the TEMP_RAW values have values == 99.99 and the
                     # HISTORY_PREVIOUS_VALUE values do not
-                    elif not (temps > 99).any() and (df['TEMP_RAW'][ind2] > 99).any():
+                    elif not (temps == 99.99).any() and (df['TEMP_RAW'][ind2] == 99.99).any():
                         df.loc[ind2, 'TEMP_RAW'] = temps
                         df.loc[ind2, 'TEMP'] = temps
                     else:
-                        LOGGER.error('TEMP_RAW values and HISTORY_PREVIOUS_VALUE values are both > 99 for CS flags %s'
+                        LOGGER.error('TEMP_RAW values and HISTORY_PREVIOUS_VALUE values are both == 99.99 for CS flags %s'
                                      % profile.Input_filename)
                         exit(1)
                     # update the TEMP_quality_control values
@@ -1409,24 +1448,24 @@ def restore_temp_val(profile):
                         # reset the index
                         profile.histories = profile.histories.reset_index(drop=True)
 
-    # are there any TEMP values that are still > 99?
-    if (df['TEMP'] > 99).any():
+    # are there any TEMP values that are still == 99.99?
+    if (df['TEMP'] == 99.99).any():
         # see if any of the histories have a valid TEMP value for these depths
-        idx = df['TEMP'] > 99
-        depths = df.loc[idx, 'DEPTH']
+        idx_temp = df['TEMP'] == 99.99
+        depths = df.loc[idx_temp, 'DEPTH']
         idx2 = (np.isclose(profile.histories['HISTORY_START_DEPTH'], (depths), atol=1e-6) &
                 (profile.histories['HISTORY_PARAMETER'].str.contains('TEMP') &
                  (profile.histories['HISTORY_PREVIOUS_VALUE'] < 99)))
         if idx2.any():
-            LOGGER.info('Restoring TEMP values for depths where TEMP > 99. %s' % profile.Input_filename)
+            LOGGER.info('Restoring TEMP values for depths where TEMP == 99.99. %s' % profile.Input_filename)
             # assign the previous_value at idx2 to the TEMP values at idx
-            df.loc[idx, 'TEMP'] = profile.histories.loc[idx2, 'HISTORY_PREVIOUS_VALUE'].values
+            df.loc[idx_temp, 'TEMP'] = profile.histories.loc[idx2, 'HISTORY_PREVIOUS_VALUE'].values
             # assign to TEMP_RAW as well
-            if (df['TEMP_RAW'][idx] > 99).any():
-                df.loc[idx, 'TEMP_RAW'] = profile.histories.loc[idx2, 'HISTORY_PREVIOUS_VALUE'].values
-            # check again if there are any TEMP values that are still > 99
-            if (df['TEMP'] > 99).any():
-                LOGGER.warning('TEMP values are still > 99 after restoration. %s' % profile.Input_filename)
+            if (df['TEMP_RAW'][idx_temp] == 99.99).any():
+                df.loc[idx_temp, 'TEMP_RAW'] = profile.histories.loc[idx2, 'HISTORY_PREVIOUS_VALUE'].values
+            # check again if there are any TEMP values that are still == 99.99
+            if (df['TEMP'] == 99.99).any():
+                LOGGER.warning('TEMP values are still == 99.99 after restoration. %s' % profile.Input_filename)
 
     # update profile data
     profile.data = df
