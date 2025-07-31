@@ -609,17 +609,11 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     profile_qc.data['LONGITUDE_RAW'] = np.round(lon_raw, 6)
 
     # position and time QC - check this is not empty. Assume 1 if it is
-    q_pos = profile_qc.netcdf_file_obj['Q_Pos'][0]
-    if not q_pos or q_pos.ndim == 0:
-        # only one value in the array
-        q_pos = remove_control_chars(str(decode_bytearray(profile_qc.netcdf_file_obj['Q_Pos'][:])))
-        if q_pos:
-            q_pos = int(q_pos)
-        else:
-            q_pos = 1
-    else:
-        # Apply the function to each element in the masked array
-        q_pos = int(np.ma.array([remove_control_chars(str(item)) for item in q_pos.data], mask=q_pos.mask)[0])
+    q_pos = decode_bytearray(profile_qc.netcdf_file_obj['Q_Pos'][:])
+    # remove control characters from the q_pos
+    q_pos = np.ma.array(remove_control_chars(q_pos), mask=0)
+    # convert to int and replace empty strings with '0' assuming that if the value is empty, it is not set
+    q_pos = np.ma.array(np.where(q_pos == '', '1', q_pos), mask=q_pos.mask).astype(int)
 
     profile_qc.data['LATITUDE_quality_control'] = q_pos
     profile_qc.data['LONGITUDE_quality_control'] = q_pos
@@ -632,14 +626,11 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     woce_date_raw = profile_noqc.netcdf_file_obj['woce_date'][0]
     woce_time_raw = profile_noqc.netcdf_file_obj['woce_time'][0]
 
-    q_date_time = profile_qc.netcdf_file_obj['Q_Date_Time'][0]
+    q_date_time = decode_bytearray(profile_qc.netcdf_file_obj['Q_Date_Time'][:])
     # remove control characters from the q_date_time
-    if not q_date_time or q_date_time.ndim == 0:
-        # only one value in the array
-        q_date_time = int(decode_bytearray(profile_qc.netcdf_file_obj['Q_Date_Time'][:]))
-    else:
-        q_date_time = int(
-            np.ma.array([remove_control_chars(str(item)) for item in q_date_time.data], mask=q_date_time.mask)[0])
+    q_date_time = np.ma.array(remove_control_chars(q_date_time), mask=0)
+    # convert to int and replace empty strings with '0' assuming that if the value is empty, it is not set
+    q_date_time = np.ma.array(np.where(q_date_time == '', '1', q_date_time), mask=q_date_time.mask).astype(int)
 
     # need to be a bit more specific as some times have missing padding at the end, some at the start.
     # could break if hour is 00 and there are no zeros!
