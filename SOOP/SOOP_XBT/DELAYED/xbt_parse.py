@@ -119,9 +119,9 @@ class XbtKeys(object):
                          'longitude': [x for x in longitude], 'callsign': [x for x in calls]}
 
 
-def coordinate_data(profile_qc, profile_noqc, profile_raw):
+def coordinate_data(profile_qc, profile_noqc, profile_raw, station_number):
     # perform checks and adjustments and combine data in preparation for writing out
-    profile_qc, profile_noqc = parse_data_nc(profile_qc, profile_noqc, profile_raw)
+    profile_qc, profile_noqc = parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number)
 
     # let's check if there are histories to parse and then handle
     profile_qc = parse_histories_nc(profile_qc)
@@ -177,6 +177,11 @@ def get_recorder_type(df):
     rct_list = read_section_from_xbt_config('RCT$')
     syst_list = read_section_from_xbt_config('SYST')
 
+    # if df['RECORDER_TYPE'][0] is nan, return '99' and 'Unknown'
+    if pd.isna(df['RECORDER_TYPE'][0]):
+        LOGGER.warning('RECORDER_TYPE is NaN in xbt_config file, using unknown for recorder. %s' % df['Input_filename'][0])
+        item_val = '99'
+        return item_val, rct_list[item_val].split(',')[0]
     item_val = str(int(df['RECORDER_TYPE'][0]))
     #        if item_val in list(syst_list.keys()):
     #            item_val = syst_list[item_val].split(',')[0]
@@ -289,6 +294,7 @@ def parse_extra_vars(profile_qc, profile_noqc):
         if ('Callsign' + ext[ind] not in dataf.columns) or not is_string_or_list_of_strings(dataf['Callsign' + ext[ind]].unique().item()):
             LOGGER.warning('Callsign is missing, GCLL has not been read or is missing. %s' % profile.Input_filename)
             # assign unknown to the platform code
+            dataf['Callsign' + ext[ind]] = 'Unknown'
             dataf['Platform_code' + ext[ind]] = 'Unknown'
             dataf['Ship_name' + ext[ind]] = 'Unknown'
             dataf['Ship_IMO' + ext[ind]] = 'Unknown'
@@ -303,7 +309,7 @@ def parse_extra_vars(profile_qc, profile_noqc):
         if calls in ships:
             dataf['Ship_name' + ext[ind]] = ships[calls][0]
             dataf['Ship_IMO' + ext[ind]] = ships[calls][1]
-        elif difflib.get_close_matches(calls, ships, n=1, cutoff=0.8) != []:
+        elif calls !='Unknown' and difflib.get_close_matches(calls, ships, n=1, cutoff=0.8) != []:
             dataf['Callsign' + ext[ind]] = \
                 difflib.get_close_matches(calls, ships, n=1, cutoff=0.8)[0]
             dataf['Ship_name' + ext[ind]] = ships[dataf['Callsign' + ext[ind]].unique().item()][0]
@@ -381,13 +387,22 @@ def parse_extra_vars(profile_qc, profile_noqc):
         # if date1 is not NaT, assign it to the column, otherwise assign date2
         dataf['PROBE_manufacture_date'] = date1 if not date1.isna().all() else date2
 
+    # if the 'Institution_unique_identifier' is nan, assign the 'station_number' to it
+    if dataf['Institution_unique_identifier'].isna().all():
+        if 'station_number' in dataf.columns:
+            dataf['Institution_unique_identifier'] = dataf['station_number'].astype(str)
+        else:
+            LOGGER.warning('Institution_unique_identifier is NaN and station_number is not available. %s' %
+                           profile.Input_filename)
+            dataf['Institution_unique_identifier'] = 'Unknown'
+
     # assign dataf to profile_qc.data
     profile_qc.data = dataf
 
     return profile_qc, profile_noqc
 
 
-def parse_data_nc(profile_qc, profile_noqc, profile_raw):
+def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
     """ Parse variable data from all sources into a dictionary attached to the profile_qc structure
     """
     # create column headers from the variable names in generate_nc_file_att file
@@ -580,6 +595,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw):
     # check for duplicated depths and log if found
     if profile_qc.data['DEPTH'].duplicated().any() or profile_qc.data['DEPTH_RAW'].duplicated().any():
         LOGGER.error('Duplicated DEPTH or DEPTH_RAW found in %s' % profile_qc.Input_filename)
+
+    # assign the station number to the profile_qc.data
+    profile_qc.data['station_number'] = station_number
 
     # Location information
     lat = profile_qc.netcdf_file_obj['latitude'][0].__float__()
@@ -1916,15 +1934,19 @@ if __name__ == '__main__':
         keys = XbtKeys(input_path)
         print('Processing database %s' % keys.dbase_name)
 
-        # make an empty dataframe to collect all the data
-        dfall = pd.DataFrame()
-        # make a second dataframe to hold the histories
-        dfhist = pd.DataFrame()
-        # and another dataframe to hold the global attributes
-        globsall = pd.DataFrame()
+        # read all the variables from the netcdfVars.csv file
+        vars = read_variables_config()
+        # create dfall with the variables from the netcdfVars.csv file that do not start with 'HISTORY_'
+        dfall = pd.DataFrame(columns=vars[vars['variable_name'].str.startswith('HISTORY_') == False]['variable_name'].tolist())
+        # add the station_number column to dfall
+        dfall['station_number'] = pd.Series(dtype='int64')
+        # create dfhist with the variables from the netcdfVars.csv file that start with 'HISTORY_'
+        dfhist = pd.DataFrame(columns=vars[vars['variable_name'].str.startswith('HISTORY_')]['variable_name'].tolist())
+        # add the station_number column to dfhist
+        dfhist['station_number'] = pd.Series(dtype='int64')
 
         for f in keys.data['station_number']:
-            # if f != 88118198:
+            # if f <= 88473843:
             #     continue
             fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
             fname = os.path.join(keys.dbase_name, fpath)
@@ -1948,12 +1970,14 @@ if __name__ == '__main__':
                 if check_nc_to_be_created(profile_ed):
                     print('Processing profile %s' % f)
                     # for example where depths are different, metadata is different etc between the ed and raw files.
-                    profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo)
+                    profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo, f)
                     if not profile_ed:
                         continue
                     profile_df = make_dataframe(profile_ed, profile_raw, profile_turo)
                     # add the station number to the dataframe
                     profile_df['station_number'] = f
+                    # drop all columns in profile_df that are all NaN
+                    profile_df = profile_df.dropna(axis=1, how='all')
                     # add to the big dataframes
                     dfall = pd.concat([dfall, profile_df], ignore_index=True)
                     # add station number to the histories
@@ -1963,6 +1987,9 @@ if __name__ == '__main__':
             else:
                 LOGGER.warning('Profile not processed, file %s is in keys file, but does not exist' % f)
 
+        if dfall.empty:
+            LOGGER.warning('No profiles found in %s' % keys.dbase_name)
+            continue
         # Drop columns labelled *_RAW_quality_control if they contain all 0s
         dfall = dfall.loc[:, ~(dfall.columns.str.contains('_RAW_quality_control') & (dfall == 0).all())]
 
