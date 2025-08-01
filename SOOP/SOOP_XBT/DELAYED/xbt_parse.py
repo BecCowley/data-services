@@ -1342,9 +1342,9 @@ def restore_temp_val(profile):
         # update the TEMP values with the previous value
         df.loc[ind, 'TEMP'] = temps
     # makes sure we have the same number of CS flags in the profile data as in the histories before proceeding
-    elif (len(ind) > 0) & (len(temps) == len(ind)) & len(missing_depths) > 0:
+    elif (len(ind) > 0) & (len(temps) == len(ind)):
         # check the depths and missing_depths are the same
-        if len(depths) != len(missing_depths):
+        if (len(depths) != len(missing_depths)) & len(missing_depths) > 0:
             LOGGER.error('Depths in CS flags do not match the missing depths in the profile data. Updating CS flags with missing depths. %s'
                          % profile.Input_filename)
             # if there are more depths than missing depths, exit with error
@@ -1946,7 +1946,7 @@ if __name__ == '__main__':
         dfhist['station_number'] = pd.Series(dtype='int64')
 
         for f in keys.data['station_number']:
-            # if f <= 88473843:
+            # if f != 89019122:
             #     continue
             fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
             fname = os.path.join(keys.dbase_name, fpath)
