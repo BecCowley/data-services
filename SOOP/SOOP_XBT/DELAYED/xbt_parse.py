@@ -661,8 +661,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
     xbt_date = convert_time_string(xbt_date, '%Y%m%dT%H%M%S')
     xbt_date2 = '%sT%s' % (woce_date, lpad)
     xbt_date2 = convert_time_string(xbt_date2, '%Y%m%dT%H%M%S')
+    # format is hhmmss so xbt_date2 is the one with the leading zeros
     # replace NaT with the other date
-    if pd.isnull(xbt_date):
+    if not pd.isnull(xbt_date2):
         xbt_date = xbt_date2
 
     # Raw date
@@ -675,7 +676,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
     xbt_date_raw2 = '%sT%s' % (woce_date_raw, lpad)
     xbt_date_raw2 = convert_time_string(xbt_date_raw2, '%Y%m%dT%H%M%S')
     # replace NaT with the other date
-    if pd.isnull(xbt_date_raw):
+    if not pd.isnull(xbt_date_raw2):
         xbt_date_raw = xbt_date_raw2
 
     # AW - TIME_RAW is original date-time - set it too
