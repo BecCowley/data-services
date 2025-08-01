@@ -1342,7 +1342,7 @@ def restore_temp_val(profile):
         # update the TEMP values with the previous value
         df.loc[ind, 'TEMP'] = temps
     # makes sure we have the same number of CS flags in the profile data as in the histories before proceeding
-    elif (len(ind) > 0) & (len(temps) == len(ind)):
+    elif (len(ind) > 0) & (len(temps) == len(ind)) & len(missing_depths) > 0:
         # check the depths and missing_depths are the same
         if len(depths) != len(missing_depths):
             LOGGER.error('Depths in CS flags do not match the missing depths in the profile data. Updating CS flags with missing depths. %s'
