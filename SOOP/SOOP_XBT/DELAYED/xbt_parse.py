@@ -785,6 +785,11 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
 
     for ind in range(vv.__len__()):
         item_val = profile_qc.data['PROBE_TYPE' + vv[ind]].unique().item()
+        # if histories is not empty, check for TPR code
+        if not profile_qc.histories.empty and \
+                profile_qc.histories['HISTORY_QC_CODE'].str.contains('TPR').any():
+            # assign a test probe type
+            item_val = '104'
         if item_val in list(ptyp_list.keys()) and item_val not in list(fre_list.keys()):
             # old PTYP surface code, need to match up PEQ$code
             item_val = ptyp_list[item_val]
@@ -794,20 +799,16 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
             profile_qc.data['PROBE_TYPE'] = ''
             # this is not an XBT
             return profile_qc
-        elif item_val not in list(fre_list.keys()):
-            # check if this is a test probe in the histories
-            if profile_qc.histories['HISTORY_QC_CODE'].str.contains('TPR').any():
-                # assign a test probe type
-                item_val = '104'
-            else:
-                # record the original value
-                profile_qc.data['PROBE_TYPE_original_name'] = item_val
-                # try fuzzy matching here
-                imatch = difflib.get_close_matches(item_val[0:4], list(ptyp_list.keys()), n=1, cutoff=0.5)
-                if imatch:
-                    LOGGER.warning('PROBE_TYPE %s not found in WMO1770, using closest match %s %s'
-                                   % (item_val, imatch[0], profile_qc.Input_filename))
-                    item_val = ptyp_list[imatch[0]]
+        elif item_val in list(peq_list.keys()):
+            # record the original value
+            profile_qc.data['PROBE_TYPE_original_name'] = item_val
+        else:
+            # try fuzzy matching here
+            imatch = difflib.get_close_matches(item_val[0:4], list(ptyp_list.keys()), n=1, cutoff=0.5)
+            if imatch:
+                LOGGER.warning('PROBE_TYPE %s not found in WMO1770, using closest match %s %s'
+                               % (item_val, imatch[0], profile_qc.Input_filename))
+                item_val = ptyp_list[imatch[0]]
 
         # use the code we have extracted to get the fall rate equation and name of probe
         if item_val in list(fre_list.keys()):
@@ -1705,6 +1706,13 @@ def check_nc_to_be_created(profile):
     histcodes = [''.join(chr(x) for x in bytearray(xx)).strip()
                  for xx in profile.netcdf_file_obj['Act_Code'][0:nhist].data]
     depth = np.round(profile.netcdf_file_obj.variables['Depthpress'][:], 2)
+    woce_date = profile.netcdf_file_obj['woce_date'][0]
+    # turn the woce_date into a string that is 8 characters long with spaces filled with zeros
+    woce_date = str(woce_date).zfill(8)
+    # transform the date to a datetime object
+    date1 = convert_time_string(woce_date, '%Y%m%d')
+    date2 = convert_time_string(woce_date, '%d%m%Y')
+    year = (date1 if not pd.isna(date1) else date2).year
 
     if np.sum(~depth.mask) == 0:
         LOGGER.error('Profile not processed, No data in the file: %s' % profile.Input_filename)
@@ -1712,6 +1720,11 @@ def check_nc_to_be_created(profile):
 
     if (data_type != 'XB') and (data_type != 'BA'):  # and data_type != 'BA' and data_type != 'TE':
         LOGGER.error('Profile not processed as it is type %s %s ' % (data_type, profile.Input_filename))
+        return False
+
+    # if the date of the profile is before 1950, skip it
+    if year < 1950:
+        LOGGER.error('Profile not processed, date is before 1950: %s' % profile.Input_filename)
         return False
 
     if duplicate_flag == 'D':
