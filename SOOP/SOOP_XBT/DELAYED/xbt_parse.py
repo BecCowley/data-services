@@ -1006,8 +1006,10 @@ def parse_histories_nc(profile):
                 # use date1 if it is not None, otherwise use date2
                 if date1 is not None:
                     df.loc[df['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = date1
+                    dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = date1
                 elif date2 is not None:
                     df.loc[df['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = date2
+                    dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = date2
                 else:
                     LOGGER.error('DATE format not recognised in %s. Please review the file.' % profile.Input_filename)
                     exit(1)
@@ -1220,7 +1222,7 @@ def combine_histories(profile_qc, profile_noqc):
                         'HISTORY_PREVIOUS_VALUE'].values[0])), profile_qc.data[var][0], 6, atol=0.01):
                     profile_qc.data[var] = float(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
                         'HISTORY_PREVIOUS_VALUE'].values[0])
-                    LOGGER.info('HISTORY: Updating %s to match the negative longitude in *raw.nc file. %s'
+                    LOGGER.info('HISTORY: Updating %s to match the *raw.nc file. %s'
                                    % (var, profile_qc.Input_filename))
                 else:
                     LOGGER.error('HISTORY: Previous value for %s is not the same as the %s_RAW value. %s'
