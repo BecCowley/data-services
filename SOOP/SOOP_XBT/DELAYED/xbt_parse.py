@@ -1111,6 +1111,31 @@ def parse_histories_nc(profile):
     # remove any rows where HISTORY_QC_CODE is 'WBR' and has a HISTORY_START_DEPTH of NAN
     df.dropna(subset=['HISTORY_START_DEPTH'], inplace=True)
 
+    # change the start_depth values to the closest depth value in the profile data
+    for idx, row in df.iterrows():
+        # find the closest depth value in the profile data
+        closest_depth = profile.data['DEPTH'].sub(row['HISTORY_START_DEPTH']).abs().idxmin()
+        # if the closest depth is > 0.8, stop here with an error
+        if abs(profile.data['DEPTH'].iloc[closest_depth] - row['HISTORY_START_DEPTH']) > 0.8:
+            LOGGER.error('HISTORY_START_DEPTH %s is not close to any DEPTH value in the profile data %s. '
+                         'Please review the file %s' %
+                         (row['HISTORY_START_DEPTH'], profile.data['DEPTH'].iloc[closest_depth],
+                          profile.Input_filename))
+            exit(1)
+        # update the HISTORY_START_DEPTH value to the closest depth value
+        df.at[idx, 'HISTORY_START_DEPTH'] = profile.data['DEPTH'].iloc[closest_depth]
+        # if there are any 9999 type values in the HISTORY_PREVIOUS_VALUE and the HISTORY_PARAMETER is TEMP,
+        # change the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value at the closest depth
+        pattern = re.compile(r'^9{1,5}(?:\.\d+)?$')
+        if row['HISTORY_PREVIOUS_VALUE'] and \
+                row['HISTORY_PARAMETER'] == 'TEMP' and \
+                re.match(pattern, row['HISTORY_PREVIOUS_VALUE']):
+            # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value at the closest depth
+            df.at[idx, 'HISTORY_PREVIOUS_VALUE'] = \
+                profile.data['TEMP_RAW'].iloc[closest_depth].astype(str).zfill(6)
+
+
+
     # assign the dataframe back to profile at this stage
     profile.histories = df.reset_index(drop=True)
 
