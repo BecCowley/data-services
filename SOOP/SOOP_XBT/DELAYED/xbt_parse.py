@@ -169,10 +169,10 @@ def coordinate_data(profile_qc, profile_noqc, profile_raw, station_number):
         profile_noqc.histories = pd.DataFrame({col: pd.Series(dtype=profile_qc.histories[col].dtype) for col in profile_qc.histories.columns})
     else:
         # we need to carry the depths information into the history parsing, so copy the data array into profile_noqc
-        profile_noqc.data = pd.DataFrame(columns=profile_qc.data.columns)
-        profile_noqc.data['DEPTH'] = profile_qc.data['DEPTH_RAW']
-        profile_noqc.data['TEMP_quality_control'] = profile_qc.data['TEMP_RAW_quality_control']
+        profile_noqc.data = profile_qc.data
         profile_noqc = parse_histories_nc(profile_noqc)
+        # delete the data array from profile_noqc as it is not needed anymore
+        del profile_noqc.data
     # check for histories in the noqc file and reconcile:
     profile_qc = combine_histories(profile_qc, profile_noqc)
 
@@ -1150,29 +1150,43 @@ def parse_histories_nc(profile):
     # remove any rows where HISTORY_QC_CODE is 'WBR' and has a HISTORY_START_DEPTH of NAN
     df.dropna(subset=['HISTORY_START_DEPTH'], inplace=True)
 
-    # change the start_depth values to the closest depth value in the profile data
-    for idx, row in df.iterrows():
-        # find the closest depth value in the profile data
-        closest_depth = profile.data['DEPTH'].sub(row['HISTORY_START_DEPTH']).abs().idxmin()
-        # if the closest depth is > 0.8, stop here with an error
-        if abs(profile.data['DEPTH'].iloc[closest_depth] - row['HISTORY_START_DEPTH']) > 0.8:
-            LOGGER.error('HISTORY_START_DEPTH %s is not close to any DEPTH value in the profile data %s. '
-                         'Please review the file %s' %
-                         (row['HISTORY_START_DEPTH'], profile.data['DEPTH'].iloc[closest_depth],
-                          profile.Input_filename))
-            exit(1)
-        # update the HISTORY_START_DEPTH value to the closest depth value
-        df.at[idx, 'HISTORY_START_DEPTH'] = profile.data['DEPTH'].iloc[closest_depth]
-        # if there are any 9999 type values in the HISTORY_PREVIOUS_VALUE and the HISTORY_PARAMETER is TEMP,
-        # change the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value at the closest depth
-        pattern = re.compile(r'^9{1,5}(?:\.\d+)?$')
-        if row['HISTORY_PREVIOUS_VALUE'] and \
-                row['HISTORY_PARAMETER'] == 'TEMP' and \
-                re.match(pattern, row['HISTORY_PREVIOUS_VALUE']):
-            # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value at the closest depth
-            df.at[idx, 'HISTORY_PREVIOUS_VALUE'] = \
-                profile.data['TEMP_RAW'].iloc[closest_depth].astype(str).zfill(6)
-
+    # change the start_depth values to the closest depth value in the profile data if profile.input_filename ends with ed.nc
+    if profile.Input_filename.endswith('ed.nc'):
+        # reset the index
+        df = df.reset_index(drop=True)
+        for idx, row in df.iterrows():
+            # find the closest depth value in the profile data
+            closest_depth = profile.data['DEPTH'].sub(row['HISTORY_START_DEPTH']).abs().idxmin()
+            # if the closest depth is > 2m, log warning
+            if abs(profile.data['DEPTH'][closest_depth] - row['HISTORY_START_DEPTH']) > 2:
+                LOGGER.warning('HISTORY: Closest depth for HISTORY_START_DEPTH %s is %s, which is more than 2m away from the profile depth. %s'
+                                % (row['HISTORY_START_DEPTH'], profile.data['DEPTH'][closest_depth],
+                                    profile.Input_filename))
+            # update the HISTORY_START_DEPTH value to the closest depth value
+            df.at[idx, 'HISTORY_START_DEPTH'] = profile.data['DEPTH'].iloc[closest_depth]
+            # if there are any 9999 type values in the HISTORY_PREVIOUS_VALUE and the HISTORY_PARAMETER is TEMP,
+            # change the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value at the closest depth
+            pattern = re.compile(r'^9{1,5}(?:\.\d+)?$')
+            if row['HISTORY_PREVIOUS_VALUE'] and row['HISTORY_PARAMETER'] == 'TEMP' and \
+                    re.match(pattern, row['HISTORY_PREVIOUS_VALUE']):
+                # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value at the closest depth
+                df.at[idx, 'HISTORY_PREVIOUS_VALUE'] = \
+                    profile.data['TEMP_RAW'].iloc[closest_depth].astype(str)
+                # re-read the row
+                row = df.iloc[idx]
+            # if the HISTORY_PREVIOUS_VALUE does not match the TEMP_RAW value at the closest depth, update it if the depth is within 2m
+            if row['HISTORY_PARAMETER'] == 'TEMP' and \
+                    np.isclose(float(row['HISTORY_PREVIOUS_VALUE']),
+                                   profile.data['TEMP_RAW'].iloc[closest_depth], atol=5e-1):
+                # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value at the closest depth
+                df.at[idx, 'HISTORY_PREVIOUS_VALUE'] = \
+                    profile.data['TEMP_RAW'].iloc[closest_depth].astype(str)
+            elif row['HISTORY_PARAMETER'] == 'TEMP' and \
+                    not np.isclose(float(row['HISTORY_PREVIOUS_VALUE']),
+                                   profile.data['TEMP_RAW'].iloc[closest_depth], atol=5e-1):
+                LOGGER.warning('HISTORY: HISTORY_PREVIOUS_VALUE %s does not match TEMP_RAW value %s at depth %s. %s'
+                               % (row['HISTORY_PREVIOUS_VALUE'], profile.data['TEMP_RAW'].iloc[closest_depth],
+                                  profile.data['DEPTH'].iloc[closest_depth], profile.Input_filename))
 
 
     # assign the dataframe back to profile at this stage
@@ -1356,10 +1370,10 @@ def combine_histories(profile_qc, profile_noqc):
             if not np.isclose(round(float(row['HISTORY_PREVIOUS_VALUE']), 2), np.round(profile_qc.data['TEMP_RAW'][ii], 2).item(), atol=0.01):
                 # remove this row from the dataframe
                 profile_qc.histories = profile_qc.histories.drop(idx)
-                # reset the index
-                profile_qc.histories = profile_qc.histories.reset_index(drop=True)
                 # log the error
                 LOGGER.warning('HISTORY: Duplicate QC code removed: %s. Please review. %s' % (row['HISTORY_QC_CODE'], profile_qc.Input_filename))
+        # reset the index
+        profile_qc.histories = profile_qc.histories.reset_index(drop=True)
         if profile_qc.histories.duplicated(['HISTORY_PARAMETER', 'HISTORY_QC_CODE', 'HISTORY_START_DEPTH']).any():
             LOGGER.warning('HISTORY: Duplicated flags remain in the qc file. Please review. %s' % profile_qc.Input_filename)
 
@@ -2026,7 +2040,7 @@ if __name__ == '__main__':
             dfhist['station_number'] = pd.Series(dtype='int64')
 
             for f in stations[year]:
-                # if f != 87125394:
+                # if f != 61014950:
                 #     continue
                 fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
                 fname = os.path.join(keysall.dbase_name, fpath)
