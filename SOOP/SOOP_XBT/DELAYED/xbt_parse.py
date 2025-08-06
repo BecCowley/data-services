@@ -113,6 +113,8 @@ class XbtKeys(object):
                      if bytearray(xx).strip()]
             # sort the same as station number
             calls = [x for _, x in sorted(zip(istn, calls))]
+            # remove control characters from the callsign list
+            calls = [remove_control_chars(x) for x in calls]
 
             # get the date/time information
             year = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in netcdf_file_obj['obs_y'][:].data
@@ -315,6 +317,8 @@ def parse_extra_vars(profile_qc, profile_noqc):
                 att_name = srfc_code_list.loc[srfc_code_index, 'variable_name']
                 att_type = srfc_code_list.loc[srfc_code_index, 'variable_type']
                 att_val = decode_bytearray(srfc_parm[i])
+                # remove control characters from the attribute value
+                att_val = remove_control_chars(att_val).strip()
                 try:
                     if 'float' in att_type:
                         dataf[att_name + ext[ind]] = float(att_val.replace(' ', ''))
@@ -2054,7 +2058,7 @@ if __name__ == '__main__':
                     LOGGER.warning('No keys found for year %s in %s' % (year, keysall.dbase_name))
                     continue
 
-                print('Processing database %s for year' % keysall.dbase_name, year)
+                print('Processing database %s for year %s with callsign %s' % (keysall.dbase_name, year, callsign))
 
                 # read all the variables from the netcdfVars.csv file
                 vars = read_variables_config()
