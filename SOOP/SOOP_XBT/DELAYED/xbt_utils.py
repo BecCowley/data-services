@@ -82,8 +82,9 @@ def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
             dt = time_string.apply(lambda x: x.replace(' ', '0') if isinstance(x, str) else x)
         else:
             dt = time_string.replace(' ', '0')
-            # in case it has a '.' in the string, replace it with ''
-            dt = dt.replace('.', '')
+            # in case it has a '.' in the string, assume it is a decimal point so convert to an integer then back to string
+            if isinstance(dt, str) and '.' in dt:
+                dt = str(int(float(dt)))
         dt = pd.to_datetime(dt, errors='coerce', format=format)
         if output == 'datetime':
             # if the result is NaT, return None

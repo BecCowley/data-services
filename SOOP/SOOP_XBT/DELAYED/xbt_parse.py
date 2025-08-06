@@ -1079,8 +1079,11 @@ def parse_histories_nc(profile):
             if any(dfTEA['HISTORY_PARAMETER'] == 'TIME'):
                 # get the TIME value from the TIME variable
                 ti = dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'].values[0]
+                ti = convert_time_string(ti, '%H%M%S', 'string')
                 # combine the dtt and ti into a single string called dati
                 dati = str(dtt) + str(ti)
+                # convert the dati to to a date string in the format YYYYMMDDHHMMSS
+                dati = convert_time_string(dati, '%Y%m%d%H%M%S', 'string')
                 # replace the TIME row with the new datetime value
                 df.loc[df['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'] = dati
 
@@ -1088,8 +1091,15 @@ def parse_histories_nc(profile):
             if any(dfTEA['HISTORY_PARAMETER'] == 'DATE'):
                 # get the DATE value from the DATE variable
                 dt = dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'].values[0]
+                dt = convert_time_string(dt, '%Y%m%d', 'string')
+                # if the date is not in the correct format, try DDMMYYYY
+                if dt is None:
+                    dt = dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'].values[0]
+                    dt = convert_time_string(dt, '%d%m%Y', 'string')
                 # combine the dtt and dt into a single string called dati
                 dati = str(dt) + str(ti)
+                # convert the dati to a date string in the format YYYYMMDDHHMMSS
+                dati = convert_time_string(dati, '%Y%m%d%H%M%S', 'string')
                 # replace the DATE row with the new datetime value
                 df.loc[df['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = dati
 
