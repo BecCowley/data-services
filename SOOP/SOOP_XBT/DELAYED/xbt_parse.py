@@ -1067,6 +1067,12 @@ def parse_histories_nc(profile):
             # combine the HISTORY_PREVIOUS_VALUE TIME with DATE into a single string called dati
             dati = dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'].values[0] + \
                    dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'].values[0]
+            # convert the dati to a date string in the format YYYYMMDDHHMMSS
+            dati = convert_time_string(dati, '%Y%m%d%H%M%S', 'string')
+            # if dati is None, put '000000' in the TIME row
+            if dati is None:
+                dati = '00000000000000'
+            # replace the TIME row
             # replace the TIME and DATE rows with a single row for TIME
             df = df.loc[df['HISTORY_PARAMETER'] != 'DATE']
             df.loc[df['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'] = dati
