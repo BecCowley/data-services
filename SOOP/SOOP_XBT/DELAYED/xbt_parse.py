@@ -124,8 +124,14 @@ class XbtKeys(object):
             day = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in netcdf_file_obj['obs_d'][:].data
                      if bytearray(xx).strip()]
             # create a datetime object for each profile
-            date_time = [datetime(int(y), int(m), int(d))
-                              for y, m, d in zip(year, month, day)]
+            try:
+                date_time = [datetime(int(y), int(m), int(d))
+                                  for y, m, d in zip(year, month, day)]
+            except ValueError as e:
+                # use a default day of 1 with year and month as we are only interested in the year for grouping
+                LOGGER.error('Error parsing date/time in keys file %s: %s' % (self.keys_file_path, e))
+                date_time = [datetime(int(y), int(m), 1)
+                                  for y, m in zip(year, month)]
 
             self.data = {}
             self.data = {'station_number': [int(x) for x in station_number], 'latitude': [x for x in latitude],
