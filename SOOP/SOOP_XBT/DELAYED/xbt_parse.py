@@ -1211,6 +1211,17 @@ def parse_histories_nc(profile):
                     profile.data['TEMP_RAW'].iloc[closest_depth].astype(str)
                 # re-read the row
                 row = df.iloc[idx]
+            # check for values that cannot be converted to float in HISTORY_PREVIOUS_VALUE
+            if row['HISTORY_PARAMETER'] == 'TEMP':
+                try:
+                    float(row['HISTORY_PREVIOUS_VALUE'])
+                except ValueError:
+                    LOGGER.error('HISTORY: HISTORY_PREVIOUS_VALUE %s cannot be converted to float at depth %s. %s'
+                                 % (row['HISTORY_PREVIOUS_VALUE'], row['HISTORY_START_DEPTH'], profile.Input_filename))
+                    # set the HISTORY_PREVIOUS_VALUE to '0'
+                    df.at[idx, 'HISTORY_PREVIOUS_VALUE'] = '0'
+                    # re-read the row
+                    row = df.iloc[idx]
             # if the HISTORY_PREVIOUS_VALUE does not match the TEMP_RAW value at the closest depth, update it if the depth is within 2m
             if row['HISTORY_PARAMETER'] == 'TEMP' and \
                     np.isclose(float(row['HISTORY_PREVIOUS_VALUE']),
