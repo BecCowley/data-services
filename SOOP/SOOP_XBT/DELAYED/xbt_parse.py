@@ -1087,8 +1087,11 @@ def parse_histories_nc(profile):
                 ti = convert_time_string(ti, '%H%M%S', 'string')
                 # combine the dtt and ti into a single string called dati
                 dati = str(dtt) + str(ti)
-                # convert the dati to to a date string in the format YYYYMMDDHHMMSS
+                # convert the dati to a date string in the format YYYYMMDDHHMMSS
                 dati = convert_time_string(dati, '%Y%m%d%H%M%S', 'string')
+                # if dati is None, put '000000' in the TIME row
+                if dati is None:
+                    dati = '000000'
                 # replace the TIME row with the new datetime value
                 df.loc[df['HISTORY_PARAMETER'] == 'TIME', 'HISTORY_PREVIOUS_VALUE'] = dati
 
@@ -1105,6 +1108,9 @@ def parse_histories_nc(profile):
                 dati = str(dt) + str(ti)
                 # convert the dati to a date string in the format YYYYMMDDHHMMSS
                 dati = convert_time_string(dati, '%Y%m%d%H%M%S', 'string')
+                # if dati is None, put '00000000' in the DATE row
+                if dati is None:
+                    dati = '00000000'
                 # replace the DATE row with the new datetime value
                 df.loc[df['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = dati
 
@@ -1182,8 +1188,8 @@ def parse_histories_nc(profile):
             # if there are any 9999 type values in the HISTORY_PREVIOUS_VALUE and the HISTORY_PARAMETER is TEMP,
             # change the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value at the closest depth
             pattern = re.compile(r'^9{1,5}(?:\.\d+)?$')
-            if row['HISTORY_PREVIOUS_VALUE'] and row['HISTORY_PARAMETER'] == 'TEMP' and \
-                    re.match(pattern, row['HISTORY_PREVIOUS_VALUE']):
+            if (row['HISTORY_PARAMETER'] == 'TEMP' and pd.isna(row['HISTORY_PREVIOUS_VALUE'])) or (row['HISTORY_PARAMETER'] == 'TEMP' and \
+                    re.match(pattern, row['HISTORY_PREVIOUS_VALUE'])) :
                 # update the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value at the closest depth
                 df.at[idx, 'HISTORY_PREVIOUS_VALUE'] = \
                     profile.data['TEMP_RAW'].iloc[closest_depth].astype(str)
@@ -1324,7 +1330,7 @@ def combine_histories(profile_qc, profile_noqc):
         elif vv in ['TIME']:
             # TIME_RAW is in datetime format and HISTORY_PREVIOUS_VALUE is in string format
             # if the HISTORY_PREVIOUS_VALUE is not zeros, then it is a valid date
-            if not int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
+            if int(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
                 'HISTORY_PREVIOUS_VALUE'].values[0]) == 0:
                 # convert the HISTORY_PREVIOUS_VALUE to a datetime object if it is not already
                 prevval = convert_time_string(non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv,
