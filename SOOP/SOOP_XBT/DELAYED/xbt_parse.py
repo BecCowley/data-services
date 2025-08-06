@@ -129,7 +129,7 @@ class XbtKeys(object):
             self.data = {'station_number': [int(x) for x in station_number], 'latitude': [x for x in latitude],
                          'longitude': [x for x in longitude], 'callsign': [x for x in calls], 'date': [x for x in date_time]}
 
-    def group_by_year(self, group_by=None):
+    def group_by_year(self, group_by=False):
         # group the data by year and return a dictionary with years as keys and lists of station numbers as values
         year_dict = {}
         if not group_by:
@@ -146,16 +146,21 @@ class XbtKeys(object):
                 year_dict[year].append(self.data['station_number'][i])
         return year_dict
 
-    def get_stations_for_year(self, year):
-        # use the group_by_year method to get the keys for a specific year
-        year_dict = self.group_by_year()
-        if year in year_dict:
-            # create a new dictionary with the keys for the specified year
-            stations_for_year = {year: year_dict[year]}
-            return stations_for_year
-        else:
-            LOGGER.error('No stations found for year %s in %s' % (year, self.keys_file_path))
-            return None
+    def group_by_callsign_year(self, year_dictionary=None):
+        # get the unique callsigns, group by callsign and year
+        callsign_dict = {}
+        if year_dictionary is None:
+            year_dictionary = self.group_by_year(group_by=True)
+        # iterate through the data and group by callsign and year
+        for i, callsign in enumerate(self.data['callsign']):
+            year = self.data['date'][i].year
+            if callsign not in callsign_dict:
+                callsign_dict[callsign] = {}
+            if year not in callsign_dict[callsign]:
+                callsign_dict[callsign][year] = []
+            # append the station number to the list for this callsign and year
+            callsign_dict[callsign][year].append(self.data['station_number'][i])
+        return callsign_dict
 
 
 def coordinate_data(profile_qc, profile_noqc, profile_raw, station_number):
@@ -2026,91 +2031,92 @@ if __name__ == '__main__':
     for input_path in vargs.input_xbt_campaign_path:
         keysall = XbtKeys(input_path)
         # group the keys by year and process each year separately
-        years = keysall.group_by_year(vargs.group_by_year)
+        calls = keysall.group_by_callsign_year(vargs.group_by_year)
         # process each year separately
-        for year in years:
-            # get the subset of keys for the year
-            stations = keysall.get_stations_for_year(year)
-            # if there are no keys for this year, skip it
-            if stations is None:
-                LOGGER.warning('No keys found for year %s in %s' % (year, keysall.dbase_name))
-                continue
+        for callsign in calls:
+            for year in calls[callsign]:
+                # get the subset of keys for the year
+                stations = calls[callsign][year]
+                # if there are no keys for this year, skip it
+                if stations is None:
+                    LOGGER.warning('No keys found for year %s in %s' % (year, keysall.dbase_name))
+                    continue
 
-            print('Processing database %s for year ' % keysall.dbase_name, year)
+                print('Processing database %s for year' % keysall.dbase_name, year)
 
-            # read all the variables from the netcdfVars.csv file
-            vars = read_variables_config()
-            # create dfall with the variables from the netcdfVars.csv file that do not start with 'HISTORY_'
-            dfall = pd.DataFrame(columns=vars[vars['variable_name'].str.startswith('HISTORY_') == False]['variable_name'].tolist())
-            # add the station_number column to dfall
-            dfall['station_number'] = pd.Series(dtype='int64')
-            # create dfhist with the variables from the netcdfVars.csv file that start with 'HISTORY_'
-            dfhist = pd.DataFrame(columns=vars[vars['variable_name'].str.startswith('HISTORY_')]['variable_name'].tolist())
-            # add the station_number column to dfhist
-            dfhist['station_number'] = pd.Series(dtype='int64')
+                # read all the variables from the netcdfVars.csv file
+                vars = read_variables_config()
+                # create dfall with the variables from the netcdfVars.csv file that do not start with 'HISTORY_'
+                dfall = pd.DataFrame(columns=vars[vars['variable_name'].str.startswith('HISTORY_') == False]['variable_name'].tolist())
+                # add the station_number column to dfall
+                dfall['station_number'] = pd.Series(dtype='int64')
+                # create dfhist with the variables from the netcdfVars.csv file that start with 'HISTORY_'
+                dfhist = pd.DataFrame(columns=vars[vars['variable_name'].str.startswith('HISTORY_')]['variable_name'].tolist())
+                # add the station_number column to dfhist
+                dfhist['station_number'] = pd.Series(dtype='int64')
 
-            for f in stations[year]:
-                # if f != 61014950:
-                #     continue
-                fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
-                fname = os.path.join(keysall.dbase_name, fpath)
-                # make input_filename here
-                input_filename = os.path.join(os.path.basename(keysall.dbase_name), fpath)
+                for f in stations:
+                    # if f != 61057040:
+                    #     continue
+                    fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
+                    fname = os.path.join(keysall.dbase_name, fpath)
+                    # make input_filename here
+                    input_filename = os.path.join(os.path.basename(keysall.dbase_name), fpath)
 
-                # if the file exists, let's make a profile object with all the
-                # data and metadata attached.
+                    # if the file exists, let's make a profile object with all the
+                    # data and metadata attached.
 
-                if os.path.isfile(fname):
-                    # read the edited profile
-                    profile_ed = XbtProfile(fname, input_filename)
-                    # read the raw profile
-                    profile_raw = XbtProfile(fname.replace('ed.nc', 'raw.nc'), input_filename.replace('ed.nc', 'raw.nc'))
-                    # TODO: check the keys data (date/time/lat/long etc) against what is in the data file
-                    # TODO: find the matching TURO profile if it is available:
-                    # profile_turo = turoProfile(profile_ed)
-                    profile_turo = []
+                    if os.path.isfile(fname):
+                        # read the edited profile
+                        profile_ed = XbtProfile(fname, input_filename)
+                        # read the raw profile
+                        profile_raw = XbtProfile(fname.replace('ed.nc', 'raw.nc'), input_filename.replace('ed.nc', 'raw.nc'))
+                        # TODO: check the keys data (date/time/lat/long etc) against what is in the data file
+                        # TODO: find the matching TURO profile if it is available:
+                        # profile_turo = turoProfile(profile_ed)
+                        profile_turo = []
 
-                    # now write it out to the new netcdf format
-                    if check_nc_to_be_created(profile_ed):
-                        print('Processing profile %s' % f)
-                        # for example where depths are different, metadata is different etc between the ed and raw files.
-                        profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo, f)
-                        if not profile_ed:
-                            continue
-                        profile_df = make_dataframe(profile_ed, profile_raw, profile_turo)
-                        # add the station number to the dataframe
-                        profile_df['station_number'] = f
-                        # drop all columns in profile_df that are all NaN
-                        profile_df = profile_df.dropna(axis=1, how='all')
-                        # add to the big dataframes
-                        dfall = pd.concat([dfall, profile_df], ignore_index=True)
-                        # add station number to the histories
-                        profile_ed.histories['station_number'] = f
-                        # add the histories to the big dataframe
-                        dfhist = pd.concat([dfhist, profile_ed.histories], ignore_index=True)
+                        # now write it out to the new netcdf format
+                        if check_nc_to_be_created(profile_ed):
+                            print('Processing profile %s' % f)
+                            # for example where depths are different, metadata is different etc between the ed and raw files.
+                            profile_ed = coordinate_data(profile_ed, profile_raw, profile_turo, f)
+                            if not profile_ed:
+                                continue
+                            profile_df = make_dataframe(profile_ed, profile_raw, profile_turo)
+                            # add the station number to the dataframe
+                            profile_df['station_number'] = f
+                            # drop all columns in profile_df that are all NaN
+                            profile_df = profile_df.dropna(axis=1, how='all')
+                            # add to the big dataframes
+                            dfall = pd.concat([dfall, profile_df], ignore_index=True)
+                            # add station number to the histories
+                            profile_ed.histories['station_number'] = f
+                            # add the histories to the big dataframe
+                            dfhist = pd.concat([dfhist, profile_ed.histories], ignore_index=True)
+                    else:
+                        LOGGER.warning('Profile not processed, file %s is in keys file, but does not exist' % f)
+
+                if dfall.empty:
+                    LOGGER.warning('No profiles found in %s' % keysall.dbase_name)
+                    continue
+                # Drop columns labelled *_RAW_quality_control if they contain all 0s
+                dfall = dfall.loc[:, ~(dfall.columns.str.contains('_RAW_quality_control') & (dfall == 0).all())]
+
+                # add table metadata to the dfall dataframe
+                dfall = set_metadata(dfall, tbl_meta={'Parent file':keysall.dbase_name})
+                # write the dataframe to a parquet file
+                if not vargs.group_by_year:
+                    pq_filename = os.path.join(vargs.output_folder, os.path.basename(keysall.dbase_name) + '.parquet')
                 else:
-                    LOGGER.warning('Profile not processed, file %s is in keys file, but does not exist' % f)
-
-            if dfall.empty:
-                LOGGER.warning('No profiles found in %s' % keysall.dbase_name)
-                continue
-            # Drop columns labelled *_RAW_quality_control if they contain all 0s
-            dfall = dfall.loc[:, ~(dfall.columns.str.contains('_RAW_quality_control') & (dfall == 0).all())]
-
-            # add table metadata to the dfall dataframe
-            dfall = set_metadata(dfall, tbl_meta={'Parent file':keysall.dbase_name})
-            # write the dataframe to a parquet file
-            if not vargs.group_by_year:
-                pq_filename = os.path.join(vargs.output_folder, os.path.basename(keysall.dbase_name) + '.parquet')
-            else:
-                pq_filename = os.path.join(vargs.output_folder, os.path.basename(keysall.dbase_name) + '_' + str(year) + '.parquet')
-            pq.write_table(dfall, pq_filename)
-            if not vargs.group_by_year:
-                pq_filename = os.path.join(vargs.output_folder,
-                                           os.path.basename(keysall.dbase_name) + '_histories.parquet')
-            else:
-                pq_filename = os.path.join(vargs.output_folder,
-                                       os.path.basename(keysall.dbase_name)  + '_' + str(year) + '_histories.parquet')
-            dfhist.to_parquet(pq_filename, index=False)
+                    pq_filename = os.path.join(vargs.output_folder, os.path.basename(keysall.dbase_name) + '_' + callsign + str(year) + '.parquet')
+                pq.write_table(dfall, pq_filename)
+                if not vargs.group_by_year:
+                    pq_filename = os.path.join(vargs.output_folder,
+                                               os.path.basename(keysall.dbase_name) + '_histories.parquet')
+                else:
+                    pq_filename = os.path.join(vargs.output_folder,
+                                           os.path.basename(keysall.dbase_name)  + '_' + callsign + str(year) + '_histories.parquet')
+                dfhist.to_parquet(pq_filename, index=False)
 
     print('All done')
