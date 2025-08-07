@@ -983,6 +983,18 @@ def parse_histories_nc(profile):
         df = df.loc[df['HISTORY_QC_CODE'].isin(qc_df['code']) & df['HISTORY_PARAMETER'].isin(parm_names.keys())]
         # reset nhist to the new length
         nhist = len(df)
+    # Check for errors in the HISTORY_PARAMETER where the HISTORY_QC_CODE does not match the parameter in qc_df
+    # match the HISTORY_QC_CODE with qc_df['code'] and check the parameter is correct
+    for idx, row in df.iterrows():
+        # get the code and parameter
+        code = row['HISTORY_QC_CODE']
+        parm = row['HISTORY_PARAMETER']
+        # does row['HISTORY_QC_CODE'] match the qc_df['code']?
+        if parm != qc_df.loc[qc_df['code'] == code, 'Parameter'].values[0] and code not in ['PE', 'TE']:
+            LOGGER.warning('HISTORY_QC_CODE %s has incorrect HISTORY_PARAMETER %s and has been corrected. Please review output for this file. %s'
+                           % (code, parm, profile.Input_filename))
+            # if the qc_df['parameter'] is not 'PE' OR 'TE', then set the HISTORY_PARAMETER to the qc_df['parameter']
+            df.at[idx, 'HISTORY_PARAMETER'] = qc_df.loc[qc_df['code'] == code, 'Parameter'].values[0]
 
     # allow for history dates to be YYYYMMDD or DDMMYYYY
     date1 = convert_time_string(df['HISTORY_DATE'], '%Y%m%d')
@@ -1000,22 +1012,22 @@ def parse_histories_nc(profile):
     # there are some that are not correct.
     # change ERA to PLA with flag 3 to reduce duplication of flags
     df.loc[
-        (df['HISTORY_QC_CODE'].str.contains('ERA')), ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'PLA', 3
+        (df['HISTORY_QC_CODE'].str.contains('ERA')), ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'PLA', np.int8(3)
     # change URA for BDA and flag 2
     df.loc[
-        (df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'BDA', 2
+        (df['HISTORY_QC_CODE'].str.contains('URA')), ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'BDA', np.int8(2)
 
     # change CSA to CSR and the flag to 3 to match new format
     df.loc[(df['HISTORY_QC_CODE'].str.contains('CSA')),
-    ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'CSR', 3
+    ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'CSR', np.int8(3)
 
     # Change the PEA flag to LA or LO and ensure the HISTORY_QC_CODE_VALUE is set to 5
     df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
             (df['HISTORY_PARAMETER'].str.contains('LATI'))),
-    ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'LAA', 5
+    ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'LAA', np.int8(5)
     df.loc[((df['HISTORY_QC_CODE'].str.contains('PEA')) &
             (df['HISTORY_PARAMETER'].str.contains('LONG'))),
-    ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'LOA', 5
+    ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE']] = 'LOA', np.int8(5)
 
     # set the software value to 2.1 for CS and PE, RE flags
     df.loc[
@@ -1030,6 +1042,19 @@ def parse_histories_nc(profile):
     # Also change just DATE TEA flags to TIME
     dfTEA = df[df['HISTORY_QC_CODE'] == 'TEA'].copy()
     if len(dfTEA) > 0:
+        # check that the history parameter is TIME or DATE
+        if not dfTEA['HISTORY_PARAMETER'].isin(['TIME', 'DATE']).all():
+            LOGGER.warning('HISTORY_PARAMETER for TEA flags incorrect and has been reset to TIME or DATE. Please review %s' % profile.Input_filename)
+            # test the HISTORY_PREVIOUS_VALUE by converting to time string
+            for idx, row in dfTEA.iterrows():
+                dati = convert_time_string(row['HISTORY_PREVIOUS_VALUE'], '%Y%m%d', 'string')
+                if dati is None:
+                    # assume this is a TIME variable and set the HISTORY_PARAMETER to TIME
+                    dfTEA.at[idx, 'HISTORY_PARAMETER'] = 'TIME'
+                else:
+                    # assume this is a DATE variable and set the HISTORY_PARAMETER to DATE
+                    dfTEA.at[idx, 'HISTORY_PARAMETER'] = 'DATE'
+
         # first tidy up the TIME variable and DATE variable
         # if any of timerows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
         pattern = re.compile(r'^9{1,5}(?:\.\d+)?$')
@@ -1201,6 +1226,17 @@ def parse_histories_nc(profile):
                                     profile.Input_filename))
             # update the HISTORY_START_DEPTH value to the closest depth value
             df.at[idx, 'HISTORY_START_DEPTH'] = profile.data['DEPTH'].iloc[closest_depth]
+            # check for values that cannot be converted to float in HISTORY_PREVIOUS_VALUE
+            if row['HISTORY_PARAMETER'] == 'TEMP':
+                try:
+                    float(row['HISTORY_PREVIOUS_VALUE'])
+                except ValueError:
+                    LOGGER.error('HISTORY: HISTORY_PREVIOUS_VALUE %s cannot be converted to float at depth %s. %s'
+                                 % (row['HISTORY_PREVIOUS_VALUE'], row['HISTORY_START_DEPTH'], profile.Input_filename))
+                    # set the HISTORY_PREVIOUS_VALUE to '99.99' if it cannot be converted to float
+                    df.at[idx, 'HISTORY_PREVIOUS_VALUE'] = '99.99'
+                    # re-read the row
+                    row = df.iloc[idx]
             # if there are any 9999 type values in the HISTORY_PREVIOUS_VALUE and the HISTORY_PARAMETER is TEMP,
             # change the HISTORY_PREVIOUS_VALUE to the TEMP_RAW value at the closest depth
             pattern = re.compile(r'^9{1,5}(?:\.\d+)?$')
@@ -1211,17 +1247,7 @@ def parse_histories_nc(profile):
                     profile.data['TEMP_RAW'].iloc[closest_depth].astype(str)
                 # re-read the row
                 row = df.iloc[idx]
-            # check for values that cannot be converted to float in HISTORY_PREVIOUS_VALUE
-            if row['HISTORY_PARAMETER'] == 'TEMP':
-                try:
-                    float(row['HISTORY_PREVIOUS_VALUE'])
-                except ValueError:
-                    LOGGER.error('HISTORY: HISTORY_PREVIOUS_VALUE %s cannot be converted to float at depth %s. %s'
-                                 % (row['HISTORY_PREVIOUS_VALUE'], row['HISTORY_START_DEPTH'], profile.Input_filename))
-                    # set the HISTORY_PREVIOUS_VALUE to '0'
-                    df.at[idx, 'HISTORY_PREVIOUS_VALUE'] = '0'
-                    # re-read the row
-                    row = df.iloc[idx]
+
             # if the HISTORY_PREVIOUS_VALUE does not match the TEMP_RAW value at the closest depth, update it if the depth is within 2m
             if row['HISTORY_PARAMETER'] == 'TEMP' and \
                     np.isclose(float(row['HISTORY_PREVIOUS_VALUE']),
@@ -1485,17 +1511,20 @@ def restore_temp_val(profile):
                         # add a new row to the histories with the depth and previous value
                         new_row = {
                             'HISTORY_START_DEPTH': depth,
-                            'HISTORY_PREVIOUS_VALUE': df.loc[df['DEPTH'] == depth, 'TEMP_RAW'].values[0],
+                            'HISTORY_PREVIOUS_VALUE': str(df.loc[df['DEPTH'] == depth, 'TEMP_RAW'].values[0]),
                             'HISTORY_QC_CODE': 'CSR',
                             'HISTORY_QC_CODE_DESCRIPTION': 'surface_transient',
-                            'HISTORY_QC_CODE_VALUE': 3,
+                            'HISTORY_QC_CODE_VALUE': np.int8(3),
                             'HISTORY_PARAMETER': 'TEMP',
                             'HISTORY_DATE': pd.Timestamp.now(),
                             'HISTORY_INSTITUTION': profile.histories['HISTORY_INSTITUTION'].values[0],
                             'HISTORY_SOFTWARE_RELEASE': '2.1',
                             'HISTORY_SOFTWARE': 'Australian XBT Quality Control Cookbook Version 2.1'
                         }
-                        profile.histories = pd.concat([profile.histories, pd.DataFrame([new_row])], ignore_index=True)
+                        df_new_row = pd.DataFrame([new_row])
+                        df_new_row['HISTORY_PREVIOUS_VALUE'] = df_new_row['HISTORY_PREVIOUS_VALUE'].astype('string')
+                        # append the new row to the histories
+                        profile.histories = pd.concat([profile.histories, df_new_row], ignore_index=True)
                         # reset the index
                         profile.histories = profile.histories.reset_index(drop=True)
                         # re-get the depths and temps
@@ -1648,9 +1677,9 @@ def create_flag_feature(profile):
                                'HISTORY_DATE': profile.data['TIME'].strftime('%Y-%m-%d %H:%M:%S'),
                                'HISTORY_START_DEPTH': df_data['DEPTH'].values[0],
                                'HISTORY_QC_CODE_DESCRIPTION': 'scientific_qc_applied',
-                               'HISTORY_QC_CODE_VALUE': 1,
+                               'HISTORY_QC_CODE_VALUE': np.int8(1),
                                'HISTORY_SOFTWARE_RELEASE': '',
-                               'HISTORY_PREVIOUS_VALUE': 0}, ignore_index=True)
+                               'HISTORY_PREVIOUS_VALUE': '0'}, ignore_index=True)
 
     # only continue if there are codes to map
     if codes.empty:
