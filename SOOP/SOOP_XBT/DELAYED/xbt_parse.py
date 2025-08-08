@@ -429,7 +429,6 @@ def parse_extra_vars(profile_qc, profile_noqc):
                 else:
                     LOGGER.error('Column %s in *_RAW file is not the same as the non-RAW column. Please review %s' %
                                  (col, profile_qc.Input_filename))
-                    exit(1)
 
     # split the input filename and remove the _ed.nc or _raw.nc ending
     dataf['Input_filename'] = re.split(r'ed\.nc|raw\.nc', profile_qc.Input_filename)[0]
@@ -1091,13 +1090,14 @@ def parse_histories_nc(profile):
                     dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = date2
                 else:
                     LOGGER.error('DATE format not recognised in %s. Please review the file.' % profile.Input_filename)
-                    exit(1)
+                    df.loc[df['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = '00000000'
+                    dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'] = '00000000'
         # test here for both TIME and DATE in the TEA flags
         if any(dfTEA['HISTORY_PARAMETER'].str.contains('TIME')) & any(dfTEA['HISTORY_PARAMETER'].str.contains('DATE')):
             # if there are more than two rows, break with error for now
             if len(dfTEA) > 2:
                 LOGGER.error('Multiple TEA flags found for TIME and DATE in %s. Please review the file.' % profile.Input_filename)
-                exit(1)
+                # exit(1)
             # if both TIME and DATE are present, combine them into a single row for TIME
             # combine the HISTORY_PREVIOUS_VALUE TIME with DATE into a single string called dati
             dati = dfTEA.loc[dfTEA['HISTORY_PARAMETER'] == 'DATE', 'HISTORY_PREVIOUS_VALUE'].values[0] + \
