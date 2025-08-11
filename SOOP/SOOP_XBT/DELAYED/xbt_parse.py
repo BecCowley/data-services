@@ -720,6 +720,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
         # if int(rpad) > 240000, assume time is at 00:00:00
         if int(lpad) >= 240000:
             xbt_time ='000000'
+    else:
+        xbt_time = lpad
 
     xbt_date = '%s%s' % (woce_date, xbt_time)
     xbt_date = convert_time_string(xbt_date,'%Y%m%d%H%M%S')
@@ -740,6 +742,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
         # if int(rpad) > 240000, assume time is at 00:00:00
         if int(lpad) >= 240000:
             xbt_time_raw ='000000'
+    else:
+        xbt_time_raw = lpad
     xbt_date_raw = '%s%s' % (woce_date_raw, xbt_time_raw)
     xbt_date_raw = convert_time_string(xbt_date_raw,'%Y%m%d%H%M%S')
 
