@@ -712,7 +712,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
     xbt_time = convert_time_string(rpad, '%H%M%S')
     xbt_time2 = convert_time_string(lpad, '%H%M%S')
     if not pd.isnull(xbt_time2) and pd.isnull(xbt_time):
-        xbt_time = xbt_time2
+        xbt_time = lpad
+    elif pd.isnull(xbt_time2) and not pd.isnull(xbt_time):
+        xbt_time = rpad
     elif pd.isnull(xbt_time) and pd.isnull(xbt_time2):
         LOGGER.error('Could not convert time %s to a valid time format, using 000000' % (woce_time))
         # if int(rpad) > 240000, assume time is at 00:00:00
@@ -730,7 +732,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
     xbt_time_raw = convert_time_string(rpad, '%H%M%S')
     xbt_time_raw2 = convert_time_string(lpad, '%H%M%S')
     if not pd.isnull(xbt_time_raw2) and pd.isnull(xbt_time_raw):
-        xbt_time_raw = xbt_time_raw2
+        xbt_time_raw = lpad
+    elif pd.isnull(xbt_time_raw2) and not pd.isnull(xbt_time_raw):
+        xbt_time = rpad
     elif pd.isnull(xbt_time_raw) and pd.isnull(xbt_time_raw2):
         LOGGER.error('Could not convert time_raw %s to a valid time format, using 000000' % (woce_time))
         # if int(rpad) > 240000, assume time is at 00:00:00
