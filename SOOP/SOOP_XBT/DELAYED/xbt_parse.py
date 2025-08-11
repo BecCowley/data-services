@@ -708,29 +708,36 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
     # Let's try padding left and right, then convert to time for both
     rpad = str(woce_time).ljust(6, '0')
     lpad = str(woce_time).zfill(6)
+    # get the right date format using convert_time_string
+    xbt_time = convert_time_string(rpad, '%H%M%S')
+    xbt_time2 = convert_time_string(lpad, '%H%M%S')
+    if not pd.isnull(xbt_time2) and pd.isnull(xbt_time):
+        xbt_time = xbt_time2
+    elif pd.isnull(xbt_time) and pd.isnull(xbt_time2):
+        LOGGER.error('Could not convert time %s to a valid time format, using 000000' % (woce_time))
+        # if int(rpad) > 240000, assume time is at 00:00:00
+        if int(lpad) >= 240000:
+            xbt_time ='000000'
 
-    # get the right date format
-    xbt_date = '%sT%s' % (woce_date, rpad)
-    xbt_date = convert_time_string(xbt_date, '%Y%m%dT%H%M%S')
-    xbt_date2 = '%sT%s' % (woce_date, lpad)
-    xbt_date2 = convert_time_string(xbt_date2, '%Y%m%dT%H%M%S')
-    # format is hhmmss so xbt_date2 is the one with the leading zeros
-    # replace NaT with the other date
-    if not pd.isnull(xbt_date2):
-        xbt_date = xbt_date2
+    xbt_date = '%s%s' % (woce_date, xbt_time)
+    xbt_date = convert_time_string(xbt_date,'%Y%m%d%H%M%S')
 
     # Raw date
     rpad = str(woce_time_raw).ljust(6, '0')
     lpad = str(woce_time_raw).zfill(6)
 
-    # get the right date format
-    xbt_date_raw = '%sT%s' % (woce_date_raw, rpad)
-    xbt_date_raw = convert_time_string(xbt_date_raw, '%Y%m%dT%H%M%S')
-    xbt_date_raw2 = '%sT%s' % (woce_date_raw, lpad)
-    xbt_date_raw2 = convert_time_string(xbt_date_raw2, '%Y%m%dT%H%M%S')
-    # replace NaT with the other date
-    if not pd.isnull(xbt_date_raw2):
-        xbt_date_raw = xbt_date_raw2
+    # get the right date format using convert_time_string
+    xbt_time_raw = convert_time_string(rpad, '%H%M%S')
+    xbt_time_raw2 = convert_time_string(lpad, '%H%M%S')
+    if not pd.isnull(xbt_time_raw2) and pd.isnull(xbt_time_raw):
+        xbt_time_raw = xbt_time_raw2
+    elif pd.isnull(xbt_time_raw) and pd.isnull(xbt_time_raw2):
+        LOGGER.error('Could not convert time_raw %s to a valid time format, using 000000' % (woce_time))
+        # if int(rpad) > 240000, assume time is at 00:00:00
+        if int(lpad) >= 240000:
+            xbt_time_raw ='000000'
+    xbt_date_raw = '%s%s' % (woce_date_raw, xbt_time_raw)
+    xbt_date_raw = convert_time_string(xbt_date_raw,'%Y%m%d%H%M%S')
 
     # AW - TIME_RAW is original date-time - set it too
     profile_qc.data['TIME'] = xbt_date
