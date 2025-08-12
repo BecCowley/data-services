@@ -1394,9 +1394,11 @@ def combine_histories(profile_qc, profile_noqc):
                     LOGGER.info('HISTORY: Updating %s to match the *raw.nc file. %s'
                                    % (var, profile_qc.Input_filename))
                 else:
-                    LOGGER.error('HISTORY: Previous value for %s is not the same as the %s_RAW value. %s'
+                    LOGGER.error('HISTORY: Previous value for %s is not the same as the %s_RAW value, Updating previous value to match. %s'
                                    % (vv, vv, profile_qc.Input_filename))
-                    exit(1)
+                    # if the previous value is not within 0.01 of the LATITUDE or LONGITUDE_RAW value, then update the previous value to match the raw value
+                    non_temp_codes.loc[non_temp_codes['HISTORY_PARAMETER'].values == vv, 'HISTORY_PREVIOUS_VALUE'] = \
+                        str(round(profile_qc.data[var][0], 6))
         elif vv in ['TIME']:
             # TIME_RAW is in datetime format and HISTORY_PREVIOUS_VALUE is in string format
             # if the HISTORY_PREVIOUS_VALUE is not zeros, then it is a valid date
