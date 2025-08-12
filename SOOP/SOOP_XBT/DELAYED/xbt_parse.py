@@ -488,6 +488,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
                 LOGGER.error('Pressure data found in %s. This is not a valid XBT file' % s.Input_filename)
                 exit(1)
             dep = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 4)
+            # if there are any depths that are less than 0, set them to NaN
+            dep[dep < 0] = np.nan
             # eliminate nan depths if there are any
             dep = np.ma.masked_invalid(dep)
             # resize the arrays to eliminate empty values
@@ -1531,7 +1533,7 @@ def restore_temp_val(profile):
                             'HISTORY_QC_CODE_DESCRIPTION': 'surface_transient',
                             'HISTORY_QC_CODE_VALUE': np.int8(3),
                             'HISTORY_PARAMETER': 'TEMP',
-                            'HISTORY_DATE': pd.Timestamp.now(),
+                            'HISTORY_DATE': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
                             'HISTORY_INSTITUTION': profile.histories['HISTORY_INSTITUTION'].values[0],
                             'HISTORY_SOFTWARE_RELEASE': '2.1',
                             'HISTORY_SOFTWARE': 'Australian XBT Quality Control Cookbook Version 2.1'
@@ -1679,7 +1681,7 @@ def create_flag_feature(profile):
     codes = profile.histories
     # if the TEMP_quality_control values are 0 and the TEMP_RAW_quality_control values are not, update the TEMP_quality_control
     # values to be the same as the TEMP_RAW_quality_control values
-    idx = (df_data['TEMP_quality_control'] == 0) & (df_data['TEMP_RAW_quality_control'] != 0)
+    idx = (df_data['TEMP_quality_control'] == 0).all() & (df_data['TEMP_RAW_quality_control'] != 0).all()
     if idx.any():
         LOGGER.warning('TEMP_quality_control values are 0 and TEMP_RAW_quality_control values are not. Updating. %s'
                        % profile.Input_filename)
@@ -1689,7 +1691,7 @@ def create_flag_feature(profile):
                                'HISTORY_QC_CODE': 'QCA',
                                'HISTORY_PARAMETER': 'TEMP',
                                'HISTORY_SOFTWARE': 'Unknown',
-                               'HISTORY_DATE': profile.data['TIME'].strftime('%Y-%m-%d %H:%M:%S'),
+                               'HISTORY_DATE': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
                                'HISTORY_START_DEPTH': df_data['DEPTH'].values[0],
                                'HISTORY_QC_CODE_DESCRIPTION': 'scientific_qc_applied',
                                'HISTORY_QC_CODE_VALUE': np.int8(1),
