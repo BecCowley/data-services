@@ -480,13 +480,13 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
 
         if len(data_vars) > 1:
             LOGGER.error('Profile contains %s variables and is not an XBT %s' % (data_vars, s.Input_filename))
-            exit(1)
+            continue
         # should only be one variable, TEMP, but leave as a loop for future proofing
         for ivar, var in data_vars.items():
             # we want the DEPTH to be a single dataset, but read all depths for each variable
             if 'P' in decode_bytearray(s.netcdf_file_obj.variables['D_P_Code'][ivar]):
                 LOGGER.error('Pressure data found in %s. This is not a valid XBT file' % s.Input_filename)
-                exit(1)
+                continue
             dep = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 4)
             # if there are any depths that are less than 0, set them to NaN
             dep[dep < 0] = np.nan
@@ -1642,19 +1642,23 @@ def restore_temp_val(profile):
         # see if any of the histories have a valid TEMP value for these depths
         idx_temp = df['TEMP'] == 99.99
         depths = df.loc[idx_temp, 'DEPTH']
-        idx2 = (np.isclose(profile.histories['HISTORY_START_DEPTH'], (depths), atol=1e-6) &
-                (profile.histories['HISTORY_PARAMETER'].str.contains('TEMP') &
-                 (profile.histories['HISTORY_PREVIOUS_VALUE'] < 99)))
-        if idx2.any():
-            LOGGER.info('Restoring TEMP values for depths where TEMP == 99.99. %s' % profile.Input_filename)
-            # assign the previous_value at idx2 to the TEMP values at idx
-            df.loc[idx_temp, 'TEMP'] = profile.histories.loc[idx2, 'HISTORY_PREVIOUS_VALUE'].values
-            # assign to TEMP_RAW as well
-            if (df['TEMP_RAW'][idx_temp] == 99.99).any():
-                df.loc[idx_temp, 'TEMP_RAW'] = profile.histories.loc[idx2, 'HISTORY_PREVIOUS_VALUE'].values
-            # check again if there are any TEMP values that are still == 99.99
-            if (df['TEMP'] == 99.99).any():
-                LOGGER.warning('TEMP values are still == 99.99 after restoration. %s' % profile.Input_filename)
+        # find each depth in the histories where the HISTORY_START_DEPTH matches the depths
+        # and the HISTORY_PARAMETER is TEMP and the HISTORY_PREVIOUS_VALUE is not 99.
+        for depth in depths:
+            # find the index of the depth in the histories
+            idx2 = (np.isclose(profile.histories['HISTORY_START_DEPTH'], depth, atol=0.01) &
+                    (profile.histories['HISTORY_PARAMETER'] == 'TEMP') &
+                    (profile.histories['HISTORY_PREVIOUS_VALUE'] != '99.99'))
+            # if there are any histories with a valid TEMP value for this depth
+            if idx2.any():
+                # get the previous value for this depth
+                previous_value = profile.histories.loc[idx2, 'HISTORY_PREVIOUS_VALUE'].values[0]
+                # update the TEMP value in the profile data
+                df.loc[idx_temp & (df['DEPTH'] == depth), 'TEMP'] = float(previous_value)
+                # update the TEMP_RAW value in the profile data
+                if (df['TEMP_RAW'][idx_temp] == 99.99).any():
+                    df.loc[idx_temp & (df['DEPTH'] == depth), 'TEMP_RAW'] = float(previous_value)
+                LOGGER.info('Restoring TEMP values for depths where TEMP == 99.99. %s' % profile.Input_filename)
 
     # update profile data
     profile.data = df
