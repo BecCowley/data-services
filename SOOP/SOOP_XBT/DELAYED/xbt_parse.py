@@ -536,7 +536,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
                 prof = np.where(np.vectorize(lambda x: bool(pattern.match(x)))(prof.astype(str)), 99.99, prof)
                 # replace values == 99.99 with NaN where they occur after 4 m depth
                 idepth = np.where(dep < 4.0)[0]
-                prof[idepth[-1]+1:] = np.where(abs(prof[idepth[-1]+1:]) == 99.99, np.nan, prof[idepth[-1]+1:])
+                if len(idepth) > 0:
+                    # if there are depths less than 4m, then replace the values after the last depth less than 4m
+                    prof[idepth[-1]+1:] = np.where(abs(prof[idepth[-1]+1:]) == 99.99, np.nan, prof[idepth[-1]+1:])
                 prof = np.ma.masked_invalid(prof)
             # resize the arrays to eliminate empty values
             prof = np.ma.masked_array(prof.compressed())
@@ -1719,13 +1721,24 @@ def create_flag_feature(profile):
     if len(depths) > 0:
         # find the next deepest depth
         ideps = df_data['DEPTH'] > depths[-1]
-        # update any codes['tempqc'] where start_depth == 0
-        idx = codes['HISTORY_START_DEPTH'] == df_data['DEPTH'].values[0]
-        codes.loc[idx, 'tempqc'] = df_data.loc[ideps, 'TEMP_quality_control'].values[0]
-        # special case where CSR was used as a single flag to reject everything below. Let's change this flag to a SPR
-        if len(depths) == 1 and df_data.loc[ideps, 'TEMP_quality_control'].values[0] == 3:
-            codes.loc[idx_csr, 'HISTORY_QC_CODE'] = 'SPR'
-            codes.loc[idx_csr, 'HISTORY_QC_CODE_VALUE'] = 4
+        # if there are no depths deeper than the last CSR flag, then assume the last CSR flag is at the bottom of the profile and remove the CSR flag
+        if not ideps.any():
+            LOGGER.warning('No depths deeper than the last CSR flag, removing CSR flag from bottom of profile. %s' % profile.Input_filename)
+            # remove the last CSR flag from the histories
+            last_csr_idx = codes.loc[idx_csr].index[-1]
+            codes = codes.drop(last_csr_idx)
+            # reset the index
+            codes = codes.reset_index(drop=True)
+            # make sure the df_data['TEMP_quality_control'] is updated to be the same as the previous depth
+            df_data.loc[df_data['DEPTH'] == depths[-1], 'TEMP_quality_control'] = df_data.loc[(df_data['DEPTH'] < depths[-1]).index[-2], 'TEMP_quality_control']
+        else:
+            # update any codes['tempqc'] where start_depth == 0
+            idx = codes['HISTORY_START_DEPTH'] == df_data['DEPTH'].values[0]
+            codes.loc[idx, 'tempqc'] = df_data.loc[ideps, 'TEMP_quality_control'].values[0]
+            # special case where CSR was used as a single flag to reject everything below. Let's change this flag to a SPR
+            if len(depths) == 1 and df_data.loc[ideps, 'TEMP_quality_control'].values[0] == 3:
+                codes.loc[idx_csr, 'HISTORY_QC_CODE'] = 'SPR'
+                codes.loc[idx_csr, 'HISTORY_QC_CODE_VALUE'] = 4
 
     # check the TEMP_quality_control values are the same as the HISTORY_QC_CODE_VALUE values
     for idx, row in codes.iterrows():
