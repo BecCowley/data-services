@@ -337,17 +337,20 @@ def parse_extra_vars(profile_qc, profile_noqc):
                     # try to convert the string to a datetime object
                     att_val_conv = convert_time_string(att_val, format, 'string', '%Y%m%d')
                     if att_val_conv is None:
-                        # try converting with no format
+                        # try converting with no format, dayfirst = true
                         att_val_conv = pd.to_datetime(att_val,errors='coerce')
-                    # check if att_val_conv is NaNT
-                    if not pd.isna(att_val_conv):
-                        # convert to a string
-                        att_val = att_val_conv.strftime('%Y%m%d')
+                        # check if att_val_conv is NaNT
+                        if not pd.isna(att_val_conv):
+                            # convert to a string
+                            att_val = att_val_conv.strftime('%Y%m%d')
+                        else:
+                            # if conversion fails, set to deployment date
+                            att_val = dataf['TIME'][0].strftime('%Y%m%d')
+                            LOGGER.error('"%s = %s" could not be converted to date format. Using deployment date %s' % (
+                                att_name, att_val, dataf['TIME'][0].strftime('%Y%m%d')))
                     else:
-                        # if conversion fails, set to deployment date
-                        att_val = dataf['TIME'][0].strftime('%Y%m%d')
-                        LOGGER.error('"%s = %s" could not be converted to date format. Using deployment date %s' % (
-                            att_name, att_val, dataf['TIME'][0].strftime('%Y%m%d')))
+                        # successfully converted to a string
+                        att_val = att_val_conv
                 try:
                     if 'float' in att_type:
                         dataf[att_name + ext[ind]] = float(att_val.replace(' ', ''))
