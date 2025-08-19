@@ -1,7 +1,9 @@
 ﻿Attribute Name,Attribute Value
-Conventions,"CF-1.8,IMOS-1.4"
+Conventions,"CF-1.6,IMOS-1.4"
 citation,"The citation in a list of references is: IMOS [year-of-data-download], [Title], [data-access-url], accessed [date-of-access]"
 title,Ocean Temperature profile data from XBT (expendable bathythermographs)
+abstract,"The variables in this file are from XBT data which measure Temperature (TEMP). DEPTH is derived from a fall rate equation with coefficients as shown in the PROBE variable. Data in *RAW variables and attributes contains the original data and metadata from the XBT profile. The user should, in all cases, use the non-RAW variables (eg, TEMP and DEPTH) as these contain the BEST version of the data. For example, TEMP will potentially contain modified data, where spikes and noise have been interpolated. Another example is where DEPTH may be changed due to an incorrect probe type in the RAW data."
+acknowledgement,"Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: Data was sourced from the Integrated Marine Observing System (IMOS) - IMOS is a national collaborative research infrastructure, supported by the Australian Government. If relevant, also credit other organisations involved in collection of this particular datastream (as listed in credit in the metadata record)."
 cdm_data_type,profile
 date_created,
 data_centre,Australian Ocean Data Network (AODN)
@@ -26,6 +28,8 @@ keywords,Oceans>Ocean Temperature>Sea Water Temperature; Oceans>Bathymetry/Seafl
 keywords_vocabulary,NASA/GCMD Earth Science Keywords
 license,http://creativecommons.org/licenses/by/4.0/
 naming_authority,IMOS
+principal_investigator,"Rebecca Cowley, CSIRO"
+project,IMOS Ship Of Opportunity Expendable BathyThermograph (SOOP XBT)
 author,"Cowley, Rebecca, CSIRO "
 author_email,rebecca.cowley@csiro.au
 quality_control_set,1

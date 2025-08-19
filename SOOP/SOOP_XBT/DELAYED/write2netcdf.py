@@ -197,8 +197,12 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
 
                     # Ensure the data from profile[v] matches the shape of the NetCDF variable
                     if profile[v].shape == var_shape:
-                        # fill any NaN values with the fill value for this variable
-                        data = profile[v].fillna(output_netcdf_obj[v]._FillValue)
+                        if v != 'DEPTH':
+                            # fill any NaN values with the fill value for this variable
+                            data = profile[v].fillna(output_netcdf_obj[v]._FillValue)
+                        else:
+                            # for DEPTH, we can directly assign the values
+                            data = profile[v].values
                         output_netcdf_obj[v][:] = data
                     else:
                         # just outputting the first value of profile[v] to the netcdf variable
