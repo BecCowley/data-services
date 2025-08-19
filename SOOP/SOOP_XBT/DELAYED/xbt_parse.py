@@ -335,13 +335,19 @@ def parse_extra_vars(profile_qc, profile_noqc):
                     else:
                         format = '%m%d%Y'  # assume the date is in the format mmddyyyy
                     # try to convert the string to a datetime object
-                    try:
-                        att_val = convert_time_string(att_val, format, 'string', '%Y%m%d')
-                    except ValueError:
-                        LOGGER.warning(
-                            '"%s = %s" could not be converted to datetime. Please review. %s' % (
-                            att_name, att_val, profile.Input_filename))
-                        continue
+                    att_val_conv = convert_time_string(att_val, format, 'string', '%Y%m%d')
+                    if att_val_conv is None:
+                        # try converting with no format
+                        att_val_conv = pd.to_datetime(att_val,errors='coerce')
+                    # check if att_val_conv is NaNT
+                    if not pd.isna(att_val_conv):
+                        # convert to a string
+                        att_val = att_val_conv.strftime('%Y%m%d')
+                    else:
+                        # if conversion fails, set to deployment date
+                        att_val = dataf['TIME'][0].strftime('%Y%m%d')
+                        LOGGER.error('"%s = %s" could not be converted to date format. Using deployment date %s' % (
+                            att_name, att_val, dataf['TIME'][0].strftime('%Y%m%d')))
                 try:
                     if 'float' in att_type:
                         dataf[att_name + ext[ind]] = float(att_val.replace(' ', ''))
@@ -980,7 +986,7 @@ def parse_histories_nc(profile):
                       for xx in profile.netcdf_file_obj[var][:].data if bytearray(xx)]
                 vv = [remove_control_chars(str(x)) for x in vv]
                 # identify the locations of the empty stings in vv
-                code_strings = [i for i, x in enumerate(vv) if x != '  ']
+                code_strings = [i for i, x in enumerate(vv) if x.strip() != '']
                 # use code_strings to set nhist and resize vv
                 if code_strings:
                     vv = [vv[i] for i in code_strings]
@@ -1597,6 +1603,7 @@ def restore_temp_val(profile):
         # update the TEMP_RAW values with the HISTORY_PREVIOUS_VALUE values if the TEMP_RAW values have values > 99 and the
         # HISTORY_PREVIOUS_VALUE values do not
         elif not (temps == 99.99).any() and (df['TEMP_RAW'][ind] == 99.99).any():
+            LOGGER.info('Restoring TEMP and TEMP_RAW missing data from histories %s' % profile.Input_filename)
             df.loc[ind, 'TEMP_RAW'] = temps
             df.loc[ind, 'TEMP'] = temps
         else:
