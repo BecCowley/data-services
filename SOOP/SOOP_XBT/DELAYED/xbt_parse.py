@@ -261,7 +261,7 @@ def parse_extra_vars(profile_qc, profile_noqc):
     # where the mquest column contains ';' separate the codes into a list
     srfc_code_list.loc[:, 'Mquest'] = srfc_code_list['Mquest'].str.split(';')
     # now explode the mquest column to have one row per code
-    srfc_code_list = srfc_code_list.explode('Mquest')
+    srfc_code_list = srfc_code_list.explode('Mquest').reset_index(drop=True)
 
     # other variables are the ones remaining
     vars_list = vars_list[~(vars_list['Mquest'].str.contains(';')) & ~(vars_list['Mquest'].str.len() == 4)]
@@ -325,6 +325,23 @@ def parse_extra_vars(profile_qc, profile_noqc):
                 att_val = decode_bytearray(srfc_parm[i])
                 # remove control characters from the attribute value
                 att_val = remove_control_chars(att_val).strip()
+                # if the att_name contains 'date' then convert it to a datetime object
+                if 'date' in att_name.lower():
+                    # check for characters such as '/' or '-' in the string
+                    pattern = re.compile(r'[\-\/]')
+                    # build a format string based on the presence of these characters
+                    if pattern.search(att_val):
+                        format = '%m-%d-%Y' if '-' in att_val else '%m/%d/%Y'
+                    else:
+                        format = '%m%d%Y'  # assume the date is in the format mmddyyyy
+                    # try to convert the string to a datetime object
+                    try:
+                        att_val = convert_time_string(att_val, format, 'string', '%Y%m%d')
+                    except ValueError:
+                        LOGGER.warning(
+                            '"%s = %s" could not be converted to datetime. Please review. %s' % (
+                            att_name, att_val, profile.Input_filename))
+                        continue
                 try:
                     if 'float' in att_type:
                         dataf[att_name + ext[ind]] = float(att_val.replace(' ', ''))
@@ -938,6 +955,8 @@ def parse_histories_nc(profile):
     # let's use a pandas dataframe with empty columns
     df = pd.DataFrame()
     nhist = int(profile.netcdf_file_obj['Num_Hists'][0].data)
+    # set code_strings to a list of indices from 0 to nhist
+    code_strings = list(range(nhist))
 
     # for each column, extract the data
     # list the data labels matching the columns in the dataframe
@@ -950,22 +969,30 @@ def parse_histories_nc(profile):
             continue
         # test if the data is a byte array or a float
         if np.issubdtype(profile.netcdf_file_obj[var].dtype, np.number):
-            vv = profile.netcdf_file_obj[var][0:nhist].data
+            vv = profile.netcdf_file_obj[var][:].data
+            # use code_strings to resize vv
+            vv = [vv[i] for i in code_strings]
         else:
             # if this is the Act_Code, check if the nhist is correct
             if var == 'Act_Code':
-                vv = [''.join(chr(x) for x in bytearray(xx)).strip()
-                      for xx in profile.netcdf_file_obj[var][:].data if bytearray(xx).strip()]
+                # first get all the history codes including empty ones
+                vv = [''.join(chr(x) for x in bytearray(xx))
+                      for xx in profile.netcdf_file_obj[var][:].data if bytearray(xx)]
                 vv = [remove_control_chars(str(x)) for x in vv]
-                # Remove empty strings from the list
-                vv = [x for x in vv if x]
-                if nhist != len(vv):
+                # identify the locations of the empty stings in vv
+                code_strings = [i for i, x in enumerate(vv) if x != '  ']
+                # use code_strings to set nhist and resize vv
+                if code_strings:
+                    vv = [vv[i] for i in code_strings]
                     nhist = len(vv)
                     LOGGER.warning('HISTORY: Updating nhist to match length of history codes. %s' % profile.Input_filename)
-            # convert the byte array to a string
-            vv = [''.join(chr(x) for x in bytearray(xx)).strip()
-                  for xx in profile.netcdf_file_obj[var][0:nhist].data if bytearray(xx).strip()]
-            vv = [remove_control_chars(str(x)) for x in vv]
+            else:
+                # convert the byte array to a string
+                vv = [''.join(chr(x) for x in bytearray(xx))
+                      for xx in profile.netcdf_file_obj[var][:].data if bytearray(xx)]
+                vv = [remove_control_chars(str(x)) for x in vv]
+                # use code_strings to resize vv
+                vv = [vv[i] for i in code_strings]
         df[var] = vv
     # rename the columns
     df.columns = ['HISTORY_QC_CODE', 'HISTORY_INSTITUTION', 'HISTORY_PARAMETER', 'HISTORY_SOFTWARE',

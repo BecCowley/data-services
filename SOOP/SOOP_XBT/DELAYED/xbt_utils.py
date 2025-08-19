@@ -73,7 +73,7 @@ def read_flag_quality_table(all=False):
 
     return dfa, dfr
 
-def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
+def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime', outformat='%Y%m%d%H%M%S'):
     """
     convert a time string to a datetime object
     """
@@ -98,12 +98,12 @@ def convert_time_string(time_string, format='%Y%m%dT%H%M%S', output='datetime'):
                     return dt
         elif output == 'string':
             if isinstance(dt, pd.Series):
-                dt = dt.apply(lambda x: x.strftime(format) if not pd.isna(x) else None)
+                dt = dt.apply(lambda x: x.strftime(outformat) if not pd.isna(x) else None)
                 return dt
             elif pd.isna(dt):
                 return None
             elif isinstance(dt, pd.Timestamp):
-                dt = dt.strftime(format)
+                dt = dt.strftime(outformat)
                 return dt
         else:
             return dt
