@@ -77,8 +77,6 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
     extra_atts = vars[vars['is_var_att_global'] == 'att']
     # get a list of the global attributes
     extra_globals = vars[vars['is_var_att_global'] == 'global']
-    # create a list from extra_globals['variable_name'] to use as a list of global attributes
-    extra_globals = extra_globals['variable_name'].tolist()
     # get a list of the variable attributes
     vars = vars[vars['is_var_att_global'] == 'var']
     # Identify attribute columns starting with 'att_'
@@ -254,7 +252,9 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
                 for ind, row in att_extras.iterrows():
                     att_name = row['variable_name']
                     # if the attribute is not in the profile DataFrame, skip it
-                    if row['variable optional/required (1=required 0=optional)'] == 0 and profile[att_name].isnull().all():
+                    val = profile[att_name][0]
+                    if row['variable optional/required (1=required 0=optional)'] == 0 and (
+                        pd.isna(val) or val == '' or (isinstance(val, str) and val.strip() == '')):
                         continue
                     if att_name not in profile.columns or pd.isna(profile[att_name].values[0]):
                         setattr(output_netcdf_obj.variables[v], att_name, '')
@@ -279,7 +279,14 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
         globals_list['time_coverage_end'] = profile['TIME'][0].strftime("%Y-%m-%dT%H:%M:%SZ")
 
         # add extra global attributes from the extra_globals list
-        for att_name in extra_globals:
+        for ind, row in extra_globals.iterrows():
+            att_name = row['variable_name']
+            # if the attribute is not in the profile DataFrame, skip it
+            val = profile[att_name][0]
+            if row['variable optional/required (1=required 0=optional)'] == 0 and (
+                    pd.isna(val) or val == '' or (isinstance(val, str) and val.strip() == '')):
+                continue
+            # if the attribute is in the globals_list, use that value
             if att_name in profile.columns:
                 # if the attribute is in the profile DataFrame, use that value
                 globals_list[att_name] = profile[att_name].values[0]
