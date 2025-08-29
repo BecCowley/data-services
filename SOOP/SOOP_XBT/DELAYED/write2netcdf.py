@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from netCDF4 import Dataset, date2num
 
-from xbt_parse import read_section_from_xbt_config
+from xbt_utils import read_section_from_xbt_config
 from xbt_utils import read_flag_quality_table, read_variables_config, read_globals_config
 
 def create_filename_output(prof, hist, profile_raw=False):
