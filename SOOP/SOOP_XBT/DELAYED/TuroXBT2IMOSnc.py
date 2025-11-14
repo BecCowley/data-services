@@ -162,27 +162,27 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                 print("Variable not found in original file: \"%s\"." % vname)
                 continue
 
-        if vname in ['TIME','PROBE_manufacture_date', 'SAMPLE_TIME']:
+        if vname in ['TIME','PROBE_manufacture_date_YYYY-MM-DD', 'SAMPLE_TIME']:
             if vname == 'SAMPLE_TIME':
                 # Convert numpy.datetime64 array to a list of datetime objects
                 datetime_list = [pd.to_datetime(d).to_pydatetime() for d in data]
                 # save the datetime list to the profile dataframe
                 dfprofile['SAMPLE_TIME'] = datetime_list
             else:
-                if vname == 'PROBE_manufacture_date':
+                if vname == 'PROBE_manufacture_date_YYYY-MM-DD':
                     # convert the string to a datetime object, assuming correct format entry of MM/DD/YY
                     data = convert_time_string(data, format='%m/%d/%y', output='datetime')
 
                     if data is None or test:
-                        # data is not applicable as it is a test canister, fill the profile['PROBE_manufacture_date'] with None
-                        dfprofile['PROBE_manufacture_date'] = None
+                        # data is not applicable as it is a test canister, fill the profile['PROBE_manufacture_date_YYYY-MM-DD'] with None
+                        dfprofile['PROBE_manufacture_date_YYYY-MM-DD'] = None
                     else:
                         if type(data) == str or data is None:
                             # put None in the profile dataframe
-                            dfprofile['PROBE_manufacture_date'] = None
+                            dfprofile['PROBE_manufacture_date_YYYY-MM-DD'] = None
                         else:
                             # put the datetime object in the profile dataframe
-                            dfprofile['PROBE_manufacture_date'] = pd.to_datetime(data)
+                            dfprofile['PROBE_manufacture_date_YYYY-MM-DD'] = pd.to_datetime(data)
                 else:
                     dfprofile[vname] = pd.to_datetime(data)
 

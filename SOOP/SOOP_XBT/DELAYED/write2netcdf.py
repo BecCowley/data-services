@@ -177,7 +177,7 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
                 # if the variable is not in the profile or history or global attributes, skip it, keep fill value
                 print(f"Variable {v} not found in profile or history data, skipping.")
                 continue
-            if v in ['TIME', 'TIME_RAW','PROBE_manufacture_date', 'SAMPLE_TIME']:
+            if v in ['TIME', 'TIME_RAW', 'SAMPLE_TIME']:
                 # if the profile[v] is None or contains a string, skip it
                 if not ((profile[v].isnull().all()) or (isinstance(profile[v].values[0], str))):
                     time_val_dateobj = date2num(pd.to_datetime(profile[v].values[0]), output_netcdf_obj[v].units,
@@ -334,12 +334,14 @@ if __name__ == '__main__':
         # read the parquet file
         profiles = pd.read_parquet(data_file)
         histories = pd.read_parquet(data_file.replace(".parquet", "_histories.parquet"))
-
+        # put a fix in here for already made parquet files where we have changed the column name from PROBE_manufacture_date to PROBE_manufacture_date_YYYY-MM-DD
+        if 'PROBE_manufacture_date' in profiles.columns:
+            profiles = profiles.rename(columns={'PROBE_manufacture_date': 'PROBE_manufacture_date_YYYY-MM-DD'})
         # there are multiple profiles in the profiles dataframe, loop through unique station numbers
         for station in profiles['station_number'].unique():
             # get the profile and history data for this station
-            profile = profiles[profiles['station_number'] == station]
-            profile_histories = histories[histories['station_number'] == station]
+            profile = profiles[profiles['station_number'] == station].reset_index()
+            profile_histories = histories[histories['station_number'] == station].reset_index()
 
             # write the profile to the netcdf file
             write_output_nc(output_folder, profile, profile_histories,profile_raw=False, historic_flags=True)
