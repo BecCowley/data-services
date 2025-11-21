@@ -98,23 +98,25 @@ class XbtKeys(object):
             # change station number to a numpy array
             station_number = np.asarray(station_number, dtype=np.int32)
             # sort it and keep unique station numbers where sometimes the keys has multiple values
-            station_number, istn = np.unique(station_number, return_index=True)
+            order = np.argsort(station_number)
+            station_number = station_number[order]
 
             # read in the position information
             latitude = np.round(netcdf_file_obj['obslat'][:].data, 6)
             longitude = np.round(netcdf_file_obj['obslng'][:].data, 6)
             # sort them as per the station number
-            latitude = latitude[istn]
-            longitude = longitude[istn]
+            latitude = latitude[order]
+            longitude = longitude[order]
             # decode date/time information
 
             # callsign
             calls = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in netcdf_file_obj['callsign'][:].data
                      if bytearray(xx).strip()]
-            # sort the same as station number
-            calls = [x for _, x in sorted(zip(istn, calls))]
             # remove control characters from the callsign list
             calls = [remove_control_chars(x) for x in calls]
+
+            # sort the same as station number
+            calls = np.asarray(calls)[order].tolist()
 
             # get the date/time information
             year = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in netcdf_file_obj['obs_y'][:].data
@@ -133,6 +135,9 @@ class XbtKeys(object):
                 date_time = [datetime(int(y), int(m), 1)
                                   for y, m in zip(year, month)]
 
+            # sort the date_time as per station number
+            date_time = np.asarray(date_time)[order].tolist()
+            # create the data dictionary
             self.data = {}
             self.data = {'station_number': [int(x) for x in station_number], 'latitude': [x for x in latitude],
                          'longitude': [x for x in longitude], 'callsign': [x for x in calls], 'date': [x for x in date_time]}
