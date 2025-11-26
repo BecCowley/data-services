@@ -1992,7 +1992,7 @@ def check_nc_to_be_created(profile):
         return False
 
     data_vars = temp_prof_info(profile.netcdf_file_obj)
-    if 'TEMP' not in data_vars.values():
+    if not any('TEMP' in str(v) for v in data_vars.values()):
         LOGGER.error('Profile not processed, no TEMP in file %s' % profile.Input_filename)
         return False
 
