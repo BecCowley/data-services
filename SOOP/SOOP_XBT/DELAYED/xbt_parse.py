@@ -506,6 +506,10 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
         raw = '_RAW' if s == profile_noqc else ''
         # cycle through the variables identified in the file, for XBT files, this should only be TEMP:
         data_vars = temp_prof_info(s.netcdf_file_obj)
+        # if the data_vars is not 'TEMP' but contains 'TEMP', change to 'TEMP'
+        for key, value in data_vars.items():
+            if 'TEMP' in value:
+                data_vars[key] = 'TEMP'
         # assign the data_vars to the profile object
         s.prof_type = list(data_vars.values())
 
