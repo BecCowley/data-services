@@ -13,12 +13,10 @@ def _error(message):
     """ Raise an exception with the given message."""
     raise XbtException('{message}'.format(message=message))
 
-def read_globals_config():
+def read_globals_config(file_path):
     """
     read the global attributes from the xbt_config file
     """
-    # Specify the file path
-    file_path = 'netcdfGlobalAtts.csv'
     # Read the CSV file into a dictionary
     df = pd.read_csv(os.path.join(os.path.dirname(__file__), file_path))
     # fill any empty cells and strings with NaN

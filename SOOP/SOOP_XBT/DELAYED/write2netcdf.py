@@ -39,7 +39,7 @@ def create_filename_output(prof, hist, profile_raw=False):
     return filename
 
 
-def write_output_nc(output_folder, profile, history, profile_raw=False, historic_flags=False):
+def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGlobalAtts.csv', profile_raw=False, historic_flags=False):
     """output the data to the IMOS format netcdf version
     :param output_folder: the folder to write the netcdf file to
     :param profile: the profile DataFrame
@@ -72,7 +72,7 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
         profile['SOT_ID'] = None  # default value if SOT_ID is not present
         profile['WIGOS_ID'] = None  # default value if SOT_ID is not present
     # read the global attributes config file
-    globals_list = read_globals_config()
+    globals_list = read_globals_config(globals_file_path)
     # first get a list of the attributes attached to the variables
     extra_atts = vars[vars['is_var_att_global'] == 'att']
     # get a list of the global attributes
@@ -305,17 +305,20 @@ def write_output_nc(output_folder, profile, history, profile_raw=False, historic
 # main function
 if __name__ == '__main__':
     """
-    Example: python write2netcdf.py -i /path/to/input/ -o /path/to/output/
+    Example: python write2netcdf.py -i /path/to/input/ -o /path/to/output/ -g /path/to/globals_file
     """
     # parse the arguments
     parser = argparse.ArgumentParser(description="Convert XBT data to IMOS format netcdf")
     parser.add_argument("-i", "--input", help="Path to the input folder", required=True)
     parser.add_argument("-o", "--output", help="Path to the output folder", required=True)
+    # add globals file input argument
+    parser.add_argument("-g", "--globals",help="Path to globals information", required=True)
     args = parser.parse_args()
 
     # get the input and output folders
     input_folder = args.input
     output_folder = args.output
+    globals_input_file = args.output
 
     # if output folder doesn't exist, create it
     if not os.path.exists(output_folder):
@@ -344,4 +347,4 @@ if __name__ == '__main__':
             profile_histories = histories[histories['station_number'] == station].reset_index()
 
             # write the profile to the netcdf file
-            write_output_nc(output_folder, profile, profile_histories,profile_raw=False, historic_flags=True)
+            write_output_nc(output_folder, profile, profile_histories, globals_input_file,profile_raw=False, historic_flags=True)
