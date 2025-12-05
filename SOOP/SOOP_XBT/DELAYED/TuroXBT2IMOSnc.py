@@ -13,23 +13,12 @@ import difflib
 # Example:
 # python /path/to/data-services/SOOP/SOOP_XBT/DELAYED/TuroXBT2IMOSnc.py -i RD3203 -o IMOSformatnc
 
-import os
-import re
 import sys
 import tempfile
-import shutil
 import xarray as xr
-from netCDF4 import Dataset
-import datetime
-from time import gmtime, strftime
-from netCDF4 import date2num
-import numpy as np
 import glob
-import pandas as pd
 
 from xbt_line_vocab import xbt_line_info
-from xbt_parse import read_section_from_xbt_config
-from generate_netcdf_att import generate_netcdf_att, get_imos_parameter_info
 from ship_callsign import ship_callsign_list
 from imos_logging import IMOSLogging
 from xbt_utils import *

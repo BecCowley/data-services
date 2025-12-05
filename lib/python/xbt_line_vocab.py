@@ -11,12 +11,10 @@ How to use:
 author : Besnard, Laurent
 """
 
-import urllib.request, urllib.error, urllib.parse
-import xml.etree.ElementTree as ET
 import ssl
 import os
-from platform_code_vocab import is_url_accessible
-
+from platform_code_vocab import is_url_accessible, _fetch_xml_root
+import xml.etree.ElementTree as ET
 
 def xbt_line_info():
     """
@@ -29,10 +27,7 @@ def xbt_line_info():
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
-
-        response               = urllib.request.urlopen(xbt_line_vocab_url, context=ctx)
-        html                   = response.read()
-        root                   = ET.fromstring(html)
+        root, response               = _fetch_xml_root(xbt_line_vocab_url)
         url = True
     else:
         # look for the file in the same directory

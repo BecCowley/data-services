@@ -15,12 +15,14 @@ author : Besnard, Laurent
 """
 
 import warnings
-import xml.etree.ElementTree as ET
 import os
-
-from six.moves.urllib.request import urlopen
-
 import requests
+import xml.etree.ElementTree as ET
+
+def _fetch_xml_root(url, timeout=10):
+    resp = requests.get(url, timeout=timeout)
+    resp.raise_for_status()
+    return ET.fromstring(resp.content), resp
 
 def is_url_accessible(url):
     try:
@@ -39,9 +41,7 @@ def platform_type_uris_by_category():
     """
     platform_cat_vocab_url = 'http://content.aodn.org.au/Vocabularies/platform-category/aodn_aodn-platform-category-vocabulary.rdf'
     if is_url_accessible(platform_cat_vocab_url):
-        response               = urlopen(platform_cat_vocab_url)
-        html                   = response.read()
-        root                   = ET.fromstring(html)
+        root,response          = _fetch_xml_root(platform_cat_vocab_url)
         platform_cat_list      = {}
         url = True
     else:
@@ -95,9 +95,7 @@ def platform_altlabels_per_preflabel(category_name=None):
     platform_vocab_url = 'http://content.aodn.org.au/Vocabularies/platform/aodn_aodn-platform-vocabulary.rdf'
     # test if the platform vocab url is accessible
     if is_url_accessible(platform_vocab_url):
-        response           = urlopen(platform_vocab_url)
-        html               = response.read()
-        root               = ET.fromstring(html)
+        root, response           = _fetch_xml_root(platform_vocab_url)
         platform           = {}
         filter_cat_type    = False
         url = True
