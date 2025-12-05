@@ -199,14 +199,14 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
                     LOGGER.warning(
                         'Probe type %s missing from probe type part in xbt_config file, using unknown for probe type' % str(
                             data))
-                    probe_type_name = 'Unknown'
+                    probe_type_name = ''
                 dfprofile['PROBE_TYPE_name' + probe] = str(probe_type_name)
                 # get the probe type coefficients
                 if str(data) not in list(fre_list.keys()):
                     LOGGER.warning(
                         'Probe type %s missing from frequency part in xbt_config file, using default coefficients' % str(
                             data))
-                    probe_type_coef = fre_list['default'].split(',')
+                    probe_type_coef = ''.split(',')
                 else:
                     probe_type_coef = fre_list[str(data)].split(',')
                 dfprofile['PROBE_TYPE_coefficient_a' + probe] = float(probe_type_coef[0])
