@@ -192,11 +192,23 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
             # do for both the PROBE_TYPE and the PROBE_TYPE_RAW
             for probe in ['', '_RAW']:
                 dfprofile['PROBE_TYPE' + probe] = data
-                # get the probe type name
-                probe_type_name = read_section_from_xbt_config('PEQ$')[data].split(',')[0]
+                # get the probe type name, return 'Unknown' if not found
+                if str(data) in list(peq_list.keys()):
+                    probe_type_name = peq_list[str(data)].split(',')[0]
+                else:
+                    LOGGER.warning(
+                        'Probe type %s missing from probe type part in xbt_config file, using unknown for probe type' % str(
+                            data))
+                    probe_type_name = 'Unknown'
                 dfprofile['PROBE_TYPE_name' + probe] = str(probe_type_name)
                 # get the probe type coefficients
-                probe_type_coef = read_section_from_xbt_config('FRE')[data].split(',')
+                if str(data) not in list(fre_list.keys()):
+                    LOGGER.warning(
+                        'Probe type %s missing from frequency part in xbt_config file, using default coefficients' % str(
+                            data))
+                    probe_type_coef = fre_list['default'].split(',')
+                else:
+                    probe_type_coef = fre_list[str(data)].split(',')
                 dfprofile['PROBE_TYPE_coefficient_a' + probe] = float(probe_type_coef[0])
                 dfprofile['PROBE_TYPE_coefficient_b' + probe] = float(probe_type_coef[1]) * 1e-3
             # add quality control for the probe type

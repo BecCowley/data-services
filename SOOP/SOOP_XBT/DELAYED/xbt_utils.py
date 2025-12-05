@@ -237,6 +237,9 @@ def wire_break(dat):
     d = np.append(d, 0)
     # points within acceptable temp bounds
     valid_data = np.where((dat['TEMP'] > -2.4) & (dat['TEMP'] < 32.) & np.abs(d <= 0.1))[0]
+    # if there is no valid data, return None
+    if len(valid_data) == 0:
+        return None, False
     last_valid = min(valid_data[-1] + 1, len(dat) - 1)  # Use min with length to prevent going out of index bounds
     # find the first point that is not in jj
     #TODO: refine this to select the first time it happens in depth order

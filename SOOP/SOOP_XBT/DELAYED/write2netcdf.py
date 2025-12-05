@@ -190,11 +190,11 @@ def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGl
             elif v in list(profile):
                 # if all the values of profile[v] are NaN, output the fill value
                 if not profile[v].isnull().all():
-                    # Check the shape of the NetCDF variable
-                    var_shape = output_netcdf_obj[v].shape
+                    # Check the dimensions of the NetCDF variable
+                    var_dims = output_netcdf_obj[v].dimensions
 
-                    # Ensure the data from profile[v] matches the shape of the NetCDF variable
-                    if profile[v].shape == var_shape:
+                    # for variables that are dimensioned by DEPTH, output the full array
+                    if 'DEPTH' in var_dims:
                         if v != 'DEPTH':
                             # fill any NaN values with the fill value for this variable
                             data = profile[v].fillna(output_netcdf_obj[v]._FillValue)
