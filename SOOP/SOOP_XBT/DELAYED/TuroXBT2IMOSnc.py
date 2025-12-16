@@ -323,7 +323,7 @@ if __name__ == '__main__':
         if n == 1 and first:
             first = False
             # ask the user to confirm the cruise id and ship name
-            user_input = input("Is %s the correct cruise id [Y/N]: " % crid)
+            user_input = input("Is %s the correct cruise id [Y/N]: " % crid).upper()
             if user_input == 'N':
                 cid = input("Enter the correct cruise id: ")
             else:
