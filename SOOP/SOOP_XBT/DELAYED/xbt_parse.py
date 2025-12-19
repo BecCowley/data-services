@@ -1802,10 +1802,10 @@ def create_flag_feature(profile):
                 if np.size(tempqc) > 1:
                     # if so, then we need to check that the TEMP_quality_control value is in the same category as the tempqc value
                     # where the categories are 1,2,5 and 3,4
-                    if ((row['HISTORY_QC_CODE_VALUE'] in [1, 2, 5] and row['tempqc'] in [3 ,4]) or
-                            (row['HISTORY_QC_CODE_VALUE'] in [3, 4] and row['tempqc'] in [1, 2, 5])):
+                    if ((row['HISTORY_QC_CODE_VALUE'] in [0, 1, 2, 5] and row['tempqc'] in [3 ,4]) or
+                            (row['HISTORY_QC_CODE_VALUE'] in [3, 4] and row['tempqc'] in [0, 1, 2, 5])):
                         # update the HISTORY_QC_CODE_VALUE to the tempqc value as the TEMP_quality_control value is in the wrong category
-                        if row['tempqc'] in [1, 2, 5]:
+                        if row['tempqc'] in [0, 1, 2, 5]:
                             codes.loc[idx, 'HISTORY_QC_CODE_VALUE'] = tempqc[0]
                             # also change the HISTORY_QC_CODE to A
                             codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
@@ -1906,8 +1906,10 @@ def create_flag_feature(profile):
     # find any depths where the tempqc value is less than the TEMP_quality_control value not including the 5 values
     # and ignore where LOA has changed the QC to 2 from 1
     idx = (df_data['TEMP_quality_control'] > tempdf['tempqc']) & (df_data['TEMP_quality_control'] != 5)
-    if idx.any() & ~(codes['HISTORY_QC_CODE'].str.contains('LOA')).any():
-        LOGGER.warning('TEMP_quality_control values are greater than the tempqc values. %s' % profile.Input_filename)
+    # if there are any idx and there are values other than 'LOA' in the HISTORY_QC_CODE column, log a warning
+    if idx.any():
+        if not mapcodes.loc[mapcodes['HISTORY_QC_CODE'].isin(['LOA'])].empty:
+            LOGGER.warning('TEMP_quality_control values are greater than the tempqc values. %s' % profile.Input_filename)
     idx = (df_data['DEPTH_quality_control'] > depdf['depthqc']) & (df_data['DEPTH_quality_control'] != 5)
     if idx.any():
         LOGGER.warning('DEPTH_quality_control values are greater than the depthqc values. %s' % profile.Input_filename)
