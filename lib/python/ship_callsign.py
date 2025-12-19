@@ -43,18 +43,23 @@ def ship_callsign_list():
     Example: "Highland-Chief-{VROJ8}"
     Also remove the "IMO:" string in the IMO field
     """
-    str_imo = 'IMO:'
     for callsign in platform_codes:
         str_to_rm = '-{{{callsign}}}'.format(callsign=callsign)
         if str_to_rm in platform_codes[callsign][0]:
             value_list = list(platform_codes[callsign])
             value_list[0] = value_list[0].replace(str_to_rm, '')
             platform_codes[callsign] = tuple(value_list)
-        if platform_codes[callsign][1] is not None and str_imo in platform_codes[callsign][1]:
-            value_list = list(platform_codes[callsign])
-            value_list[1] = value_list[1].replace(str_imo, '')
-            platform_codes[callsign] = tuple(value_list)
-
+        # remove IMO:
+        imo_field = platform_codes[callsign][1]
+        if imo_field is not None:
+            if ':' in imo_field:
+                cleaned_imo = imo_field.split(':', 1)[1].strip()
+            else:
+                cleaned_imo = imo_field
+            if cleaned_imo != imo_field:
+                value_list = list(platform_codes[callsign])
+                value_list[1] = cleaned_imo
+                platform_codes[callsign] = tuple(value_list)
     return platform_codes
 
 

@@ -101,7 +101,7 @@ def get_recorder_type(nco):
         return item_val, rct_list[item_val].split(',')[0]
 
 
-def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF_file):
+def extract_turo_data(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF_file):
     ''' create three dataframes from the nco object and write them to a netCDF file using write_output_nc function.
     nco: xarray dataset object
     n: drop number
@@ -255,8 +255,15 @@ def netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF
     # add some final global attributes
     dfprofile['qc_completed'] = 'no'
 
-    # add the line information
+    # add the line information based on input arguments
     dfprofile['SOOP_line_description'] = line_info[1]
+    dfprofile['SOOP_line_label'] = line_info[0]
+
+    # update the cruise id and callsign based on input arguments
+    dfprofile['Cruise_ID'] = str(crid)
+    dfprofile['CallSign'] = str(callsign)
+    dfprofile['Ship_IMO'] = str(ship_IMO)
+    dfprofile['Ship_name'] = str(ship_name)
 
     # add 0 to the QC_accept_code and QC_reject_code columns
     dfprofile['QC_accept_code'] = 0
@@ -315,12 +322,12 @@ if __name__ == '__main__':
         # make sure the name isn't a *.*.nc file
         name = name.split(".")
         n = int(name[0][4:])
-        # check the cruise id and ship name
-        crid = nco.Voyage
-        callsign = nco.CallSign
-        xbtline = nco.LineNo
         # for the first file only, ask the user to confirm the cruise id and ship name
         if n == 1 and first:
+            # check the cruise id and ship name
+            crid = nco.Voyage
+            callsign = nco.CallSign
+            xbtline = nco.LineNo
             first = False
             # ask the user to confirm the cruise id and ship name
             user_input = input("Is %s the correct cruise id [Y/N]: " % crid).upper()
@@ -363,18 +370,10 @@ if __name__ == '__main__':
                 # warning if the line is not in the vocab
                 LOGGER.warning('XBT line %s not found in the AODN vocabulary, assigning NOLINE line' % xbtline)
                 # create a tuple with 'Unknown' values
-                line_info = ('NOLINE', 'NO LINE')
-
-
-        # if crid is not the same as cid, use cid
-        if 'drop' in name[0]:
-            if crid != cid:
-                crid = cid
-            if callsign != calls:
-                callsign = calls
+                line_info = ('NOLINE', 'Data is not associated with an XBT Ship of Opportunity (SOOP) line')
 
         # Write function
-        profile, history = netCDFout(nco, n, crid, callsign, ship_IMO, ship_name, line_info, raw_netCDF_file)
+        profile, history = extract_turo_data(nco, n, cid, calls, ship_IMO, ship_name, line_info, raw_netCDF_file)
         # write the output to a netCDF file
         write_output_nc(vargs.output_folder, profile, history, profile_raw=False)
         # write the output to a netCDF file with the raw profile
