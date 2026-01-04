@@ -2263,6 +2263,12 @@ if __name__ == '__main__':
                 else:
                     pq_filename = os.path.join(vargs.output_folder,
                                            os.path.basename(keysall.dbase_name)  + '_' + callsign + str(year) + '_histories.parquet')
+                # ensure HISTORY_START_DEPTH and HISTORY_PREVIOUS_VALUE are float64
+                dfhist['HISTORY_START_DEPTH'] = dfhist['HISTORY_START_DEPTH'].astype('float32')
+                dfhist['HISTORY_PREVIOUS_VALUE'] = dfhist['HISTORY_PREVIOUS_VALUE'].astype('string')
+                # change HISTORY_QC_CODE_VALUE to int32
+                dfhist['HISTORY_QC_CODE_VALUE'] = dfhist['HISTORY_QC_CODE_VALUE'].astype('int8')
+
                 dfhist.to_parquet(pq_filename, index=False)
 
     print('All done')
