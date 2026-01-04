@@ -1582,13 +1582,15 @@ def restore_temp_val(profile):
                             'HISTORY_QC_CODE_DESCRIPTION': 'surface_transient',
                             'HISTORY_QC_CODE_VALUE': np.int8(3),
                             'HISTORY_PARAMETER': 'TEMP',
-                            'HISTORY_DATE': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
+                            'HISTORY_DATE': pd.Timestamp.now().strftime('%Y-%m-%d'),
                             'HISTORY_INSTITUTION': profile.histories['HISTORY_INSTITUTION'].values[0],
                             'HISTORY_SOFTWARE_RELEASE': '2.1',
                             'HISTORY_SOFTWARE': 'Australian XBT Quality Control Cookbook Version 2.1'
                         }
                         df_new_row = pd.DataFrame([new_row])
                         df_new_row['HISTORY_PREVIOUS_VALUE'] = df_new_row['HISTORY_PREVIOUS_VALUE'].astype('string')
+                        df_new_row['HISTORY_DATE'] = pd.to_datetime(df_new_row['HISTORY_DATE'])
+                        df_new_row['HISTORY_QC_CODE_VALUE'] = df_new_row['HISTORY_QC_CODE_VALUE'].astype('int8')
                         # append the new row to the histories
                         profile.histories = pd.concat([profile.histories, df_new_row], ignore_index=True)
                         # reset the index
@@ -1744,12 +1746,12 @@ def create_flag_feature(profile):
         codes = codes._append({'HISTORY_INSTITUTION': profile.data['Institution'],
                                'HISTORY_QC_CODE': 'QCA',
                                'HISTORY_PARAMETER': 'TEMP',
-                               'HISTORY_SOFTWARE': 'Unknown',
-                               'HISTORY_DATE': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
+                               'HISTORY_SOFTWARE': 'Australian XBT Quality Control Cookbook Version 2.1',
+                               'HISTORY_DATE': pd.datetime(pd.Timestamp.now()).strftime('%Y-%m-%d'),
                                'HISTORY_START_DEPTH': df_data['DEPTH'].values[0],
                                'HISTORY_QC_CODE_DESCRIPTION': 'scientific_qc_applied',
                                'HISTORY_QC_CODE_VALUE': np.int8(1),
-                               'HISTORY_SOFTWARE_RELEASE': '',
+                               'HISTORY_SOFTWARE_RELEASE': '2.1',
                                'HISTORY_PREVIOUS_VALUE': '0'}, ignore_index=True)
 
     # only continue if there are codes to map
@@ -2238,6 +2240,9 @@ if __name__ == '__main__':
                             dfall = pd.concat([dfall, profile_df], ignore_index=True)
                             # add station number to the histories
                             profile_ed.histories['station_number'] = f
+                            # check for HISTORY_DATE datatype here
+                            if profile_ed.histories['HISTORY_DATE'].dtype != 'datetime64[ns]':
+                                profile_ed.histories['HISTORY_DATE'] = pd.to_datetime(profile_ed.histories['HISTORY_DATE'], errors='coerce')
                             # add the histories to the big dataframe
                             dfhist = pd.concat([dfhist, profile_ed.histories], ignore_index=True)
                     else:
@@ -2263,11 +2268,6 @@ if __name__ == '__main__':
                 else:
                     pq_filename = os.path.join(vargs.output_folder,
                                            os.path.basename(keysall.dbase_name)  + '_' + callsign + str(year) + '_histories.parquet')
-                # ensure HISTORY_START_DEPTH and HISTORY_PREVIOUS_VALUE are float64
-                dfhist['HISTORY_START_DEPTH'] = dfhist['HISTORY_START_DEPTH'].astype('float32')
-                dfhist['HISTORY_PREVIOUS_VALUE'] = dfhist['HISTORY_PREVIOUS_VALUE'].astype('string')
-                # change HISTORY_QC_CODE_VALUE to int32
-                dfhist['HISTORY_QC_CODE_VALUE'] = dfhist['HISTORY_QC_CODE_VALUE'].astype('int8')
 
                 dfhist.to_parquet(pq_filename, index=False)
 
