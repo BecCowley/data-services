@@ -1003,7 +1003,6 @@ def parse_histories_nc(profile):
                 if code_strings:
                     vv = [vv[i] for i in code_strings]
                     nhist = len(vv)
-                    LOGGER.warning('HISTORY: Updating nhist to match length of history codes. %s' % profile.Input_filename)
             else:
                 # convert the byte array to a string
                 vv = [''.join(chr(x) for x in bytearray(xx))
