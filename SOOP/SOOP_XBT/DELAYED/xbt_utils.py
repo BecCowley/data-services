@@ -334,7 +334,7 @@ def update_histories(dfprofile, code, software, release, dfhist, dep=0):
     if code.endswith('R'):
         hist_info = dfr[dfr['full_code'] == code]
     else:
-        hist_info = dfa[dfr['full_code'] == code]
+        hist_info = dfa[dfa['full_code'] == code]
 
     # add the code to the QC_accept_code or QC_reject_code column in the dfprofile dataframe
     if code.endswith('R'):
@@ -352,6 +352,7 @@ def update_histories(dfprofile, code, software, release, dfhist, dep=0):
     else:
         # accept code
         dfprofile.loc[dep, 'QC_accept_code'] = hist_info['QC_accept_code'].values[0]
+        dep_range = [dep]
 
     # change the TEMP_quality_control to the value from the dataframe, apply to all depths indicated by the hist_info['rule_direction'] column
     # where 'up' indicates from the dep index to all the depths above it, 'down' indicates from the dep index to all the depths below it
