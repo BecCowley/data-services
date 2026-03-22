@@ -346,5 +346,12 @@ if __name__ == '__main__':
             profile = profiles[profiles['station_number'] == station].reset_index()
             profile_histories = histories[histories['station_number'] == station].reset_index()
 
+            # add some paths to the output_folder based on the 'SOOP_line_label' and year of the profile time
+            line_label = profile['SOOP_line_label'][0]
+            year = profile['TIME'][0].year
+            output_folder_line_year = os.path.join(output_folder, line_label, str(year), 'processed', 'netcdf')
+            if not os.path.exists(output_folder_line_year):
+                os.makedirs(output_folder_line_year)
+
             # write the profile to the netcdf file
-            write_output_nc(output_folder, profile, profile_histories, globals_input_file,profile_raw=False, historic_flags=True)
+            write_output_nc(output_folder_line_year, profile, profile_histories, globals_input_file,profile_raw=False, historic_flags=True)
