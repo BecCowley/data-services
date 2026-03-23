@@ -318,7 +318,7 @@ if __name__ == '__main__':
     # get the input and output folders
     input_folder = args.input
     output_folder = args.output
-    globals_input_file = args.output
+    globals_input_file = args.globals
 
     # if output folder doesn't exist, create it
     if not os.path.exists(output_folder):
