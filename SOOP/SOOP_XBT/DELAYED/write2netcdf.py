@@ -277,6 +277,8 @@ def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGl
         # add time coverage information to global attributes dictionary
         globals_list['time_coverage_start'] = profile['TIME'][0].strftime("%Y-%m-%dT%H:%M:%SZ")
         globals_list['time_coverage_end'] = profile['TIME'][0].strftime("%Y-%m-%dT%H:%M:%SZ")
+        # add transect_id to global attributes dictionary
+        globals_list['transect_id'] = profile['transect_id'][0]
 
         # add extra global attributes from the extra_globals list
         for ind, row in extra_globals.iterrows():
