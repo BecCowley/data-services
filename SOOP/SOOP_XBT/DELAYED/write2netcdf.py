@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from netCDF4 import Dataset, date2num
 
-from xbt_utils import read_section_from_xbt_config
+from xbt_utils import read_section_from_xbt_config, make_transect_id
 from xbt_utils import read_flag_quality_table, read_variables_config, read_globals_config
 
 def create_filename_output(prof, hist, profile_raw=False):
@@ -337,9 +337,24 @@ if __name__ == '__main__':
         # read the parquet file
         profiles = pd.read_parquet(data_file)
         histories = pd.read_parquet(data_file.replace(".parquet", "_histories.parquet"))
+        # if the latest date is prior to 2017, append "_pre2016.csv" to the globals_input_file path to use the older version of the global attributes file which is more appropriate for older data
+        if profiles['TIME'].max() < datetime(2017, 1, 1) and profiles['Institution'].iloc[0] == "Australia Commonwealth Scientific and Industrial Research Organization (CSIRO)":
+            globals_input_file = globals_input_file.replace(".csv", "_pre2016.csv")
+        # if the profiles['Institution'] is "Australia Bureau of Meteorology (BoM)", replace the globals_input_file path with the globals_input_file path with "_bom.csv" appended to the file name to use the version of the global attributes file which is more appropriate for BoM data
+        if profiles['Institution'].iloc[0] == "Australia Bureau of Meteorology (BoM)":
+            globals_input_file = globals_input_file.replace(".csv", "_BOM.csv")
         # put a fix in here for already made parquet files where we have changed the column name from PROBE_manufacture_date to PROBE_manufacture_date_YYYY-MM-DD
         if 'PROBE_manufacture_date' in profiles.columns:
             profiles = profiles.rename(columns={'PROBE_manufacture_date': 'PROBE_manufacture_date_YYYY-MM-DD'})
+        # make an empty transect_id column in the profiles dataframe
+        profiles['transect_id'] = None
+        # create a transect_id column in the profiles dataframe by concatenating the SOOP_line_label and the year of the TIME column
+        for soop_line_label in profiles['SOOP_line_label'].unique():
+            # get existing ids
+            existing_ids = profiles.loc[profiles['SOOP_line_label'] == soop_line_label, 'transect_id'].dropna().unique()
+            # group the profiles for this soop_line_label by Cruise_ID and using the first TIME value in each group, create a transect_id.
+            profiles.loc[profiles['SOOP_line_label'] == soop_line_label, 'transect_id'] = profiles[profiles['SOOP_line_label'] == soop_line_label].groupby('Cruise_ID')['TIME'].transform(lambda x: make_transect_id(soop_line_label, x.iloc[0], existing_ids))
+
         # there are multiple profiles in the profiles dataframe, loop through unique station numbers
         for station in profiles['station_number'].unique():
             # get the profile and history data for this station

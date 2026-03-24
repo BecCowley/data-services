@@ -13,6 +13,21 @@ def _error(message):
     """ Raise an exception with the given message."""
     raise XbtException('{message}'.format(message=message))
 
+
+def make_transect_id(soop_line, date_like, existing_ids):
+    """
+    Return a unique transect id like: soop_line-YYYYMM-I
+    where I starts at 1 and increments until the id is not in existing_ids.
+    """
+    yyyymm = pd.to_datetime(date_like).strftime('%Y%m')
+    i = 1
+    while True:
+        candidate = f"{soop_line}-{yyyymm}-{i}"
+        if candidate not in existing_ids:
+            return candidate
+        i += 1
+
+
 def read_globals_config(file_path):
     """
     read the global attributes from the xbt_config file
