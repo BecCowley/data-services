@@ -240,6 +240,9 @@ def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGl
                         padded_array = np.full(padded_shape, '', dtype=output_netcdf_obj[v].dtype)
                         # fill the padded array with the history[v] values
                         for i, s in enumerate(history[v].values):
+                            # if the history[v][i] is None, create an empty string
+                            if pd.isna(s):
+                                s = ''
                             padded_array[i, :len(s)] = list(s)
                             # assign the padded values to the variable
                         output_netcdf_obj[v][:] = padded_array
@@ -335,9 +338,13 @@ if __name__ == '__main__':
 
     # write the output netcdf files
     for data_file in parquet_data:
+        print("Processing file %s" % data_file)
         # read the parquet file
         profiles = pd.read_parquet(data_file)
         histories = pd.read_parquet(data_file.replace(".parquet", "_histories.parquet"))
+        # remove the HISTORY_PREVIOUS_VALUE column from the histories dataframe if it exists as it is not needed for the netcdf output
+        if 'HISTORY_PREVIOUS_VALUE' in histories.columns:
+            histories = histories.drop(columns=['HISTORY_PREVIOUS_VALUE'])
         globals_input_file = args.globals
         # if the latest date is prior to 2017, append "_pre2016.csv" to the globals_input_file path to use the older version of the global attributes file which is more appropriate for older data
         if profiles['TIME'].max() < datetime(2017, 1, 1) and profiles['Institution'].iloc[0] == "Australia Commonwealth Scientific and Industrial Research Organization (CSIRO)":
