@@ -320,7 +320,6 @@ if __name__ == '__main__':
     # get the input and output folders
     input_folder = args.input
     output_folder = args.output
-    globals_input_file = args.globals
 
     # if output folder doesn't exist, create it
     if not os.path.exists(output_folder):
@@ -339,6 +338,7 @@ if __name__ == '__main__':
         # read the parquet file
         profiles = pd.read_parquet(data_file)
         histories = pd.read_parquet(data_file.replace(".parquet", "_histories.parquet"))
+        globals_input_file = args.globals
         # if the latest date is prior to 2017, append "_pre2016.csv" to the globals_input_file path to use the older version of the global attributes file which is more appropriate for older data
         if profiles['TIME'].max() < datetime(2017, 1, 1) and profiles['Institution'].iloc[0] == "Australia Commonwealth Scientific and Industrial Research Organization (CSIRO)":
             globals_input_file = globals_input_file.replace(".csv", "_pre2016.csv")
