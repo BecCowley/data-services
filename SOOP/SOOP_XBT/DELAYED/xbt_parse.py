@@ -1792,10 +1792,12 @@ def create_flag_feature(profile):
                 codes.loc[idx_csr, 'HISTORY_QC_CODE_VALUE'] = 4
 
     # check the TEMP_quality_control values are the same as the HISTORY_QC_CODE_VALUE values
+    # first get the profile.data['TEMP_quality_control'] value at the first depth deeper than 3.7m
+    tqc = df_data.loc[df_data['DEPTH'] > 3.7, 'TEMP_quality_control'].values[0]
     for idx, row in codes.iterrows():
         # check here that the TEMP_quality_control value is the same as the tempqc value
         # skip the CSR and position flags as they are handled specifically
-        if row['HISTORY_QC_CODE'] not in ['REA','TEA','LAA','LOA','PER','TER','CSR']:
+        if row['HISTORY_QC_CODE'] not in ['REA','TEA','LAA','LOA','PER','TER','CSR', 'QCA']:
             if row['tempqc'] != row['HISTORY_QC_CODE_VALUE']:
                 # get the df['tempqc'] value for the two-character code
                 tempqc = df.loc[df['code'].str.contains(row['HISTORY_QC_CODE'][:2]), 'TEMP_quality_control'].values
@@ -1806,7 +1808,7 @@ def create_flag_feature(profile):
                     if ((row['HISTORY_QC_CODE_VALUE'] in [0, 1, 2, 5] and row['tempqc'] in [3 ,4]) or
                             (row['HISTORY_QC_CODE_VALUE'] in [3, 4] and row['tempqc'] in [0, 1, 2, 5])):
                         # update the HISTORY_QC_CODE_VALUE to the tempqc value as the TEMP_quality_control value is in the wrong category
-                        if row['tempqc'] in [0, 1, 2, 5]:
+                        if row['tempqc'] in [0, 1, 2, 5] & tqc < 3:
                             codes.loc[idx, 'HISTORY_QC_CODE_VALUE'] = tempqc[0]
                             # also change the HISTORY_QC_CODE to A
                             codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
@@ -1817,7 +1819,7 @@ def create_flag_feature(profile):
                 else:
                     # if the two character code only appears once, then update the tempqc value in the codes table
                     codes.loc[idx, 'HISTORY_QC_CODE_VALUE'] = tempqc
-                    if tempqc in [0, 1, 2, 5]:
+                    if tempqc in [0, 1, 2, 5] and tqc < 3:
                         # also change the HISTORY_QC_CODE to A
                         codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
                     else:
@@ -2203,8 +2205,8 @@ if __name__ == '__main__':
                 dfhist['station_number'] = pd.Series(dtype='int64')
 
                 for f in stations:
-                    # if f != 61057040:
-                    #     continue
+                    if f != 61013321:
+                        continue
                     fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
                     fname = os.path.join(keysall.dbase_name, fpath)
                     # make input_filename here
