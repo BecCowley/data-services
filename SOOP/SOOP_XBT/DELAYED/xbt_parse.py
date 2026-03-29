@@ -1819,7 +1819,7 @@ def create_flag_feature(profile):
                 else:
                     # if the two character code only appears once, then update the tempqc value in the codes table
                     codes.loc[idx, 'HISTORY_QC_CODE_VALUE'] = tempqc
-                    if tempqc in [0, 1, 2, 5] and tqc < 3:
+                    if tempqc in [0, 1, 2, 5]:
                         # also change the HISTORY_QC_CODE to A
                         codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
                     else:
