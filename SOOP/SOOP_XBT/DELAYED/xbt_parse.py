@@ -1797,7 +1797,7 @@ def create_flag_feature(profile):
     for idx, row in codes.iterrows():
         # check here that the TEMP_quality_control value is the same as the tempqc value
         # skip the CSR and position flags as they are handled specifically
-        if row['HISTORY_QC_CODE'] not in ['REA','TEA','LAA','LOA','PER','TER','CSR', 'QCA']:
+        if row['HISTORY_QC_CODE'] not in ['REA','TEA','LAA','LOA','PER','TER','CSR']:
             if row['tempqc'] != row['HISTORY_QC_CODE_VALUE']:
                 # get the df['tempqc'] value for the two-character code
                 tempqc = df.loc[df['code'].str.contains(row['HISTORY_QC_CODE'][:2]), 'TEMP_quality_control'].values
@@ -1808,7 +1808,7 @@ def create_flag_feature(profile):
                     if ((row['HISTORY_QC_CODE_VALUE'] in [0, 1, 2, 5] and row['tempqc'] in [3 ,4]) or
                             (row['HISTORY_QC_CODE_VALUE'] in [3, 4] and row['tempqc'] in [0, 1, 2, 5])):
                         # update the HISTORY_QC_CODE_VALUE to the tempqc value as the TEMP_quality_control value is in the wrong category
-                        if row['tempqc'] in [0, 1, 2, 5] & tqc < 3:
+                        if row['tempqc'] in [0, 1, 2, 5] and tqc < 3:
                             codes.loc[idx, 'HISTORY_QC_CODE_VALUE'] = tempqc[0]
                             # also change the HISTORY_QC_CODE to A
                             codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
