@@ -1793,7 +1793,10 @@ def create_flag_feature(profile):
 
     # check the TEMP_quality_control values are the same as the HISTORY_QC_CODE_VALUE values
     # first get the profile.data['TEMP_quality_control'] value at the first depth deeper than 3.7m
-    tqc = df_data.loc[df_data['DEPTH'] > 3.7, 'TEMP_quality_control'].values[0]
+    if df_data['DEPTH'].max() > 3.7:
+        tqc = df_data.loc[df_data['DEPTH'] > 3.7, 'TEMP_quality_control'].values[0]
+    else:
+        tqc = df_data['TEMP_quality_control'].values[0]
     for idx, row in codes.iterrows():
         # check here that the TEMP_quality_control value is the same as the tempqc value
         # skip the CSR and position flags as they are handled specifically
