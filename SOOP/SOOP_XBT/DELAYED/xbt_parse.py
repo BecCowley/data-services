@@ -794,6 +794,9 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
     # drop rows where all NaN values which does happen in these old files sometimes
     profile_qc.data = profile_qc.data.dropna(subset=['TEMP', 'DEPTH', 'TEMP_RAW', 'DEPTH_RAW'], how='all')
 
+    # sort the data by DEPTH and reset the index
+    profile_qc.data = profile_qc.data.sort_values(by='DEPTH').reset_index(drop=True)
+
     # how many parameters do we have, not including DEPTH?
     profile_qc.nprof = len(profile_qc.prof_type)
     profile_noqc.nprof = len(profile_noqc.prof_type)
