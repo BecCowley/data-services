@@ -1812,10 +1812,10 @@ def create_flag_feature(profile):
                         deeper_tempqc = row['tempqc']
                     # if so, then we need to check that the TEMP_quality_control value is in the same category as the tempqc value
                     # where the categories are 1,2,5 and 3,4
-                    if ((row['HISTORY_QC_CODE_VALUE'] in [0, 1, 2, 5] and row['tempqc'] in [3 ,4]) or
-                            (row['HISTORY_QC_CODE_VALUE'] in [3, 4] and row['tempqc'] in [0, 1, 2, 5])):
+                    if ((row['HISTORY_QC_CODE_VALUE'] in [0, 1, 2, 5] and deeper_tempqc in [3 ,4]) or
+                            (row['HISTORY_QC_CODE_VALUE'] in [3, 4] and deeper_tempqc in [0, 1, 2, 5])):
                         # update the HISTORY_QC_CODE_VALUE to the tempqc value as the TEMP_quality_control value is in the wrong category
-                        if row['tempqc'] in [0, 1, 2, 5] and deeper_tempqc in [0, 1, 2]:
+                        if row['HISTORY_QC_CODE_VALUE'] in [0, 1, 2, 5] and deeper_tempqc in [0, 1, 2]:
                             codes.loc[idx, 'HISTORY_QC_CODE_VALUE'] = tempqc[0]
                             # also change the HISTORY_QC_CODE to A
                             codes.loc[idx, 'HISTORY_QC_CODE'] = row['HISTORY_QC_CODE'][:2] + 'A'
