@@ -277,7 +277,10 @@ def add_uncertainties(df):
     # XCTD(pre - 1998) 0.06; 4 %
     # XCTD(post - 1998) 0.02; 2 %
 
-    pt = int(df['PROBE_TYPE'].unique().item())
+    if df['PROBE_TYPE'].unique().item() == '':
+        pt = 1023
+    else:
+        pt = int(df['PROBE_TYPE'].unique().item())
     # test probe
     if pt == 104:
         tunc = [0]
