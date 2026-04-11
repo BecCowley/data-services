@@ -93,10 +93,17 @@ class XbtKeys(object):
 
         # now get the station numbers from the keys file
         with Dataset(self.keys_file_path, 'r', format='NETCDF4') as netcdf_file_obj:
+            data_type = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in netcdf_file_obj['data_t'][:].data
+                     if bytearray(xx).strip()]
+            # keep only the data_type that are 'XB'
+            data_type = np.asarray(data_type)
+            ikeep = np.where(data_type == 'XB')[0]
+
             station_number = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in
                               netcdf_file_obj['stn_num'][:].data if bytearray(xx).strip()]
             # change station number to a numpy array
             station_number = np.asarray(station_number, dtype=np.int32)
+            station_number = station_number[ikeep]
             # sort it and keep unique station numbers where sometimes the keys has multiple values
             order = np.argsort(station_number)
             station_number = station_number[order]
@@ -104,18 +111,21 @@ class XbtKeys(object):
             # read in the position information
             latitude = np.round(netcdf_file_obj['obslat'][:].data, 6)
             longitude = np.round(netcdf_file_obj['obslng'][:].data, 6)
+            latitude = latitude[ikeep]
+            longitude = longitude[ikeep]
             # sort them as per the station number
             latitude = latitude[order]
             longitude = longitude[order]
             # decode date/time information
 
             # callsign
-            calls = [''.join(chr(x) for x in bytearray(xx)).strip() for xx in netcdf_file_obj['callsign'][:].data
-                     if bytearray(xx).strip()]
+            calls = [''.join(chr(x) for x in bytearray(xx)) for xx in netcdf_file_obj['callsign'][:].data
+                     if bytearray(xx)]
             # remove control characters from the callsign list
             calls = [remove_control_chars(x) for x in calls]
-
-            # sort the same as station number
+            # make a numpy array before indexing with ikeep (which is a numpy array)
+            calls = np.asarray(calls)[ikeep]
+            # sort the same as station number and convert back to list
             calls = np.asarray(calls)[order].tolist()
 
             # get the date/time information
@@ -136,6 +146,8 @@ class XbtKeys(object):
                                   for y, m in zip(year, month)]
 
             # sort the date_time as per station number
+            # convert to numpy array before indexing with ikeep
+            date_time = np.asarray(date_time)[ikeep]
             date_time = np.asarray(date_time)[order].tolist()
             # create the data dictionary
             self.data = {}
