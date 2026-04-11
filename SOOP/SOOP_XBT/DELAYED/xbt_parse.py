@@ -123,6 +123,10 @@ class XbtKeys(object):
                      if bytearray(xx)]
             # remove control characters from the callsign list
             calls = [remove_control_chars(x) for x in calls]
+            # replace any calls that are just spaces with "Unknown"
+            calls = [x if x.strip() else 'Unknown' for x in calls]
+            # strip any leading or trailing spaces from the callsigns
+            calls = [x.strip() for x in calls]
             # make a numpy array before indexing with ikeep (which is a numpy array)
             calls = np.asarray(calls)[ikeep]
             # sort the same as station number and convert back to list
