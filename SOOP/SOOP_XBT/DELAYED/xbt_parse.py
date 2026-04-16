@@ -1649,7 +1649,7 @@ def restore_temp_val(profile):
                      % profile.Input_filename)
 
     # find any depths with 99.99 values that are flagged with SPA or IPA or HFA
-    idx_temp = (df['TEMP'] == 99.99)
+    idx_temp = (df['TEMP'] > 90)
     if idx_temp.any() and ind.any():
         # check if there are any SPA, IPA or HFA flags at the same depth
         idx2 = profile.histories['HISTORY_START_DEPTH'].isin(df.loc[idx_temp, 'DEPTH'])
@@ -1704,7 +1704,7 @@ def restore_temp_val(profile):
                         profile.histories = profile.histories.reset_index(drop=True)
 
     # are there any TEMP values that are still == 99.99?
-    if (df['TEMP'] == 99.99).any():
+    if (df['TEMP'] > 90).any():
         # see if any of the histories have a valid TEMP value for these depths
         idx_temp = df['TEMP'] == 99.99
         depths = df.loc[idx_temp, 'DEPTH']
