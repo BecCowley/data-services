@@ -590,7 +590,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
                 idepth = np.where(dep < 4.0)[0]
                 if len(idepth) > 0:
                     # if there are depths less than 4m, then replace the values after the last depth less than 4m
-                    prof[idepth[-1]+1:] = np.where(abs(prof[idepth[-1]+1:]) == 99.99, np.nan, prof[idepth[-1]+1:])
+                    prof[idepth[-1]+1:] = np.where(np.isclose(abs(prof[idepth[-1]+1:]), 99.99,rtol=0.01), np.nan, prof[idepth[-1]+1:])
                 prof = np.ma.masked_invalid(prof)
             # resize the arrays to eliminate empty values
             prof = np.ma.masked_array(prof.compressed())
@@ -1570,7 +1570,7 @@ def restore_temp_val(profile):
     depths = profile.histories['HISTORY_START_DEPTH'][idx].values.astype('float32')
     temps = profile.histories['HISTORY_PREVIOUS_VALUE'][idx].values.astype('float32')
     # get the depths where the TEMP values are greater than 90 and the depth is less than 4
-    missing_depths = df.loc[(df['TEMP'] == 99.99) & (df['DEPTH'] < 4), 'DEPTH'].values.astype('float32')
+    missing_depths = df.loc[(np.isclose(df['TEMP'], 99.99,rtol=0.01)) & (df['DEPTH'] < 4), 'DEPTH'].values.astype('float32')
 
     # check if the temperature values are missing & replace with previous value if they are:
     # do for both TEMP and TEMP_RAW
@@ -1631,11 +1631,11 @@ def restore_temp_val(profile):
                     return profile
 
         # update the TEMP values with the TEMP_RAW values if they do not contain values == 99.99
-        if not (df['TEMP_RAW'][ind] == 99.99).any():
+        if not (np.isclose(df['TEMP_RAW'][ind], 99.99, rtol=0.01)).any():
             df.loc[ind, 'TEMP'] = df.loc[ind, 'TEMP_RAW']
         # update the TEMP_RAW values with the HISTORY_PREVIOUS_VALUE values if the TEMP_RAW values have values > 99 and the
         # HISTORY_PREVIOUS_VALUE values do not
-        elif not (temps == 99.99).any() and (df['TEMP_RAW'][ind] == 99.99).any():
+        elif not (np.isclose(temps, 99.99,rtol=0.01)).any() and (np.isclose(df['TEMP_RAW'][ind], 99.99,rtol=0.01)).any():
             LOGGER.info('Restoring TEMP and TEMP_RAW missing data from histories %s' % profile.Input_filename)
             df.loc[ind, 'TEMP_RAW'] = temps
             df.loc[ind, 'TEMP'] = temps
@@ -1670,11 +1670,11 @@ def restore_temp_val(profile):
                     LOGGER.info('Restoring 99.99 values for SPA, IPA or HFA flags and changing flag to CSR. %s'
                                 % profile.Input_filename)
                     # update the TEMP values with the TEMP_RAW values if they do not contain values == 99.99
-                    if not (df['TEMP_RAW'][ind2] == 99.99).any():
+                    if not (np.isclose(df['TEMP_RAW'][ind2], 99.99, rtol=0.01)).any():
                         df.loc[ind2, 'TEMP'] = df.loc[ind2, 'TEMP_RAW']
                     # update the TEMP_RAW values with the HISTORY_PREVIOUS_VALUE values if the TEMP_RAW values have values == 99.99 and the
                     # HISTORY_PREVIOUS_VALUE values do not
-                    elif not (temps == 99.99).any() and (df['TEMP_RAW'][ind2] == 99.99).any():
+                    elif not (np.isclose(temps, 99.99, rtol=0.01)).any() and (np.isclose(df['TEMP_RAW'][ind2], 99.99, rtol=0.01)).any():
                         df.loc[ind2, 'TEMP_RAW'] = temps
                         df.loc[ind2, 'TEMP'] = temps
                     else:
@@ -1707,7 +1707,7 @@ def restore_temp_val(profile):
     # are there any TEMP values that are still == 99.99?
     if (df['TEMP'] > 90).any():
         # see if any of the histories have a valid TEMP value for these depths
-        idx_temp = df['TEMP'] == 99.99
+        idx_temp = np.isclose(df['TEMP'], 99.99, rtol=0.01)
         depths = df.loc[idx_temp, 'DEPTH']
         # find each depth in the histories where the HISTORY_START_DEPTH matches the depths
         # and the HISTORY_PARAMETER is TEMP and the HISTORY_PREVIOUS_VALUE is not 99.
@@ -1723,7 +1723,7 @@ def restore_temp_val(profile):
                 # update the TEMP value in the profile data
                 df.loc[idx_temp & (df['DEPTH'] == depth), 'TEMP'] = float(previous_value)
                 # update the TEMP_RAW value in the profile data
-                if (df['TEMP_RAW'][idx_temp] == 99.99).any():
+                if (np.isclose(df['TEMP_RAW'][idx_temp], 99.99, rtol=0.01)).any():
                     df.loc[idx_temp & (df['DEPTH'] == depth), 'TEMP_RAW'] = float(previous_value)
                 LOGGER.info('Restoring TEMP values for depths where TEMP == 99.99. %s' % profile.Input_filename)
 
