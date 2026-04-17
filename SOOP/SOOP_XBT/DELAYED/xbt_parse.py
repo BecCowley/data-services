@@ -582,9 +582,10 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
             # special case where values == 99.99 or a similar value are invalid where depth is > 4m
             if 'TEMP' in var and (abs(prof) > 90).any():
                 # first change any values that might be 99.99 or 99999 or -99.99 or -99999  or similar to 99.99
-                # identify variations on 99.99 by converting to string and matching the pattern
-                pattern = re.compile(r'^[+-]?9{2,5}(\.9{2})?$')
-                prof = np.where(np.vectorize(lambda x: bool(pattern.match(x)))(prof.astype(str)), 99.99, prof)
+                # do this by using (abs(prof) > 90)
+                ind = np.where(abs(prof) > 90)[0]
+                if len(ind) > 0:
+                    prof[ind] = 99.99
                 # replace values == 99.99 with NaN where they occur after 4 m depth
                 idepth = np.where(dep < 4.0)[0]
                 if len(idepth) > 0:
