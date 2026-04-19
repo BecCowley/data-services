@@ -604,9 +604,8 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
                     resized_prof[:len(prof)] = prof
                     prof = resized_prof
                 else:
-                    # prof is bigger than the number of depths, so resize the profile_qc.data dataframe by adding new rows
-                    profile_qc.data = profile_qc.data.reindex(range(len(prof)))
-                    ndeps = len(prof)
+                    # prof is bigger than the number of depths, but not creating new depths, so resize prof to the number of depths
+                    prof = prof[:ndeps]
 
             # if the size of the variable isn't equal to the number of depths, exit
             if (len(prof) != ndeps):
