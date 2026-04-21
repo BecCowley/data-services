@@ -587,10 +587,10 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
                 if len(ind) > 0:
                     prof[ind] = 99.99
                 # replace values == 99.99 with NaN where they occur after 4 m depth
-                idepth = np.where(dep < 4.0)[0]
-                if len(idepth) > 0:
-                    # if there are depths less than 4m, then replace the values after the last depth less than 4m
-                    prof[idepth[-1]+1:] = np.where(np.isclose(abs(prof[idepth[-1]+1:]), 99.99,rtol=0.01), np.nan, prof[idepth[-1]+1:])
+                # idepth = np.where(dep < 4.0)[0]
+                # if len(idepth) > 0:
+                #     # if there are depths less than 4m, then replace the values after the last depth less than 4m
+                #     prof[idepth[-1]+1:] = np.where(np.isclose(abs(prof[idepth[-1]+1:]), 99.99,rtol=0.01), np.nan, prof[idepth[-1]+1:])
                 prof = np.ma.masked_invalid(prof)
             # resize the arrays to eliminate empty values
             prof = np.ma.masked_array(prof.compressed())
