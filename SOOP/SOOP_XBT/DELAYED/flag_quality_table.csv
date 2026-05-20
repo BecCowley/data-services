@@ -13,7 +13,7 @@ temperature_offset,0,"TO, TD, SA, SO",TO,TOA,,,down,,256,,,,,2,1,TEMP
 temperature_eddy_or_front,0,,EF,EFA,0,,down,,512,,,,,1,1,TEMP
 temperature_steps_or_structure_confirmed,0,FS,ST,STA,0,,down,,1024,,,,,1,1,TEMP
 temperature_steps_or_structure_unconfirmed,0,,PS,PSA,0,,down,,2048,,,,,2,1,TEMP
-depth_offset,0,"DO, PL",DO,DOA,0,,down,,4096,,,,,5,1,TEMP
+depth_offset,0,"DO, PL",DO,DOA,,,down,,4096,,,,,5,1,TEMP
 constant_temperature,0,,CT,CTA,,,down,,8192,,,,,2,1,TEMP
 time_error_corrected,0,,TE,TEA,0,,down,,16384,5,,,,2,1,TIME
 latitude_error_corrected,0,PE,LA,LAA,0,,down,,32768,,5,,,2,1,LATITUDE
@@ -42,7 +42,7 @@ depth_corrected_multiplied_by_10,1,,DE,DEA,0,,down,,34359738368,,,,,2,2,TEMP
 depth_corrected_update_fall_rate_equation,1,,DP,DPA,0,,down,,68719476736,,,,,2,2,TEMP
 bathy_data_low_resolution,1,,BD,BDA,0,,down,,1.37E+11,,,,,2,1,TEMP
 surface_transient,0,,CS,CSR,3.6,,up,1,,,,,,3,1,TEMP
-wire_break,0,,WB,WBR,,,down,2,,,,,,4,1,TEMP
+wire_break,0,,WB,WBR,,,auto,2,,,,,,4,1,TEMP
 wire_stretch,0,,WS,WSR,,,down,4,,,,,,3,1,TEMP
 hit_bottom,0,,HB,HBR,,,down,8,,,,,,3,4,TEMP
 leakage,0,,LE,LER,,,down,16,,,,,,3,1,TEMP
