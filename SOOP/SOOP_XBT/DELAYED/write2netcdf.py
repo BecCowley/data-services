@@ -394,6 +394,7 @@ if __name__ == '__main__':
             # add some paths to the output_folder based on the 'SOOP_line_label' and year of the profile time
             line_label = profile['SOOP_line_label'][0]
             year = profile['TIME'][0].year
+            # output folder is output_folder/line_label/year
             output_folder_line_year = os.path.join(output_folder, line_label, str(year))
             if not os.path.exists(output_folder_line_year):
                 os.makedirs(output_folder_line_year)
