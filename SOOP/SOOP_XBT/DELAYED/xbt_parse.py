@@ -5,10 +5,12 @@ import sys
 import tempfile
 from netCDF4 import Dataset
 import difflib
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
 
-from imos_logging import IMOSLogging
-from ship_callsign import ship_callsign_list
-from xbt_line_vocab import xbt_line_info
+from lib.python.imos_logging import IMOSLogging
+from lib.python.ship_callsign import ship_callsign_list
+from lib.python.xbt_line_vocab import xbt_line_info
 import json
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -32,7 +34,7 @@ class XbtProfile(object):
 
         Example:
             fid = open("CSIROXBT2019/88/89/34/15ed.nc")
-            profile = xbt_profile(fid) # Reads the profile and metadata.
+            profile = XbtProfile(fid) # Reads the profile and metadata.
             profile.latitude()  # Return the latitude of the profile.
             profile.z()         # Return the depths of the observations.
             fid.close()
@@ -278,14 +280,17 @@ def parse_extra_vars(profile_qc, profile_noqc):
     vars_list = read_variables_config()
     # separate the dataframe into surface codes and other variables
     # where surface codes are in the mquest column and have either 4 character codes or a ';' separator
-    srfc_code_list = vars_list[(vars_list['Mquest'].str.contains(';')) | (vars_list['Mquest'].str.len() == 4)]
+    mquest_has_sep = vars_list['Mquest'].astype('string').str.contains(';', na=False)
+    mquest_len_4 = vars_list['Mquest'].astype('string').str.len().eq(4)
+    srfc_code_list = vars_list[mquest_has_sep | mquest_len_4].copy()
     # where the mquest column contains ';' separate the codes into a list
-    srfc_code_list.loc[:, 'Mquest'] = srfc_code_list['Mquest'].str.split(';')
+    # use assign to avoid dtype-assignment issues on older pandas versions
+    srfc_code_list = srfc_code_list.assign(Mquest=srfc_code_list['Mquest'].astype(str).str.split(';'))
     # now explode the mquest column to have one row per code
     srfc_code_list = srfc_code_list.explode('Mquest').reset_index(drop=True)
 
     # other variables are the ones remaining
-    vars_list = vars_list[~(vars_list['Mquest'].str.contains(';')) & ~(vars_list['Mquest'].str.len() == 4)]
+    vars_list = vars_list[~mquest_has_sep & ~mquest_len_4]
 
     # transfer the non-surface code variables to the dataf dataframe
     ext = ['','_RAW']

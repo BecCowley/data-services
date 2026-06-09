@@ -10,13 +10,13 @@ How to use:
 
 author : Besnard, Laurent
 """
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
 
-from platform_code_vocab import platform_altlabels_per_preflabel
+from lib.python.platform_code_vocab import platform_altlabels_per_preflabel
 
-try:
-    from functools import lru_cache
-except ImportError:
-    from functools32 import lru_cache
+from functools import lru_cache
 
 
 @lru_cache(maxsize=32)

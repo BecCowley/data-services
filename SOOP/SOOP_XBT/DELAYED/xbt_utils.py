@@ -14,18 +14,14 @@ def _error(message):
     raise XbtException('{message}'.format(message=message))
 
 
-def make_transect_id(soop_line, date_like, existing_ids):
+def make_transect_id(soop_line, date_like):
     """
     Return a unique transect id like: soop_line-YYYYMM-I
     where I starts at 1 and increments until the id is not in existing_ids.
     """
     yyyymm = pd.to_datetime(date_like).strftime('%Y%m')
-    i = 1
-    while True:
-        candidate = f"{soop_line}-{yyyymm}-{i}"
-        if candidate not in existing_ids:
-            return candidate
-        i += 1
+    candidate = f"{soop_line}-{yyyymm}-{1}"
+    return candidate
 
 
 def read_globals_config(file_path):
@@ -33,7 +29,7 @@ def read_globals_config(file_path):
     read the global attributes from the xbt_config file
     """
     # Read the CSV file into a dictionary
-    df = pd.read_csv(os.path.join(os.path.dirname(__file__), file_path))
+    df = pd.read_csv(file_path)
     # fill any empty cells and strings with NaN
     df = df.fillna(value=pd.NA)
     df = df.replace(r'^\s*$', pd.NA, regex=True)
@@ -315,13 +311,12 @@ def add_uncertainties(df):
         # probe type not defined above, not in the code table 1770
         tunc = [0]
         dunc = [0]
-    # temp uncertainties
-    temp_uncertainty = np.ma.empty_like(df['TEMP'])
-    temp_uncertainty[:] = tunc
-    # depth uncertainties:
-    unc = np.ma.MaskedArray(df['DEPTH'] * dunc[0], mask=False)
+    # Use writable numpy arrays to avoid read-only assignment issues with masked/pandas views.
+    depth_vals = df['DEPTH'].to_numpy(dtype='float64', copy=True)
+    temp_uncertainty = np.full(depth_vals.shape, tunc[0], dtype='float64')
+    unc = depth_vals * dunc[0]
     if len(dunc) > 1:
-        unc[df['DEPTH'] <= 230] = dunc[1]
+        unc[depth_vals <= 230] = dunc[1]
     df['DEPTH_uncertainty'] = np.round(unc, 2)
     df['TEMP_uncertainty'] = np.round(temp_uncertainty, 2)
 

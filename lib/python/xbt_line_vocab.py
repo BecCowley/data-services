@@ -13,7 +13,7 @@ author : Besnard, Laurent
 
 import ssl
 import os
-from platform_code_vocab import is_url_accessible, _fetch_xml_root
+from lib.python.platform_code_vocab import is_url_accessible, _fetch_xml_root
 import xml.etree.ElementTree as ET
 
 def xbt_line_info():

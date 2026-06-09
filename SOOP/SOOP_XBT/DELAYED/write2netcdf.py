@@ -355,15 +355,36 @@ if __name__ == '__main__':
         # put a fix in here for already made parquet files where we have changed the column name from PROBE_manufacture_date to PROBE_manufacture_date_YYYY-MM-DD
         if 'PROBE_manufacture_date' in profiles.columns:
             profiles = profiles.rename(columns={'PROBE_manufacture_date': 'PROBE_manufacture_date_YYYY-MM-DD'})
+        # sort the dataframes by line label and TIME
+        profiles = profiles.sort_values(by=['SOOP_line_label', 'TIME', 'DEPTH']).reset_index(drop=True)
+        # get the station_number order from profiles and apply it to histories so that they are in the same order
+        station_number_order = profiles['station_number'].unique()
+        histories['station_number'] = pd.Categorical(histories['station_number'], categories=station_number_order, ordered=True)
+        histories = histories.sort_values('station_number').reset_index(drop=True)
         # make an empty transect_id column in the profiles dataframe
         profiles['transect_id'] = None
         # create a transect_id column in the profiles dataframe by concatenating the SOOP_line_label and the year of the TIME column
         for soop_line_label in profiles['SOOP_line_label'].unique():
-            # get existing ids
-            existing_ids = profiles.loc[profiles['SOOP_line_label'] == soop_line_label, 'transect_id'].dropna().unique()
-            # group the profiles for this soop_line_label by Cruise_ID and using the first TIME value in each group, create a transect_id.
-            profiles.loc[profiles['SOOP_line_label'] == soop_line_label, 'transect_id'] = profiles[profiles['SOOP_line_label'] == soop_line_label].groupby('Cruise_ID')['TIME'].transform(lambda x: make_transect_id(soop_line_label, x.iloc[0], existing_ids))
-
+            # first group by Cruise_ID
+            for cruise_id in profiles[profiles['SOOP_line_label'] == soop_line_label]['Cruise_ID'].unique():
+                # get the yyyy and mm from the TIME column for the first profile with this SOOP_line_label and Cruise_ID
+                time_value = profiles[(profiles['SOOP_line_label'] == soop_line_label) & (profiles['Cruise_ID'] == cruise_id)]['TIME'].values[0]
+                transect_id = make_transect_id(soop_line_label, time_value)
+                # if the transect_id already exists in the dataframe, append a number to the end of the transect_id to make it unique
+                if transect_id in profiles['transect_id'].values:
+                    # get the number at the end of the transect_id and increment it until we find a unique transect_id
+                    count = splitstr = transect_id.split('-')[-1]
+                    transect_id_base = '-'.join(transect_id.split('-')[:-1])
+                    if count.isdigit():
+                        count = int(count) + 1
+                    else:
+                        count = 1
+                    new_transect_id = transect_id_base + '-' + str(count)
+                    while new_transect_id in profiles['transect_id'].values:
+                        count += 1
+                        new_transect_id = transect_id_base + '-' + str(count)
+                    transect_id = new_transect_id
+                profiles.loc[(profiles['SOOP_line_label'] == soop_line_label) & (profiles['Cruise_ID'] == cruise_id), 'transect_id'] = transect_id
         # there are multiple profiles in the profiles dataframe, loop through unique station numbers
         for station in profiles['station_number'].unique():
             # get the profile and history data for this station
@@ -373,7 +394,7 @@ if __name__ == '__main__':
             # add some paths to the output_folder based on the 'SOOP_line_label' and year of the profile time
             line_label = profile['SOOP_line_label'][0]
             year = profile['TIME'][0].year
-            output_folder_line_year = os.path.join(output_folder, line_label, str(year), 'processed', 'netcdf')
+            output_folder_line_year = os.path.join(output_folder, line_label, str(year))
             if not os.path.exists(output_folder_line_year):
                 os.makedirs(output_folder_line_year)
 
