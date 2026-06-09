@@ -2,6 +2,7 @@
 import argparse
 import glob
 import os
+from collections import defaultdict
 from datetime import datetime
 from time import strftime, gmtime
 
@@ -336,6 +337,9 @@ if __name__ == '__main__':
     # and the history parquet files
     parquet_history = glob.glob(os.path.join(input_folder, "*histories.parquet"))
 
+    # Track successful profile exports per SOOP line label.
+    successful_exports_by_line = defaultdict(int)
+
     # write the output netcdf files
     for data_file in parquet_data:
         print("Processing file %s" % data_file)
@@ -401,3 +405,11 @@ if __name__ == '__main__':
 
             # write the profile to the netcdf file
             write_output_nc(output_folder_line_year, profile, profile_histories, globals_input_file,profile_raw=False, historic_flags=True)
+            successful_exports_by_line[line_label] += 1
+
+    print("\nSuccessful profile exports by SOOP line:")
+    if successful_exports_by_line:
+        for line_label in sorted(successful_exports_by_line):
+            print(f"{line_label}: {successful_exports_by_line[line_label]}")
+    else:
+        print("No profiles were exported.")
