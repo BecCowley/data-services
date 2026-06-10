@@ -223,6 +223,11 @@ def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGl
                     # fix history date time field
                     count = 0
                     for ii in history[v]:
+                        # if ii is NaN or None, replace with the fill value
+                        if pd.isna(ii):
+                            output_netcdf_obj[v][count] = output_netcdf_obj[v]._FillValue
+                            count += 1
+                            continue
                         history_date_obj = date2num(datetime.strptime(str(ii), '%Y-%m-%d %H:%M:%S'),
                                                     output_netcdf_obj['HISTORY_DATE'].units,
                                                     output_netcdf_obj['HISTORY_DATE'].calendar)
