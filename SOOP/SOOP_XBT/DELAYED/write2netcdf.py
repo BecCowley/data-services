@@ -270,7 +270,7 @@ def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGl
                     else:
                         # if the profile[att_name] is a timestamp, convert it to a string
                         if pd.api.types.is_datetime64_any_dtype(profile[att_name]):
-                            att_value = pd.to_datetime(profile[att_name].values[0]).strftime("%Y-%m-%d")
+                            att_value = pd.to_datetime(profile[att_name].values[0]).strftime("%Y%m%d")
                         else:
                             att_value = profile[att_name].values[0]
                         # set the attribute on the variable
@@ -361,9 +361,9 @@ if __name__ == '__main__':
         # if the profiles['Institution'] is "Australia Bureau of Meteorology (BoM)", replace the globals_input_file path with the globals_input_file path with "_bom.csv" appended to the file name to use the version of the global attributes file which is more appropriate for BoM data
         if profiles['Institution'].iloc[0] == "Australia Bureau of Meteorology (BoM)":
             globals_input_file = globals_input_file.replace(".csv", "_BOM.csv")
-        # put a fix in here for already made parquet files where we have changed the column name from PROBE_manufacture_date to PROBE_manufacture_date_YYYY-MM-DD
+        # put a fix in here for already made parquet files where we have changed the column name from PROBE_manufacture_date to PROBE_manufacture_date_YYYYMMDD
         if 'PROBE_manufacture_date' in profiles.columns:
-            profiles = profiles.rename(columns={'PROBE_manufacture_date': 'PROBE_manufacture_date_YYYY-MM-DD'})
+            profiles = profiles.rename(columns={'PROBE_manufacture_date': 'PROBE_manufacture_date_YYYYMMDD'})
         # sort the dataframes by line label and TIME
         profiles = profiles.sort_values(by=['SOOP_line_label', 'TIME', 'DEPTH']).reset_index(drop=True)
         # get the station_number order from profiles and apply it to histories so that they are in the same order
