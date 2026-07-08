@@ -486,11 +486,11 @@ def parse_extra_vars(profile_qc, profile_noqc):
     dataf['Input_filename'] = re.split(r'ed\.nc|raw\.nc', profile_qc.Input_filename)[0]
 
     # convert the 'PROBE_manufacture_date' to a timestamp
-    if 'PROBE_manufacture_date_YYYY-MM-DD' in dataf.columns:
-        date1 = convert_time_string(dataf['PROBE_manufacture_date_YYYY-MM-DD'], '%Y%m%d')
-        date2 = convert_time_string(dataf['PROBE_manufacture_date_YYYY-MM-DD'], '%m%d%Y')
+    if 'PROBE_manufacture_date_YYYYMMDD' in dataf.columns:
+        date1 = convert_time_string(dataf['PROBE_manufacture_date_YYYYMMDD'], '%Y%m%d')
+        date2 = convert_time_string(dataf['PROBE_manufacture_date_YYYYMMDD'], '%m%d%Y')
         # if date1 is not NaT, assign it to the column, otherwise assign date2
-        dataf['PROBE_manufacture_date_YYYY-MM-DD'] = date1 if not date1.isna().all() else date2
+        dataf['PROBE_manufacture_date_YYYYMMDD'] = date1 if not date1.isna().all() else date2
 
     # if the 'Institution_unique_identifier' is nan, assign the 'station_number' to it
     if dataf['Institution_unique_identifier'].isna().all():

@@ -364,6 +364,8 @@ if __name__ == '__main__':
         # put a fix in here for already made parquet files where we have changed the column name from PROBE_manufacture_date to PROBE_manufacture_date_YYYYMMDD
         if 'PROBE_manufacture_date' in profiles.columns:
             profiles = profiles.rename(columns={'PROBE_manufacture_date': 'PROBE_manufacture_date_YYYYMMDD'})
+        if 'PROBE_manufacture_date_YYYY-MM-DD' in profiles.columns:
+            profiles = profiles.rename(columns={'PROBE_manufacture_date_YYYY-MM-DD': 'PROBE_manufacture_date_YYYYMMDD'})
         # sort the dataframes by line label and TIME
         profiles = profiles.sort_values(by=['SOOP_line_label', 'TIME', 'DEPTH']).reset_index(drop=True)
         # get the station_number order from profiles and apply it to histories so that they are in the same order
