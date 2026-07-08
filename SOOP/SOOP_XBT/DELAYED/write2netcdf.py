@@ -196,7 +196,7 @@ def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGl
 
                     # for variables that are dimensioned by DEPTH, output the full array
                     if 'DEPTH' in var_dims:
-                        if v != 'DEPTH':
+                        if v not in ['DEPTH','DEPTH_RAW']:
                             # fill any NaN values with the fill value for this variable
                             data = profile[v].fillna(output_netcdf_obj[v]._FillValue)
                         else:
