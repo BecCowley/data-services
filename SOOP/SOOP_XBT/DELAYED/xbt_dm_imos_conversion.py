@@ -530,10 +530,10 @@ def generate_xbt_gatts_nc(gatts, data, annex, output_folder):
     #AW changes - we want to organise output by folders named by cruiseid
     #e.g. <CRUISEID>/<CRUISEID>_<Date_time>-<uniqueid>.nc
     #Make a folder with name from gatts['XBT_cruise_ID'] if it does not exist and make that the output_folder
-    cid=gatts['XBT_cruise_ID']
-    outpath="%s%s" % (output_folder,cid)
+    # cid=gatts['XBT_cruise_ID']
+    # outpath="%s%s" % (output_folder,cid)
     #TODO: FOR BOM export - put all files in one folder. Switch based on agency, currently hand-commenting in/out
-    #outpath = output_folder
+    outpath = output_folder
     #print("outpath",outpath)
     
     if os.path.isdir(outpath):
