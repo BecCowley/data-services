@@ -400,8 +400,8 @@
 	<skos:hasTopConcept rdf:resource="http://vocab.aodn.org.au/def/xbtline/entity/99"/>
 	<skos:hasTopConcept rdf:resource="http://vocab.aodn.org.au/def/xbtline/entity/136"/>
 	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.963Z</dcterms:modified>
-	<dcterms:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2025-08-26</dcterms:issued>
-	<owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Version 1.1</owl:versionInfo>
+	<dcterms:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2026-07-17</dcterms:issued>
+	<owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Version 1.3</owl:versionInfo>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://purl.org/dc/terms/created">
@@ -422,10 +422,11 @@
 	<skos:altLabel xml:lang="en">Greenland - Iceland - Ireland</skos:altLabel>
 	<skos:altLabel xml:lang="en">Greenland - Iceland - Scotland</skos:altLabel>
 	<skos:definition xml:lang="en"></skos:definition>
+	<skos:definition xml:lang="en">Routes: Greenland - Iceland - Denmark; Greenland - Iceland - Ireland; Greenland - Iceland - Scotland.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX01</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.398Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:40:38.817Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/10">
@@ -438,10 +439,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">New York - Caracas</skos:altLabel>
 	<skos:altLabel xml:lang="en">New York - Trinidad</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: New York - Caracas; New York - Trinidad.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX10</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.445Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:37:46.598Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/100">
@@ -453,10 +455,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Tahiti - Auckland</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX28</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.494Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:08:52.025Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/101">
@@ -468,10 +471,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Tahiti - Valparaiso</skos:altLabel>
+	<skos:definition xml:lang="en">Route:Tahiti - Valparaiso.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX29</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.545Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:12:04.372Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/102">
@@ -485,11 +489,12 @@
 	<skos:altLabel xml:lang="en">Brisbane - Noumea - Fiji</skos:altLabel>
 	<skos:altLabel xml:lang="en">Brisbane - Noumea - Lautoka</skos:altLabel>
 	<skos:altLabel xml:lang="en">Brisbane - Noumea - Suva</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX30</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<code xmlns="http://imos.org.au/def/xbt/" xml:lang="en">PX30-31</code>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.594Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:13:40.998Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/103">
@@ -503,10 +508,11 @@
 	<skos:altLabel xml:lang="en">Fiji - California</skos:altLabel>
 	<skos:altLabel xml:lang="en">Noumea - Fiji</skos:altLabel>
 	<skos:altLabel xml:lang="en">Noumea - Fiji - California</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX31</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.640Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:14:22.687Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/104">
@@ -518,10 +524,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Sydney - Auckland</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX32</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.688Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:14:44.894Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/105">
@@ -533,10 +540,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hobart - Macquarie Island</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Hobart - Macquarie Island.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX33</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.736Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:20:01.153Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/106">
@@ -548,11 +556,12 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Sydney - Wellington</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX34</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<georssline xmlns="http://www.georss.org/" rdf:datatype="http://www.w3.org/2001/XMLSchema#string">151.3483 -33.84711 172.84103 -40.25969</georssline>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.782Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:15:05.331Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/107">
@@ -564,10 +573,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Melbourne - Dunedin</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX35</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.824Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:15:27.984Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/108">
@@ -579,10 +589,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Christchurch - McMurdo</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Christchurch - McMurdo.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX36</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.866Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:20:39.760Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/109">
@@ -595,10 +606,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hawaii - California</skos:altLabel>
 	<skos:altLabel xml:lang="en">Hawaii - San Francisco</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Hawaii - California; Hawaii - San Francisco.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX37</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.908Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:21:01.971Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/11">
@@ -610,10 +622,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Europe - Brazil</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Europe - Brazil.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX11</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:20.950Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:38:02.629Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/110">
@@ -626,10 +639,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hawaii - California</skos:altLabel>
 	<skos:altLabel xml:lang="en">Hawaii - Long Beach</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Hawaii - California. Hawaii - Long Beach.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX37-South</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.001Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:21:22.891Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/111">
@@ -643,10 +657,11 @@
 	<skos:altLabel xml:lang="en">Hawaii - Alaska</skos:altLabel>
 	<skos:altLabel xml:lang="en">Hawaii - Kodiak</skos:altLabel>
 	<skos:altLabel xml:lang="en">Hawaii - Valdez</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Hawaii - Alaska; Hawaii - Kodiak; Hawaii - Valdez.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX38</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.044Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:21:56.482Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/112">
@@ -659,10 +674,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hawaii - Seattle</skos:altLabel>
 	<skos:altLabel xml:lang="en">Hawaii - Vancouver</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX39</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.089Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:16:15.645Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/113">
@@ -675,10 +691,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hawaii - Yokohama</skos:altLabel>
 	<skos:altLabel xml:lang="en">Japan - Hawaii</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Hawaii - Yokohama; Japan - Hawaii.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX40</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.135Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:22:41.115Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/114">
@@ -691,10 +708,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hawaii - Hong Kong</skos:altLabel>
 	<skos:altLabel xml:lang="en">Hawaii - Taiwan</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Hawaii - Hong Kong; Hawaii - Taiwan.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX41</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.178Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:23:01.971Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/115">
@@ -707,10 +725,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hawaii - New Guinea</skos:altLabel>
 	<skos:altLabel xml:lang="en">Hawaii - Solomon Islands</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Hawaii - New Guinea; Hawaii - Solomon Islands.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX42</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.219Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:23:22.353Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/116">
@@ -722,10 +741,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hawaii - Marshall Islands - Guam</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Hawaii - Marshall Islands - Guam.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX43</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.263Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:23:36.571Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/117">
@@ -738,10 +758,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hong Kong - Guam</skos:altLabel>
 	<skos:altLabel xml:lang="en">Taiwan - Guam</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Hong Kong - Guam; Taiwan - Guam.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX44</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.305Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:24:00.360Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/118">
@@ -754,10 +775,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">(3N,137E) - (34N,137E)</skos:altLabel>
 	<skos:altLabel xml:lang="en">137th meridian east from 3N to 34N</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: (3N,137E) - (34N,137E); 137th meridian east from 3N to 34N.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX45</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.350Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:24:37.995Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/119">
@@ -770,10 +792,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">(3S,165E) - (50N,1165E)</skos:altLabel>
 	<skos:altLabel xml:lang="en">165th meridian east from 3S to 50N</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: (3S,165E) - (50N,1165E); 165th meridian east from 3S to 50N.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX46</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.394Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:25:26.431Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/12">
@@ -785,10 +808,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Europe - Antarctica</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Europe - Antarctica.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX12</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.435Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:38:18.552Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/120">
@@ -800,10 +824,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Alaska - California</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Alaska - California.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX47</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.474Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:25:49.316Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/121">
@@ -816,10 +841,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Japan - Singapore</skos:altLabel>
 	<skos:altLabel xml:lang="en">Taiwan - Singapore</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Japan - Singapore; Taiwan - Singapore.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX49</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.523Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:26:11.247Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/122">
@@ -831,10 +857,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Valparaiso - Auckland</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Valparaiso - Auckland.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX50</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.561Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:26:22.496Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/123">
@@ -846,10 +873,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hong Kong - Auckland</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Hong Kong - Auckland.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX51</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.598Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:26:34.130Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/124">
@@ -861,10 +889,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Japan - Fiji</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Japan - Fiji.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX52</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.634Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:26:47.223Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/125">
@@ -877,10 +906,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Mindanao - Fiji</skos:altLabel>
 	<skos:altLabel xml:lang="en">Taiwan - Fiji</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Mindanao - Fiji; Taiwan - Fiji.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX53</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.673Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:27:07.360Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/126">
@@ -892,10 +922,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Melbourne - Wellington</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX55</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.711Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:16:43.902Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/127">
@@ -907,10 +938,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Brisbane - Dunedin</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Brisbane - Dunedin.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX56</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.749Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:27:31.843Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/128">
@@ -922,10 +954,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Brisbane - Wellington</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX57</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.787Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:17:04.736Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/129">
@@ -937,10 +970,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Costa Rica coast</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Costa Rica coast.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX76</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.827Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:27:57.707Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/13">
@@ -953,10 +987,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Brazil - Liberia</skos:altLabel>
 	<skos:altLabel xml:lang="en">Rio de Janeiro - Monrovia</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Brazil - Liberia; Rio de Janeiro - Monrovia.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX13</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.864Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:38:49.301Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/130">
@@ -968,10 +1003,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Peru coastal</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Peru coastal.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX77</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.902Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:28:08.873Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/131">
@@ -983,10 +1019,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Valparaiso - 80W</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Valparaiso - 80W.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX79</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.939Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:28:19.121Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/132">
@@ -998,10 +1035,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Tahiti - Cape Horn</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Tahiti - Cape Horn.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX80</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:21.974Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:28:31.829Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/133">
@@ -1014,10 +1052,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hawaii - Chile</skos:altLabel>
 	<skos:altLabel xml:lang="en">Honolulu - Coronel</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Hawaii - Chile; Honolulu - Coronel.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX81</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.012Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:28:58.082Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/134">
@@ -1029,10 +1068,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Melbourne - Fiji</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Melbourne - Fiji.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX82</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.049Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:29:11.489Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/135">
@@ -1044,10 +1084,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Melbourne - Auckland</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Melbourne - Auckland.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX83</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.086Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:29:23.792Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/14">
@@ -1060,10 +1101,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Brazil - Nigeria</skos:altLabel>
 	<skos:altLabel xml:lang="en">Rio de Janeiro - Lagos</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Brazil - Nigeria; Rio de Janeiro - Lagos.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX14</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.122Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:39:14.224Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/15">
@@ -1075,10 +1117,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Europe - Cape of Good Hope</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Europe - Cape of Good Hope.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX15</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.159Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:39:30.685Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/16">
@@ -1091,10 +1134,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Brazil - Namibia</skos:altLabel>
 	<skos:altLabel xml:lang="en">Rio de Janeiro - Walvis Bay</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Brazil - Namibia; Rio de Janeiro - Walvis Bay.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX16</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.196Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:39:59.585Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/17">
@@ -1106,10 +1150,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Rio de Janeiro - Cape of Good Hope</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Rio de Janeiro - Cape of Good Hope.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX17</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.239Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:40:18.597Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/18">
@@ -1121,10 +1166,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Buenos Aires - Cape of Good Hope</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Buenos Aires - Cape of Good Hope.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX18</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.278Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:40:39.573Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/19">
@@ -1136,10 +1182,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Cape Horn - Cape of Good Hope</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Cape Horn - Cape of Good Hope.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX19</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.316Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:40:57.523Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/2">
@@ -1151,10 +1198,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Newfoundland - Iceland</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Newfoundland - Iceland.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX02</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.351Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:35:09.016Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/20">
@@ -1166,10 +1214,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Europe - French Guyana</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Europe - French Guyana.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX20</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.388Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:41:17.079Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/21">
@@ -1182,10 +1231,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Cape Verde - Belem</skos:altLabel>
 	<skos:altLabel xml:lang="en">Cape Verde - Brazil</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Cape Verde - Belem; Cape Verde - Brazil.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX20b</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.428Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:41:38.962Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/22">
@@ -1198,10 +1248,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Rio de Janeiro - Luanda</skos:altLabel>
 	<skos:altLabel xml:lang="en">Rio de Janeiro - Pointe Noire</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Rio de Janeiro - Luanda; Rio de Janeiro - Pointe Noire.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX21</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.465Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:41:19.969Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/23">
@@ -1213,10 +1264,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Drake Passage</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Drake Passage.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX22</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.504Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:41:43.282Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/24">
@@ -1228,10 +1280,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Gulf of Mexico</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Gulf of Mexico.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX23</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.540Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:41:58.448Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/25">
@@ -1244,10 +1297,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Cape Town - Antarctica</skos:altLabel>
 	<skos:altLabel xml:lang="en">Cape of Good Hope - Antarctica</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Cape of Good Hope - Antarctica; Cape Town - Antarctica.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX25</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.580Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:42:26.549Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/26">
@@ -1259,10 +1313,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Cape of Good Hope - Lagos</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Cape of Good Hope - Lagos.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX26</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.621Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:42:43.392Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/27">
@@ -1274,10 +1329,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Brazil - Cape Horn</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Brazil - Cape Horn.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX27</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.662Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:43:02.585Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/28">
@@ -1289,10 +1345,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">New York - Brazil</skos:altLabel>
+	<skos:definition xml:lang="en">Route: New York - Brazil.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX29</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.704Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:43:19.175Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/29">
@@ -1304,10 +1361,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">New York - Bermuda</skos:altLabel>
+	<skos:definition xml:lang="en">Route: New York - Bermuda.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX32</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.746Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:43:37.196Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/3">
@@ -1319,10 +1377,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Europe - New York</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Europe - New York.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX03</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.786Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:35:25.280Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/30">
@@ -1335,10 +1394,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Boston - Halifax</skos:altLabel>
 	<skos:altLabel xml:lang="en">Boston - Nova Scotia</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Boston - Halifax; Boston - Nova Scotia.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX33</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.826Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:44:05.383Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/31">
@@ -1350,10 +1410,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Gulf of Guinea - Caribbean</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Gulf of Guinea - Caribbean.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX34</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.863Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:44:22.284Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/32">
@@ -1365,10 +1426,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Cape of Good Hope - Recife</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Cape of Good Hope - Recife.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX35</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.898Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:44:38.875Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/33">
@@ -1380,10 +1442,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Cape Horn - Gulf of Guinea</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Cape Horn - Gulf of Guinea.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX36</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.935Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:44:52.867Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/34">
@@ -1395,10 +1458,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Rio de Janeiro - Trindade island</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Rio de Janeiro - Trindade island.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX97</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:22.983Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:45:10.542Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/35">
@@ -1410,10 +1474,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Norwegian Sea</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Norwegian Sea.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX98</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.022Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:45:27.074Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/36">
@@ -1425,11 +1490,12 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Southern Ocean</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Southern Ocean.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX99</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<code xmlns="http://imos.org.au/def/xbt/" xml:lang="en">SO</code>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.058Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:45:41.039Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/37">
@@ -1440,12 +1506,13 @@
 	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/Sebastien-Mancini"/>
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
-	<skos:altLabel xml:lang="en">Fremantle - Sunda Strait</skos:altLabel>
+	<skos:altLabel xml:lang="en">Fremantle - Sunda Straits</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX01</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<code xmlns="http://imos.org.au/def/xbt/" xml:lang="en">IX1</code>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.093Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T05:52:30.393Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/38">
@@ -1457,11 +1524,12 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Cape of Good Hope - Fremantle</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Cape of Good Hope - Fremantle.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX02</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<code xmlns="http://imos.org.au/def/xbt/" xml:lang="en">IX2</code>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.133Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:46:08.732Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/39">
@@ -1474,10 +1542,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Red Sea - La Reunion</skos:altLabel>
 	<skos:altLabel xml:lang="en">Red Sea - Mauritius</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Red Sea - La Reunion; Red Sea - Mauritius.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX03</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.174Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:46:33.845Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/4">
@@ -1490,10 +1559,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">New York - Gibraltar</skos:altLabel>
 	<skos:altLabel xml:lang="en">New York - Lisbon</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: New York - Gibraltar; New York - Lisbon.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX04</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.220Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:35:55.756Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/40">
@@ -1506,10 +1576,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">La Reunion - Malacca Strait</skos:altLabel>
 	<skos:altLabel xml:lang="en">Mauritius - Malacca Strait</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: La Reunion - Malacca Strait; Mauritius - Malacca Strait.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX06</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.265Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:47:02.293Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/41">
@@ -1521,10 +1592,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Cape of Good Hope - Persian Gulf</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Cape of Good Hope - Persian Gulf.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX07</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.310Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:47:18.177Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/42">
@@ -1536,11 +1608,12 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Mauritius - Bombay</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Mauritius - Bombay.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX08</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<code xmlns="http://imos.org.au/def/xbt/" xml:lang="en">IX8</code>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.354Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:47:31.078Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/43">
@@ -1552,11 +1625,12 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Fremantle - Persian Gulf</skos:altLabel>
+	<skos:definition xml:lang="en">Observations sample the Leeuwin Current and monitor ocean current and transports.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX09</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<code xmlns="http://imos.org.au/def/xbt/" xml:lang="en">IX9</code>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.399Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T05:54:04.236Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/44">
@@ -1568,10 +1642,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Sri Lanka - Persian Gulf</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Sri Lanka - Persian Gulf.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX09-North</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.445Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:48:00.164Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/45">
@@ -1584,10 +1659,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Red Sea - Malacca Strait</skos:altLabel>
 	<skos:altLabel xml:lang="en">Red Sea - Singapore</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Red Sea - Malacca Strait; Red Sea - Singapore.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX10</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.486Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:48:22.458Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/46">
@@ -1599,10 +1675,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Calcutta - Java Sea</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Calcutta - Java Sea.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX11</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.528Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:48:36.612Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/47">
@@ -1614,10 +1691,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Fremantle - Red Sea</skos:altLabel>
+	<skos:definition xml:lang="en">Observations sample the Leeuwin Current and monitor ocean current and transports.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX12</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.568Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T05:53:49.690Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/48">
@@ -1629,10 +1707,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Bay of Bengal</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Bay of Bengal.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX14</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.604Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:49:02.610Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/49">
@@ -1644,10 +1723,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Mauritius - Fremantle</skos:altLabel>
+	<skos:definition xml:lang="en">Observations sample the Agulhas current and the western boundary region near Madagascar in conjunction with IX21.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX15</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.642Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T05:54:30.624Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/5">
@@ -1659,10 +1739,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Europe - Panama Canal</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Europe - Panama Canal.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX05</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.678Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:36:10.945Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/50">
@@ -1674,10 +1755,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Mombassa - Singapore</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Mombassa - Singapore.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX16</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.718Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:49:29.364Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/51">
@@ -1689,10 +1771,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Mombassa - Karachi</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Mombassa - Karachi.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX17</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.758Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:49:43.968Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/52">
@@ -1704,10 +1787,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Mombassa - Bombay</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Mombassa - Bombay.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX18</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.802Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:49:58.801Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/53">
@@ -1720,10 +1804,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">La Reunion - Kerguelen</skos:altLabel>
 	<skos:altLabel xml:lang="en">Mauritius - Kerguelen</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: La Reunion - Kerguelen; Mauritius - Kerguelen</skos:definition>
 	<skos:prefLabel xml:lang="en">IX19</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.842Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:50:34.051Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/54">
@@ -1736,10 +1821,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">La Reunion - Amsterdam</skos:altLabel>
 	<skos:altLabel xml:lang="en">Mauritius - Amsterdam</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: La Reunion - Amsterdam; Mauritius - Amsterdam.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX19b</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.879Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T02:50:59.367Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/55">
@@ -1751,10 +1837,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Mauritius - Rodriguez</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Mauritius - Rodriguez.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX20</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.916Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:44:45.563Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/56">
@@ -1767,10 +1854,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Cape of Good Hope - Mauritius</skos:altLabel>
 	<skos:altLabel xml:lang="en">Durban - Mauritius</skos:altLabel>
+	<skos:definition xml:lang="en">Observations sample the Agulhas current and the western boundary region near Madagascar in conjunction with IX15.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX21</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.953Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T05:55:11.232Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/57">
@@ -1783,10 +1871,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Shark Bay - Banda Sea</skos:altLabel>
 	<skos:altLabel xml:lang="en">Shark Bay - Timor Strait</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Shark Bay - Banda Sea; Shark Bay - Timor Strait.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX22</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:23.990Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:48:27.432Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/58">
@@ -1798,11 +1887,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Port Hedland - Japan</skos:altLabel>
-	<skos:altLabel xml:lang="en">Shark Bay - Japan</skos:altLabel>
+	<skos:definition xml:lang="en">Observations collected in a region sparsely monitored by other observing systems and used for ocean current, seasonal cycle and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX22-PX11</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.029Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T05:55:52.135Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/59">
@@ -1814,10 +1903,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hobart - Casey station</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Hobart - Casey station.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX23</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.066Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:49:42.766Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/6">
@@ -1829,10 +1919,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">New York - Abidjan</skos:altLabel>
+	<skos:definition xml:lang="en">Route: New York - Abidjan.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX06</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.105Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:36:25.974Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/60">
@@ -1844,10 +1935,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Mauritius - Karachi</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Mauritius - Karachi.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX25</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.148Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:50:03.906Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/61">
@@ -1859,10 +1951,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Red Sea - Karachi</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Red Sea - Karachi.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX26</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.191Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:51:04.122Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/62">
@@ -1874,10 +1967,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Mombassa - La Reunion</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Mombassa - La Reunion.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX27</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.233Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:51:20.741Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/63">
@@ -1889,10 +1983,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hobart - Dumont d'Urville</skos:altLabel>
+	<skos:definition xml:lang="en">Observations collected in a region sparsely monitored by other observing systems and used for ocean current, seasonal cycle and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX28</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.272Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T05:56:34.383Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/64">
@@ -1904,10 +1999,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Macquarie Island - Casey station</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Macquarie Island - Casey station.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX29</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.311Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:51:53.060Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/66">
@@ -1919,10 +2015,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Melbourne - Point Leeuwin</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Melbourne - Point Leeuwin.</skos:definition>
 	<skos:prefLabel xml:lang="en">IX31</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.350Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:52:09.345Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/67">
@@ -1934,10 +2031,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Haifa - Gibraltar</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Haifa - Gibraltar.</skos:definition>
 	<skos:prefLabel xml:lang="en">MX01</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.391Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:52:24.455Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/68">
@@ -1949,10 +2047,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Barcelona - Skikda</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Barcelona - Skikda.</skos:definition>
 	<skos:prefLabel xml:lang="en">MX02</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.443Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:52:38.684Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/69">
@@ -1964,10 +2063,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Sete - Tunis</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Sete - Tunis.</skos:definition>
 	<skos:prefLabel xml:lang="en">MX03</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.496Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:52:53.569Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/7">
@@ -1979,10 +2079,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Gulf of Mexico - Abidjan</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Gulf of Mexico - Abidjan.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX07</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.543Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:36:43.045Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/70">
@@ -1994,10 +2095,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Genoa - Palermo</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Genoa - Palermo.</skos:definition>
 	<skos:prefLabel xml:lang="en">MX04</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.596Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:53:08.845Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/71">
@@ -2009,10 +2111,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Malta - Trieste</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Malta - Trieste.</skos:definition>
 	<skos:prefLabel xml:lang="en">MX05</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.637Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:53:24.394Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/72">
@@ -2024,10 +2127,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Alexandria - Crete - Tessaloniki</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Alexandria - Crete - Tessaloniki.</skos:definition>
 	<skos:prefLabel xml:lang="en">MX06</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.676Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:53:38.297Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/73">
@@ -2039,10 +2143,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Cyprus - Port Said</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Cyprus - Port Said.</skos:definition>
 	<skos:prefLabel xml:lang="en">MX07</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.716Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:53:53.988Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/74">
@@ -2055,10 +2160,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Seattle - Indonesia</skos:altLabel>
 	<skos:altLabel xml:lang="en">Vancouver - Indonesia</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Seattle - Indonesia; Vancouver - Indonesia.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX01</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.754Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:54:39.832Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/75">
@@ -2070,11 +2176,12 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Flores Sea - Torres Strait</skos:altLabel>
+	<skos:definition xml:lang="en">Observations collected in a region sparsely monitored by other observing systems and used for ocean current, seasonal cycle and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX02</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<code xmlns="http://imos.org.au/def/xbt/" xml:lang="en">PX2</code>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.792Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T05:57:23.361Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/76">
@@ -2086,10 +2193,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Coral Sea</skos:altLabel>
+	<skos:definition xml:lang="en">Observations collected in a region sparsely monitored by other observing systems and used for ocean current, seasonal cycle and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX03</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.832Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T05:58:20.879Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/77">
@@ -2102,10 +2210,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Japan - Kiribati - Fiji</skos:altLabel>
 	<skos:altLabel xml:lang="en">Japan - Kiribati - Samoa</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Japan - Kiribati - Fiji; Japan - Kiribati - Samoa.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX04</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.872Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:55:38.851Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/78">
@@ -2117,10 +2226,14 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Japan - New Zealand</skos:altLabel>
+	<skos:altLabel xml:lang="en">Japan - Brisbane</skos:altLabel>
+	<skos:definition xml:lang="en">Observations collected in a region sparsely monitored by other observing systems and used for ocean current, seasonal cycle and transport monitoring.
+Initial Route: Japan - New Zealand.
+Now Re-Routed - Japan - Brisbane.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX05</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.910Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:00:55.223Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/79">
@@ -2133,10 +2246,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Brisbane - Yokohama</skos:altLabel>
 	<skos:altLabel xml:lang="en">Japan - Australia</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Brisbane - Yokohama; Japan - Australia.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX05b</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.948Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:56:55.753Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/8">
@@ -2148,10 +2262,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">New York - Cape of Good Hope</skos:altLabel>
+	<skos:definition xml:lang="en">Route: New York - Cape of Good Hope.</skos:definition>
 	<skos:prefLabel xml:lang="en">AX08</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:24.994Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:36:56.738Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/80">
@@ -2162,12 +2277,12 @@
 	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/Sebastien-Mancini"/>
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
-	<skos:altLabel xml:lang="en">Auckland - Suva</skos:altLabel>
-	<skos:altLabel xml:lang="en">New Zealand - Fiji</skos:altLabel>
+	<skos:altLabel xml:lang="en">Suva, Fiji - Auckland, New Zealand</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX06</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.035Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:03:17.676Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/81">
@@ -2180,10 +2295,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Auckland - Panama</skos:altLabel>
 	<skos:altLabel xml:lang="en">Dunedin - Panama</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Auckland - Panama; Dunedin - Panama.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX08</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.072Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:57:47.590Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/82">
@@ -2196,10 +2312,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hawaii - Auckland</skos:altLabel>
 	<skos:altLabel xml:lang="en">Hawaii - Fiji</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX09</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.112Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:03:54.655Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/83">
@@ -2212,10 +2329,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Guam - Hawaii</skos:altLabel>
 	<skos:altLabel xml:lang="en">Saipan - Hawaii</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Guam - Hawaii; Saipan - Hawaii.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX10</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.151Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:58:35.340Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/84">
@@ -2227,10 +2345,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Flores Sea - Japan</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Flores Sea - Japan.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX11</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.191Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:58:51.902Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/85">
@@ -2242,10 +2361,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Tahiti - Noumea</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Tahiti - Noumea.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX12</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.232Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:59:03.883Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/86">
@@ -2257,10 +2377,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">New Zealand - California</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX13</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.273Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:04:16.020Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/87">
@@ -2272,10 +2393,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Alaska - Cape Horn</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Alaska - Cape Horn.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX14</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.313Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:59:30.342Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/88">
@@ -2287,10 +2409,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Ecuador - Japan</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Ecuador - Japan.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX15</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.355Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T05:59:47.176Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/89">
@@ -2302,10 +2425,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Hawaii - Peru</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Hawaii - Peru.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX16</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.399Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:00:01.053Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/9">
@@ -2318,10 +2442,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Caracas - Gibraltar</skos:altLabel>
 	<skos:altLabel xml:lang="en">Trinidad - Gibraltar</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Caracas - Gibraltar; Trinidad - Gibraltar</skos:definition>
 	<skos:prefLabel xml:lang="en">AX09</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.455Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T00:37:25.197Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/90">
@@ -2334,10 +2459,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Maruroa - Panama</skos:altLabel>
 	<skos:altLabel xml:lang="en">Tahiti - Panama</skos:altLabel>
+	<skos:definition xml:lang="en">Observations used for ocean current and transport monitoring.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX17</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.513Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-16T06:05:01.156Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/91">
@@ -2349,10 +2475,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Tahiti - California</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Tahiti - California.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX18</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.560Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:00:48.022Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/92">
@@ -2364,10 +2491,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">California - Panama</skos:altLabel>
+	<skos:definition xml:lang="en">Route: California - Panama.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX20</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.605Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:09:44.670Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/93">
@@ -2379,10 +2507,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">California - Chile</skos:altLabel>
+	<skos:definition xml:lang="en">Route: California - Chile.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX21</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.651Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:09:59.094Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/94">
@@ -2394,10 +2523,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Panama - Valparaiso</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Panama - Valparaiso.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX22</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.697Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:10:13.940Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/95">
@@ -2410,10 +2540,11 @@
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Panama - 115W</skos:altLabel>
 	<skos:altLabel xml:lang="en">Panama - 115th meridian west</skos:altLabel>
+	<skos:definition xml:lang="en">Routes: Panama - 115th meridian west; Panama - 115W.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX23</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.742Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:10:40.975Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/96">
@@ -2425,10 +2556,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Panama - Indonesia</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Panama - Indonesia.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX24</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.786Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:10:54.217Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/97">
@@ -2440,10 +2572,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Valparaiso - Japan</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Valparaiso - Japan.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX25</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.831Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:11:10.246Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/98">
@@ -2455,10 +2588,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">TRANSPAC</skos:altLabel>
+	<skos:definition xml:lang="en">Route: TRANSPAC.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX26</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.873Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:11:23.792Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/99">
@@ -2470,10 +2604,11 @@
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network XBT line register</dc:source>
 	<skos:altLabel xml:lang="en">Guayaquil - Galapagos</skos:altLabel>
+	<skos:definition xml:lang="en">Route: Guayaquil - Galapagos.</skos:definition>
 	<skos:prefLabel xml:lang="en">PX27</skos:prefLabel>
 	<skos:topConceptOf rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/xbtline/1"/>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T06:02:25.918Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-23T06:11:38.145Z</dcterms:modified>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://purl.org/dc/elements/1.1/rights">
@@ -2604,6 +2739,12 @@
 	<rdfs:subPropertyOf rdf:resource="http://www.georss.org/georssline"/>
 </rdf:Description>
 
+<rdf:Description rdf:about="http://www.w3.org/2004/02/skos/core#inScheme">
+	<rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#inScheme"/>
+</rdf:Description>
+
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/xbtline/entity/136">
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
@@ -2621,12 +2762,6 @@
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://purl.org/dc/terms/Agent"/>
 	<foaf:name rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMII_Atkins.Natalia_Admin</foaf:name>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://www.w3.org/2004/02/skos/core#inScheme">
-	<rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
-	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
-	<rdfs:subPropertyOf rdf:resource="http://www.w3.org/2004/02/skos/core#inScheme"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://purl.org/dc/terms/modified">

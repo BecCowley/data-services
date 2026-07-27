@@ -256,7 +256,7 @@
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#ConceptScheme"/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2012-12-10T00:00:00.000Z</dcterms:created>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-08-26T04:15:49.348Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-06T03:42:50.765Z</dcterms:modified>
 	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Finney.Kim_Admin"/>
 	<dc:rights rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Freely Available For Reuse</dc:rights>
 	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/Sebastien-Mancini"/>
@@ -717,8 +717,8 @@
 	<skos:hasTopConcept rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/76"/>
 	<skos:hasTopConcept rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/77"/>
 	<skos:hasTopConcept rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/22"/>
-	<dcterms:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2025-08-26</dcterms:issued>
-	<owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Version 6.4</owl:versionInfo>
+	<dcterms:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2026-07-06</dcterms:issued>
+	<owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Version 6.5</owl:versionInfo>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://purl.org/dc/terms/created">
@@ -7402,8 +7402,8 @@
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2015-09-03T00:00:00.000Z</dcterms:created>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2020-10-15T04:56:37.621Z</dcterms:modified>
-	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia"/>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T02:48:15.816Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
 	<skos:prefLabel xml:lang="en">NOAA-15</skos:prefLabel>
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
@@ -7423,6 +7423,7 @@
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/872"/>
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/873"/>
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/874"/>
+	<dcterms:valid xml:lang="en">1998-05-13/2025-08-19</dcterms:valid>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/871">
@@ -7485,8 +7486,8 @@
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2015-08-07T00:00:00.000Z</dcterms:created>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2020-10-15T05:10:13.928Z</dcterms:modified>
-	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia"/>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T02:50:06.927Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
 	<skos:prefLabel xml:lang="en">NOAA-18</skos:prefLabel>
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
@@ -7506,14 +7507,15 @@
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/871"/>
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/872"/>
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/874"/>
+	<dcterms:valid xml:lang="en">2005-05-20/2025-06-06</dcterms:valid>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/874">
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2015-08-07T00:00:00.000Z</dcterms:created>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2020-10-15T04:57:29.825Z</dcterms:modified>
-	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia"/>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T02:51:10.951Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
 	<skos:prefLabel xml:lang="en">NOAA-19</skos:prefLabel>
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
@@ -7533,6 +7535,7 @@
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/871"/>
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/872"/>
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/873"/>
+	<dcterms:valid xml:lang="en">2009-02-06/2025-08-13</dcterms:valid>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/879">
@@ -7655,8 +7658,8 @@
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2015-09-04T00:00:00.000Z</dcterms:created>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2017-04-02T23:50:43.000Z</dcterms:modified>
-	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia"/>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T03:47:20.077Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
 	<skos:prefLabel xml:lang="en">GFO</skos:prefLabel>
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
@@ -7664,6 +7667,7 @@
 	<skos:definition xml:lang="en">This satellite was the 2nd (last) flight of the GEOSat programme. It operated between February 1998 and October 2008 at an altitude of 784km, in a drifting orbit. Instrumentation: GEOSat Follow-On Radar Altimeter, Laser Retroreflector Array, Turbo Rogue Space Receiver and Water Vapor Radiometer.</skos:definition>
 	<skos:hiddenLabel xml:lang="en">DoD/NASA - GEOSat Follow-on (GFO)</skos:hiddenLabel>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/366"/>
 	<dcterms:valid xml:lang="en">1998-02/2008-10</dcterms:valid>
 </rdf:Description>
 
@@ -8675,6 +8679,7 @@
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/293"/>
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/294"/>
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/295"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/387"/>
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">British Oceanographic Data Centre (BODC)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(L061) SeaVoX Platform Categories</dc:source>
 	<skos:definition xml:lang="en">Platforms with buoyancy-based propulsion that are capable of operations of variable depths which are not constrained to be near the sea surface.</skos:definition>
@@ -8948,6 +8953,7 @@
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/362"/>
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/363"/>
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/364"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/386"/>
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">British Oceanographic Data Centre (BODC)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(L061) SeaVoX Platform Categories</dc:source>
 	<skos:definition xml:lang="en">A platform for purpose of commerce of any size operating on the surface of the water column in unpredictable locations that regularly collects scientific (oceanographic and meteorological) data (e.g. an instrumented cargo vessel).</skos:definition>
@@ -9408,6 +9414,27 @@
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/92"/>
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/93"/>
 	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/94"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/365"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/366"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/367"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/368"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/369"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/370"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/371"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/372"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/373"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/374"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/375"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/376"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/377"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/378"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/379"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/380"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/381"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/382"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/383"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/384"/>
+	<skos:narrower rdf:resource="http://vocab.aodn.org.au/def/platform/entity/385"/>
 	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">British Oceanographic Data Centre (BODC)</dc:publisher>
 	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(L061) SeaVoX Platform Categories</dc:source>
 	<skos:definition xml:lang="en">A vehicle operating beyond the Earth's atmosphere without human occupants that orbits the Earth at a different rate to the Earth's rotation so it moves over the Earth's surface..</skos:definition>
@@ -10633,25 +10660,25 @@
 	<rdfs:subPropertyOf rdf:resource="http://xmlns.com/foaf/0.1/tipjar"/>
 </rdf:Description>
 
-<rdf:Description rdf:nodeID="genid-918fef6186374107827a98f5cb407b2d-3DF6976E2C8F3D186F3344AC11FF0F6D">
+<rdf:Description rdf:nodeID="genid-2638030c7baa4cd8b7550800712c2c1d-3DF6976E2C8F3D186F3344AC11FF0F6D">
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
 	<rdfs:subClassOf rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
-	<rdfs:subClassOf rdf:nodeID="genid-918fef6186374107827a98f5cb407b2d-3DF6976E2C8F3D186F3344AC11FF0F6D"/>
+	<rdfs:subClassOf rdf:nodeID="genid-2638030c7baa4cd8b7550800712c2c1d-3DF6976E2C8F3D186F3344AC11FF0F6D"/>
 </rdf:Description>
 
-<rdf:Description rdf:nodeID="genid-918fef6186374107827a98f5cb407b2d-48195C667C9341E5E09944AEF92C2673">
+<rdf:Description rdf:nodeID="genid-2638030c7baa4cd8b7550800712c2c1d-48195C667C9341E5E09944AEF92C2673">
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
 	<rdfs:subClassOf rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
-	<rdfs:subClassOf rdf:nodeID="genid-918fef6186374107827a98f5cb407b2d-48195C667C9341E5E09944AEF92C2673"/>
+	<rdfs:subClassOf rdf:nodeID="genid-2638030c7baa4cd8b7550800712c2c1d-48195C667C9341E5E09944AEF92C2673"/>
 </rdf:Description>
 
-<rdf:Description rdf:nodeID="genid-918fef6186374107827a98f5cb407b2d-6345A6329B6A48D85F9765042D1D191E">
+<rdf:Description rdf:nodeID="genid-2638030c7baa4cd8b7550800712c2c1d-6345A6329B6A48D85F9765042D1D191E">
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
 	<rdfs:subClassOf rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
-	<rdfs:subClassOf rdf:nodeID="genid-918fef6186374107827a98f5cb407b2d-6345A6329B6A48D85F9765042D1D191E"/>
+	<rdfs:subClassOf rdf:nodeID="genid-2638030c7baa4cd8b7550800712c2c1d-6345A6329B6A48D85F9765042D1D191E"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://purl.org/dc/elements/1.1/description">
@@ -12385,7 +12412,7 @@
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2020-01-01T23:25:31.857Z</dcterms:created>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2020-01-01T23:28:46.192Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T03:18:46.126Z</dcterms:modified>
 	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
 	<skos:prefLabel xml:lang="en">Sentinel-1A</skos:prefLabel>
 	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
@@ -12395,13 +12422,14 @@
 	<skos:definition xml:lang="en">This satellite was the 1st flight of the Sentinel-1 programme, providing SAR observation. It operated between April 2014 and is operational until 2021, at an altitude of 693km, in a sunsynchronous orbit. Instrumentation: Synthetic Aperture Radar (C-band).</skos:definition>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/50"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/365"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/50">
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2020-01-01T23:27:29.920Z</dcterms:created>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2020-01-01T23:29:01.262Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T03:18:52.853Z</dcterms:modified>
 	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
 	<skos:prefLabel xml:lang="en">Sentinel-1B</skos:prefLabel>
 	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
@@ -12411,6 +12439,8 @@
 	<skos:definition xml:lang="en">This satellite was the 2nd flight of the Sentinel-1 programme, providing SAR observation. It operated between April 2016 and is operational until 2023, at an altitude of 693km, in a sunsynchronous orbit. Instrumentation: Synthetic Aperture Radar (C-band).</skos:definition>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/49"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/365"/>
+	<dcterms:valid xml:lang="en">2016-04-25/2022-08-03</dcterms:valid>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.nerc.ac.uk/collection/C17/current/HKC2">
@@ -13042,7 +13072,7 @@
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2023-03-30T02:54:58.774Z</dcterms:created>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2023-03-30T02:59:07.974Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T02:55:49.725Z</dcterms:modified>
 	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
 	<skos:prefLabel xml:lang="en">MetOpA</skos:prefLabel>
 	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
@@ -13054,6 +13084,7 @@
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/93"/>
 	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/94"/>
+	<dcterms:valid xml:lang="en">2006-10-19/2021-11-15</dcterms:valid>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/93">
@@ -13536,7 +13567,7 @@
 	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
 	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-02-12T00:42:04.219Z</dcterms:created>
-	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-02-12T00:43:01.402Z</dcterms:modified>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-12-17T03:02:37.997Z</dcterms:modified>
 	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
 	<skos:prefLabel xml:lang="en">Maersk Rio Delta</skos:prefLabel>
 	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
@@ -13545,7 +13576,7 @@
 	<skos:altLabel xml:lang="en">9V8585</skos:altLabel>
 	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/32"/>
 	<skos:definition xml:lang="en">Container ship vessel, which is currently flying the flag of Singapore (May, 2023).</skos:definition>
-	<skos:hiddenLabel xml:lang="en">IMOS:9357951</skos:hiddenLabel>
+	<skos:hiddenLabel xml:lang="en">IMO:9357951</skos:hiddenLabel>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
 	<skos:scopeNote xml:lang="en">built:2008</skos:scopeNote>
 </rdf:Description>
@@ -13601,6 +13632,399 @@
 	<skos:hiddenLabel xml:lang="en">IMO:9233404</skos:hiddenLabel>
 	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
 	<skos:scopeNote xml:lang="en">built:2002</skos:scopeNote>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/365">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T03:18:36.354Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T03:22:13.031Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">Sentinel-1C</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 3rd flight of the Sentinel-1 programme, providing SAR observation. It operated between December 2024 and is operational until 2034, at an altitude of 693km, in a sunsynchronous orbit. Instrumentation: Synthetic Aperture Radar (C-band), Automatic Identification System.</skos:definition>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/49"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/50"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/366">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T03:47:11.360Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T03:51:21.720Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">GEOSat</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 1st flight of the GEOSat programme. It operated between March 1985 and January 1990 at an altitude of 785km, in a drifting orbit. Instrumentation: GEOSat Radar Altimeter.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">DoD/NASA - Geodetic Satellite</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/887"/>
+	<dcterms:valid xml:lang="en">1985-03-12/1990-01-31</dcterms:valid>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/367">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T03:53:02.943Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:38:29.956Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">Sentinel-6A</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 1sr flight of the Sentinel-6 programme, also named "Sentinel-6 Michael Freilich". It operated between November 2020 and is operational until 2027, at an altitude of 1336km, in a drifting orbit. Instrumentation: Doppler Orbitography and Radiopositioning Integrated by Satellite; GPS Receiver; Laser Retroreflector Array; Global Navigation Satellite System - Radio Occultation; Poseidon-4; Radiation Monitor Unit (also referred to as NGRM); Advanced Microwave Radiometer - Climate Quality; High Resolution Microwave Radiometer.</skos:definition>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/368">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T03:57:47.178Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:01:00.470Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">SWOT</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the only flight of the SWOT programme. It operated between December 2022 and is operational until 2029, at an altitude of 891km, in a drifiting orbit. Instrumentation: Poseidon-3C Altimeter; Ka-band Radar Interferometer; Microwave radiometer; Doppler Orbitography and Radiopositioning Integrated by Satellite; Laser Retroreflector Array; GPS Receiver.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">NASA/CNES - Surface Water and Ocean Topography</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/369">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:01:41.092Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:05:03.806Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">QuikSCAT</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the only flight of the QuickSCAT programme. It operated between June 1999 and November 2009 at an altitude of 803km, in a sunsynchronous orbit. Instrumentation: SeaWinds.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">NASA - Quick Scatterometer Mission</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<dcterms:valid xml:lang="en">1999-06-19/2009-11-23</dcterms:valid>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/370">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:06:43.874Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:09:44.259Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">ISS RapidScat</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">Mission consisting of hosting RapidScat on the International Space Station. Instrumentation: Rapid Scatterometer.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">NASA/CSA/DLR/ESA/JAXA/Roscosmos - Rapid Scatterometer on the ISS</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<dcterms:valid xml:lang="en">2014-09-21/2016-08-19</dcterms:valid>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/371">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:10:59.272Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:15:07.569Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">ERS-1</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 1st flight of the ERS programme. It operated between July 1991 and March 2000, at an altitude of 785km, in a sunsynchronous orbit. Instrumentation: Active Microwave Instrument - Synthetic Aperture Antenna; Active Microwave Instrument - Scatterometer; Along-Track Scanning Radiometer; Laser Retro-Reflector; Precise Range And Range-rate Equipment; Radar Altimeter; Micro-Wave Radiometer.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">ESA - European Remote-sensing Satellite - 1</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/372"/>
+	<dcterms:valid xml:lang="en">1991-07-17/2000-03-10</dcterms:valid>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/372">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:14:59.845Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:18:32.346Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">ERS-2</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 2nd (last) flight of the ERS programme. It operated between April 1995 and July 2011, at an altitude of 785km, in a sunsynchronous orbit. Instrumentation: Active Microwave Instrument - Synthetic Aperture Antenna; Active Microwave Instrument - Scatterometer; Along-Track Scanning Radiometer - 2; Global Ozone Monitoring Experiment; Laser Retro-Reflector; Micro-Wave Radiometer; Precise Range And Range-rate Equipment; Radar Altimeter.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">ESA - European Remote-sensing Satellite - 2</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/371"/>
+	<dcterms:valid xml:lang="en">1995-04-21/2011-07-06</dcterms:valid>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/373">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:19:51.683Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:24:32.570Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">Envisat</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the only flight of the Envisat programme. It operated between March 2002 and April 2012 at an altitude of 774km, in a sunsynchronous orbit. Instrumentation: Advanced Along-Track Scanning Radiometer; Advanced Synthetic Aperture Radar; Doppler Orbitography and Radiopositioning Integrated by Satellite; Global Ozone Monitoring by Occultation of Star; Laser Retro-Reflector; Medium Resolution Imaging Spectrometer; Michelson Interferometer for Passive Atmospheric Sounding; Micro-Wave Radiometer; Radar Altimeter - 2; Scanning Imaging Absorption Spectrometer for Atmospheric Cartography (limb-scanning component); Scanning Imaging Absorption Spectrometer for Atmospheric Cartography (nadir-scanning component.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">ESA - Environmental Satellite</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<dcterms:valid xml:lang="en">2002-03-01/2012-04-08</dcterms:valid>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/374">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:25:45.677Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T04:33:03.866Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">CryoSat-2</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 1st flight of the CryoSat programme. It operated between April 2010 and is operational until 2028, at an altitude of 717km, in a drifting orbit. Instrumentation: Doppler Orbitography and Radiopositioning Integrated by Satellite; Laser Retro-Reflector; SAR Interferometer Radar Altimeter.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">ESA - CryoSat-2</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/375">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:07:27.440Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:20:25.730Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">HY-2A</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 1st flight of the HY-2 programme. It operated between August 2011 and 2022 at an altitude of 975km, in a sunsynchronous orbit. Instrumentation: Doppler Orbitography and Radiopositioning Integrated by Satellite; Laser Retroreflector Array; Microwave Radiometer Imager; HY Scatterometer; Calibration Microwave Radiometer; Radar Altimeter.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">NSOAS/CAST - Hai Yang 2A</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/376"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/377"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/378"/>
+	<dcterms:valid xml:lang="en">2011-08-16/2022</dcterms:valid>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/376">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:11:55.144Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:20:12.559Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">HY-2B</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 2nd flight of the HY-2 programme. It operated between October 2018 and is operational until 2026 at an altitude of 973km, in a sunsynchronous orbit. Instrumentation: Laser Retroreflector Array; Microwave Radiometer Imager; HY Scatterometer; Calibration Microwave Radiometer; Radar Altimeter.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">NSOAS/CAST - Hai Yang 2B</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/375"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/377">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:14:09.529Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:20:19.450Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">HY-2C</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 3rd flight of the HY-2 programme. It operated between September 2020 and is operational until 2026 at an altitude of 1336km, in a drifting orbit. Instrumentation: Radar Altimeter; Doppler Orbitography and Radiopositioning Integrated by Satellite; Laser Retroreflector Array; Calibration Microwave Radiometer; HY Scatterometer .</skos:definition>
+	<skos:hiddenLabel xml:lang="en">NSOAS/CAST - Hai Yang 2C</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/375"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/378">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:16:59.154Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:20:25.730Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">HY-2D</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 4th flight of the HY-2 programme. It operated between May 2021 and is operational until 2026 at an altitude of 973km, in a drifting orbit. Instrumentation: Doppler Orbitography and Radiopositioning Integrated by Satellite; Laser Retroreflector Array; Calibration Microwave Radiometer; HY Scatterometer; Radar Altimeter.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">NSOAS/CAST - Hai Yang 2D</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/375"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/379">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:35:16.610Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:37:49.255Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">SARAL</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the only flight of the SARAL programme. It operated between February 2013 and is operational until 2026, at an altitude of 800km, in a sunsynchronous orbit. Instrumentation: Advanced Data Collection System (also called "Argos-3"); Ka-band Altimeter; Doppler Orbitography and Radiopositioning Integrated by Satellite;  	Laser Retroreflector Array.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">CNES/ISRO - Satellite with ARGOS and AltiKa</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/380">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:41:06.862Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:52:05.738Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">Sentinel-3A</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 1st flight of the Sentinel-3 programme, providing SAR observation. It operated between February 2016 and is operational until 2027, at an altitude of 814km, in a sunsynchronous orbit. Instrumentation: Doppler Orbitography and Radiopositioning Integrated by Satellite; GPS Receiver; Laser Retro-Reflector; Micro-Wave Radiometer; Ocean and Land Colour Imager; Sea and Land Surface Temperature Radiometer; Synthetic Aperture Radar Altimeter.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">ESA/EC/EUMETSAT - Sentinel-3A</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/381"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/381">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:49:59.298Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:52:05.738Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">Sentinel-3B</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 2nd flight of the Sentinel-3 programme, providing SAR observation. It operated between April 2018 and is operational until 2028, at an altitude of 814km, in a sunsynchronous orbit. Instrumentation: Doppler Orbitography and Radiopositioning Integrated by Satellite; GPS Receiver; Laser Retro-Reflector; Micro-Wave Radiometer; Ocean and Land Colour Imager; Sea and Land Surface Temperature Radiometer; Synthetic Aperture Radar Altimeter.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">ESA/EC/EUMETSAT - Sentinel-3B</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/380"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/382">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:55:34.156Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T07:30:18.654Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">CFOSAT</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 1st flight of the CFOSAT programme. It operated between October 2018 and is operational until 2026, at an altitude of 500km, in a sunsynchronous orbit. Instrumentation: CFOSAT Scatterometer; Surface Waves Investigation and Monitoring instrument.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">NSOAS/CNES - Chinese-French Oceanography Satellite</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/383">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T06:59:35.740Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T07:22:25.800Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">OceanSat-2</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 2nd flight of the OceanSat programme. It operated between September 2009 and July 2023 at an altitude of 730km, in a sunsynchronous orbit. Instrumentation: OceanSat Scatterometer; Ocean Color Monitor; Radio Occultation Sounder of the Atmosphere.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">ISRO - Satellite for the Ocean - 2</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/385"/>
+	<dcterms:valid xml:lang="en">2009-09-23/2023-07</dcterms:valid>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/384">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T07:13:26.396Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T07:22:33.326Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">OceanSat-3 (EOS-06)</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the 3rd flight of the OceanSat programme renamed ESO-06. It operated between November 2022 and is operational until 2027 at an altitude of 723km, in a sunsynchronous orbit. Instrumentation: Ocean Color Monitor; Scatterometer for Oceansat-3; Advanced Data Collection System (called "Argos-4").</skos:definition>
+	<skos:hiddenLabel xml:lang="en">ISRO - OceanSat-3 (EOS-06)</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/385"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/385">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T07:18:51.124Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-03T07:22:33.326Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">ScatSat-1</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/65"/>
+	<skos:definition xml:lang="en">This satellite was the Gap-filler for the OSCAT instrument of OceanSat-2 of the OceanSat programme. It operated between September 2016 and February 2021 at an altitude of 732km, in a sunsynchronous orbit. Instrumentation: OceanSat Scatterometer.</skos:definition>
+	<skos:hiddenLabel xml:lang="en">ISRO - ScatSat-1</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/383"/>
+	<skos:related rdf:resource="http://vocab.aodn.org.au/def/platform/entity/384"/>
+	<dcterms:valid xml:lang="en">2016-09-26/2021-02-28</dcterms:valid>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/386">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-06T03:21:41.920Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-06T03:23:27.674Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">Capitaine Tupaia</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:altLabel xml:lang="en">9V8363</skos:altLabel>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/32"/>
+	<skos:definition xml:lang="en">Container ship vessel, which is currently flying the flag of Singapore (February, 2026).</skos:definition>
+	<skos:hiddenLabel xml:lang="en">IMO:9410301</skos:hiddenLabel>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
+	<skos:scopeNote xml:lang="en">built:2010</skos:scopeNote>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/entity/387">
+	<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+	<rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
+	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-06T03:42:50.740Z</dcterms:created>
+	<dcterms:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2026-07-06T03:43:39.310Z</dcterms:modified>
+	<dcterms:contributor rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<skos:prefLabel xml:lang="en">Slocum Sentinel Glider</skos:prefLabel>
+	<dcterms:creator rdf:resource="http://editor.vocabs.ands.org.au/user/eMII_Atkins.Natalia_Admin"/>
+	<dc:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eMarine Information Infrastructure (eMII)</dc:publisher>
+	<dc:source rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Australian Ocean Data Network Platform Register</dc:source>
+	<skos:broader rdf:resource="http://vocab.nerc.ac.uk/collection/L06/current/27"/>
+	<skos:definition xml:lang="en">The Slocum Sentinel glider is 2.6 m long, 33 cm in diameter and weighs 171 kg.  Manufactured by Teledyne Webb Research Corporation, the glider is designed to operate in ocean waters, with a depth rating of 1000m, in extended missions.  Moving at an average glide speed of 0.75 knots,  the glider travels in a sawtooth pattern through the water navigating its way to a series of pre-programmed waypoints using GPS and altimeter measurements.  Operating on Lithium batteries, deployments can have a duration over 18+ months.</skos:definition>
+	<skos:inScheme rdf:resource="http://vocab.aodn.org.au/def/platform/1"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://vocab.aodn.org.au/def/platform/863/">
