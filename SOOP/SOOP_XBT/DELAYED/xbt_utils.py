@@ -14,13 +14,14 @@ def _error(message):
     raise XbtException('{message}'.format(message=message))
 
 
-def make_transect_id(soop_line, date_like):
+def make_transect_id(soop_line, date_like, count):
     """
-    Return a unique transect id like: soop_line-YYYYMM-I
+    Return a unique transect id like: soop_line-YYYYMMII
     where I starts at 1 and increments until the id is not in existing_ids.
     """
-    yyyymm = pd.to_datetime(date_like).strftime('%Y%m')
-    candidate = f"{soop_line}-{yyyymm}-{1}"
+    yyyy = pd.to_datetime(date_like).strftime('%Y')
+  
+    candidate = f"{soop_line}-{yyyy}{str(count).zfill(2)}"
     return candidate
 
 

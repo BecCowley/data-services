@@ -7,6 +7,7 @@ from datetime import datetime
 from time import strftime, gmtime
 
 import numpy as np
+from numpy.strings import zfill
 import pandas as pd
 from netCDF4 import Dataset, date2num
 
@@ -19,23 +20,13 @@ def create_filename_output(prof, hist, profile_raw=False):
     else:
         fv = 'FV01'
 
-    filename = 'XBT_T_%s_%s_%s_ID-%s' % (
+    filename = 'IMOS_SOOP-XBT_T_%s_%s_%s_%s' % (
         prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line_label'], fv,
-        prof['Institution_unique_identifier'])
+        prof['Cruise_ID'])
 
-    # decide what prefix is required
-    names = read_section_from_xbt_config('VARIOUS')
-    str = names['FILENAME']
-    if str == 'Cruise_ID':
-        str = prof['Cruise_ID']
-        filename = '{}-{}'.format(str, filename)
-    else:
-        if prof['TIME'] > datetime(2008, 0o1, 0o1):
-            filename = 'IMOS_SOOP-{}'.format(filename)
-
-    # if profile histories contains TP, change the filename
+    # if profile histories contains TP, add 'TEST' to the filename
     if 'TPR' in hist['HISTORY_QC_CODE'].values:
-        filename = filename.replace('XBT', 'TEST')
+        filename = filename + 'TEST'
 
     return filename
 
@@ -196,7 +187,7 @@ def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGl
 
                     # for variables that are dimensioned by DEPTH, output the full array
                     if 'DEPTH' in var_dims:
-                        if v not in ['DEPTH','DEPTH_RAW']:
+                        if v not in ['DEPTH']:
                             # fill any NaN values with the fill value for this variable
                             data = profile[v].fillna(output_netcdf_obj[v]._FillValue)
                         else:
@@ -376,26 +367,12 @@ if __name__ == '__main__':
         profiles['transect_id'] = None
         # create a transect_id column in the profiles dataframe by concatenating the SOOP_line_label and the year of the TIME column
         for soop_line_label in profiles['SOOP_line_label'].unique():
-            # first group by Cruise_ID
-            for cruise_id in profiles[profiles['SOOP_line_label'] == soop_line_label]['Cruise_ID'].unique():
-                # get the yyyy and mm from the TIME column for the first profile with this SOOP_line_label and Cruise_ID
-                time_value = profiles[(profiles['SOOP_line_label'] == soop_line_label) & (profiles['Cruise_ID'] == cruise_id)]['TIME'].values[0]
-                transect_id = make_transect_id(soop_line_label, time_value)
-                # if the transect_id already exists in the dataframe, append a number to the end of the transect_id to make it unique
-                if transect_id in profiles['transect_id'].values:
-                    # get the number at the end of the transect_id and increment it until we find a unique transect_id
-                    count = splitstr = transect_id.split('-')[-1]
-                    transect_id_base = '-'.join(transect_id.split('-')[:-1])
-                    if count.isdigit():
-                        count = int(count) + 1
-                    else:
-                        count = 1
-                    new_transect_id = transect_id_base + '-' + str(count)
-                    while new_transect_id in profiles['transect_id'].values:
-                        count += 1
-                        new_transect_id = transect_id_base + '-' + str(count)
-                    transect_id = new_transect_id
-                profiles.loc[(profiles['SOOP_line_label'] == soop_line_label) & (profiles['Cruise_ID'] == cruise_id), 'transect_id'] = transect_id
+            # use groupby to group the profiles by Cruise_ID, keeping them in the same order and assign a transect_id to each group based on the SOOP_line_label and the year of the TIME column
+            count = 0
+            for cruise_id, group in profiles[profiles['SOOP_line_label'] == soop_line_label].groupby('Cruise_ID', sort=False):
+                count += 1
+                transect_id = make_transect_id(soop_line_label, group['TIME'].iloc[0], count)
+                profiles.loc[group.index, 'transect_id'] = transect_id
         # there are multiple profiles in the profiles dataframe, loop through unique station numbers
         for station in profiles['station_number'].unique():
             # get the profile and history data for this station
