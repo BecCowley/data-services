@@ -48,7 +48,7 @@ hit_bottom,0,,HB,HBR,,,down,8,,,,,,3,4,TEMP
 leakage,0,,LE,LER,,,down,16,,,,,,3,1,TEMP
 electrical_interference,0,"SP, IP",EI,EIR,,,down,32,,,,,,4,1,TEMP
 high_frequency_noise,0,,HF,HFR,,,down,64,,,,,,4,1,TEMP
-no_good,0,,NG,NGR,,,down,128,,,,,,4,4,TEMP
+no_good,0,,NG,NGR,,,auto,128,,,,,,4,4,TEMP
 temperature_offset,0,"TO, TD, SA, SO",TO,TOR,,,down,256,,,,,,3,1,TEMP
 depth_offset,0,"DO, PL",DO,DOR,0,,down,512,,,,,,3,3,TEMP
 constant_temperature,0,,CT,CTR,,,down,1024,,,,,,3,3,TEMP
