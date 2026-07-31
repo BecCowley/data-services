@@ -1,10 +1,10 @@
 ﻿Attribute Name,Attribute Value
-Conventions,"CF-1.6,IMOS-1.4"
+Conventions,CF-1.6
 citation,"The citation in a list of references is: ""IMOS [year-of-data-download], [Title], [data-access-url], accessed [date-of-access]"""
 title,Ocean Temperature profile data from XBT (expendable bathythermographs)
 abstract,"The data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels prior to 2008 were managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC)."
+acknowledgement,"Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: ""Data was sourced from Australia's Integrated Marine Observing System (IMOS) - IMOS is enabled by the National Collaborative Research Infrastructure Strategy (NCRIS)."""
 comment,"The variables in this file are from XBT data which measure Temperature (TEMP). DEPTH is derived from a fall rate equation with coefficients as shown in the PROBE variable. Data in *RAW variables and attributes contains the original data and metadata from the XBT profile. The user should, in all cases, use the non-RAW variables (eg, TEMP and DEPTH) as these contain the BEST version of the data. For example, TEMP will potentially contain modified data, where spikes and noise have been interpolated. Another example is where DEPTH may be changed due to an incorrect probe type in the RAW data."
-acknowledgement,Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: Data was sourced from the Integrated Marine Observing System (IMOS) - IMOS is enabled by the National Collaborative Research Infrastructure Strategy (NCRIS). 
 cdm_data_type,profile
 date_created,
 data_centre,Australian Ocean Data Network (AODN)
