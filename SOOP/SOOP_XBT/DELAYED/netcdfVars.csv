@@ -10,7 +10,7 @@ LONGITUDE_RAW,longitude,,var,,,1,1,float64,999999,,longitude,longitude_raw,,degr
 LONGITUDE_quality_control,,,var,,,1,1,int8,-9,,longitude status_flag,longitude quality_flag,,,,0,9,,,,IMOS standard flags,0 1 2 3 4 5 6 7 8 9,No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value
 DEPTH,depth,,var,,DEPTH,1,1,float32,,,depth,depth,,m,Z,-5,12000,sea surface,down,DEPTH_quality_control DEPTH_uncertainty,,,
 DEPTH_uncertainty,,,var,,DEPTH,1,1,float32,999999,,depth standard_error,depth uncertainty_estimate,,m,,-5,12000,sea surface,,,,,
-DEPTH_RAW,depth,,var,,DEPTH,1,1,float32,,TIME LATITUDE LONGITUDE DEPTH,depth,depth_raw,,m,,-5,12000,sea surface,down,,,,
+DEPTH_RAW,depth,,var,,DEPTH,1,1,float32,999999,TIME LATITUDE LONGITUDE DEPTH,depth,depth_raw,,m,,-5,12000,sea surface,down,,,,
 DEPTH_quality_control,,,var,,DEPTH,1,1,int8,-9,,depth status_flag,depth quality_flag,,,,0,9,,,,IMOS standard flags,0 1 2 3 4 5 6 7 8 9,No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value
 TEMP,temperature,,var,,DEPTH,1,1,float32,999999,TIME LATITUDE LONGITUDE DEPTH,sea_water_temperature,sea_water_temperature,,Celsius,,-2.5,40,,,TEMP_quality_control TEMP_uncertainty,,,
 TEMP_uncertainty,,,var,,DEPTH,1,1,float32,999999,,sea_water_temperature standard_error,sea_water_temperature uncertainty_estimate,,Celsius,,-2.5,40,,,,,,
