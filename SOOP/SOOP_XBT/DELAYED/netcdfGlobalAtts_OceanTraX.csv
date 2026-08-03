@@ -32,8 +32,8 @@ keywords,Oceans>Ocean Temperature>Sea Water Temperature; Oceans>Bathymetry/Seafl
 keywords_vocabulary,NASA/GCMD Earth Science Keywords
 license,http://creativecommons.org/licenses/by/4.0/
 naming_authority,OceanTraX
-principal_investigator,"[CSC1;PICD] Rebecca Cowley, CSIRO; Lisa Krummel, BOM"
-project,[PRJ$;PRO1;PROJ] Integrated Marine Observing System (IMOS)
+principal_investigator,"Rebecca Cowley, CSIRO; Lisa Krummel, BOM"
+project,Integrated Marine Observing System (IMOS)
 references,"https://github.com/xbt-community/xbt-data-formats; Cowley, Rebecca; Krummel, Lisa. Australian XBT Quality Control Cookbook Version 2.1. Hobart, Tasmania, Australia: CSIRO; 2022. csiro:EP2022-1825. https://doi.org/10.25919/3tm5-zn80"
 source,Expendable Bathythermograph (XBT)
 standard_name_vocabulary,NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table Version 91
