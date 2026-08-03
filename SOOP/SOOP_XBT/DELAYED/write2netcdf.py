@@ -11,36 +11,56 @@ from numpy.strings import zfill
 import pandas as pd
 from netCDF4 import Dataset, date2num
 
-from xbt_utils import read_section_from_xbt_config, make_transect_id
+from xbt_utils import make_transect_id
 from xbt_utils import read_flag_quality_table, read_variables_config, read_globals_config
 
-def create_filename_output(prof, hist, profile_raw=False):
-    if profile_raw:
-        fv = 'FV00'
+def create_filename_output(prof, hist, imosformat=True, profile_raw=False):
+    if imosformat:
+        if profile_raw:
+            fv = 'FV00'
+        else:
+            fv = 'FV01'
+
+        filename = 'IMOS_SOOP-XBT_T_%s_%s_%s_%s' % (
+            prof['TIME'].iloc[0].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line_label'].iloc[0], fv,
+            prof['Cruise_ID'].iloc[0])
+
+        # if profile histories contains TP, add 'TEST' to the filename
+        if 'TPR' in hist['HISTORY_QC_CODE'].values:
+            filename = filename + 'TEST'
     else:
-        fv = 'FV01'
+        # format is VNHF_202507231645_D_001.nc
+        # where VNHF is the ship Callsign, 202507231645 is the time of the profile,
+        # <D, R> is <delayed mode, real time>,
+        # and 001 is optional: number of deployment at this date/time and location from the same vessel
+        """create the filename for the output netcdf file"""
 
-    filename = 'IMOS_SOOP-XBT_T_%s_%s_%s_%s' % (
-        prof['TIME'].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line_label'], fv,
-        prof['Cruise_ID'])
+        # get the Callsign and time from the profile
+        xbt_callsign = prof['Callsign'].iloc[0].strip()
+        xbt_time = prof['TIME'].iloc[0].strftime('%Y%m%d%H%M')
 
-    # if profile histories contains TP, add 'TEST' to the filename
-    if 'TPR' in hist['HISTORY_QC_CODE'].values:
-        filename = filename + 'TEST'
+        # check for QC flags on temperature, assume the data is from a delayed mode profile
+        if any(prof['TEMP_quality_control'] > 0):
+            qc_flag = 'D'
+        else:
+            qc_flag = 'R'
+
+        # create the filename
+        filename = f"{xbt_callsign}_{xbt_time}_{qc_flag}"
 
     return filename
 
-
-def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGlobalAtts.csv', profile_raw=False, historic_flags=False):
+def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGlobalAtts.csv', profile_raw=False, historic_flags=False, imosformat=True):
     """output the data to the IMOS format netcdf version
     :param output_folder: the folder to write the netcdf file to
     :param profile: the profile DataFrame
     :param history: the history DataFrame
     :param profile_raw: if True, the create a FV00 file, if False create a FV01 file, default is False
+    :param imosformat: if True, create a file in IMOS format, otherwise create a file in OceanTrax format
     """
 
     # now begin write out to new format
-    netcdf_filepath = os.path.join(output_folder, "%s.nc" % create_filename_output(profile.iloc[0], history, profile_raw))
+    netcdf_filepath = os.path.join(output_folder, "%s.nc" % create_filename_output(profile, history, imosformat, profile_raw))
     print('Creating output %s' % netcdf_filepath)
 
     # reset the index of the profile DataFrame
@@ -320,10 +340,8 @@ if __name__ == '__main__':
     # get the input and output folders
     input_folder = args.input
     output_folder = args.output
-
-    # if output folder doesn't exist, create it
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+    # add subscript '_oceantrax' to the output folder for oceantrax format files
+    output_folder_oceantrax = output_folder.rstrip('/') + '_oceantrax'
 
     # locate the parquet files in the input folder not including the *histories.parquet and *globals.parquet files
     parquet_data = glob.glob(os.path.join(input_folder, "*.parquet"))
@@ -382,13 +400,23 @@ if __name__ == '__main__':
             # add some paths to the output_folder based on the 'SOOP_line_label' and year of the profile time
             line_label = profile['SOOP_line_label'][0]
             year = profile['TIME'][0].year
-            # output folder is output_folder/line_label/year
-            output_folder_line_year = os.path.join(output_folder, line_label, str(year))
-            if not os.path.exists(output_folder_line_year):
-                os.makedirs(output_folder_line_year)
 
-            # write the profile to the netcdf file
-            write_output_nc(output_folder_line_year, profile, profile_histories, globals_input_file,profile_raw=False, historic_flags=True)
+            # write the profile to the netcdf file in imos format, then in oceantrax format
+            for output_format in ['imos', 'oceantrax']:
+                if output_format == 'imos':
+                    # output folder is output_folder/line_label/year
+                    output_folder_line_year = os.path.join(output_folder, line_label, str(year))
+                    if not os.path.exists(output_folder_line_year):
+                        os.makedirs(output_folder_line_year)
+                    write_output_nc(output_folder_line_year, profile, profile_histories, globals_input_file, profile_raw=False, historic_flags=True, imosformat=True)
+                elif output_format == 'oceantrax':
+                    # output folder is output_folder/line_label/year
+                    output_folder_line_year = os.path.join(output_folder_oceantrax, line_label, str(year))
+                    if not os.path.exists(output_folder_line_year):
+                        os.makedirs(output_folder_line_year)
+                    write_output_nc(output_folder_line_year, profile, profile_histories, globals_file_path='netcdfGlobalAtts_OceanTraX.csv', profile_raw=False, historic_flags=True, imosformat=False)
+                else:
+                    raise ValueError(f"Unknown output format: {output_format}")
             successful_exports_by_line[line_label] += 1
 
     print("\nSuccessful profile exports by SOOP line:")

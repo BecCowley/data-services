@@ -1,0 +1,45 @@
+﻿Attribute Name,Attribute Value
+abstract,"The variables in this file are from XBT data which measure Temperature (TEMP). DEPTH is derived from a fall rate equation with coefficients as shown in the PROBE variable. Data in *RAW variables and attributes contains the original data and metadata from the XBT profile. The user should, in all cases, use the non-RAW variables (eg, TEMP and DEPTH) as these contain the BEST version of the data. For example, TEMP will potentially contain modified data, where spikes and noise have been interpolated. Another example is where DEPTH may be changed due to an incorrect probe type in the RAW data."
+acknowledgement,Any users of OceanTraX data are required to clearly acknowledge the source of the material in the format: Data was sourced from the OceanTraX Data Management Team. 
+author,"Rebecca Cowley, CSIRO Australia; Lisa Krummel, BOM Australia"
+author_email,rebecca.cowley@csiro.au; lisa.krummel@bom.gov.au
+cdm_data_type,profile
+citation,"The citation in a list of references is: OceanTraX Data Management Team [year-of-data-download], [Title], [data-access-url], accessed [date-of-access]"
+comment,File created following OceanTraX Data Management Team recommendations from data produced by the providers in 'Institution'
+Conventions,CF-1.8
+creator_email,rebecca.cowley@csiro.au; lisa.krummel@bom.gov.au
+creator_name,"Rebecca Cowley, CSIRO Australia; Lisa Krummel, BOM Australia"
+data_centre,Commonwealth Scientific and Industrial Research Organisation (CSIRO); Australian Bureau of Meteorology (BOM)
+data_centre_email,info@csiro.au
+date_created,
+disclaimer,"Data, products and services from OceanTraX are provided ""as is"" without any warranty as to fitness for a particular purpose."
+featureType,profile
+geospatial_lat_max,
+geospatial_lat_min,
+geospatial_lat_resolution,point
+geospatial_lat_units,degrees_north
+geospatial_lon_max,
+geospatial_lon_min,
+geospatial_lon_units,degrees_east
+geospatial_vertical_max,
+geospatial_vertical_min,
+geospatial_vertical_positive,down
+geospatial_vertical_units,metres
+history,
+Institution,[Stream_Ident]
+Institution_code,
+keywords,Oceans>Ocean Temperature>Sea Water Temperature; Oceans>Bathymetry/Seafloor Topography>Water Depth; Bathythermographs>Expendable Bathythermographs (XBT)
+keywords_vocabulary,NASA/GCMD Earth Science Keywords
+license,http://creativecommons.org/licenses/by/4.0/
+naming_authority,OceanTraX
+principal_investigator,"[CSC1;PICD] Rebecca Cowley, CSIRO; Lisa Krummel, BOM"
+project,[PRJ$;PRO1;PROJ] Integrated Marine Observing System (IMOS)
+references,"https://github.com/xbt-community/xbt-data-formats; Cowley, Rebecca; Krummel, Lisa. Australian XBT Quality Control Cookbook Version 2.1. Hobart, Tasmania, Australia: CSIRO; 2022. csiro:EP2022-1825. https://doi.org/10.25919/3tm5-zn80"
+source,Expendable Bathythermograph (XBT)
+standard_name_vocabulary,NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table Version 91
+summary,"XBT data sourced from original records held at CSIRO, BOM and IMOS after delayed-mode quality control procedures applied."
+time_coverage_duration,point
+time_coverage_end,
+time_coverage_resolution,point
+time_coverage_start,
+title,Ocean Temperature profile data from XBT (expendable bathythermographs)
