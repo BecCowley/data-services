@@ -13,8 +13,10 @@ author : Besnard, Laurent
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
-
-from lib.python.platform_code_vocab import platform_altlabels_per_preflabel
+try:
+    from platform_code_vocab import platform_altlabels_per_preflabel
+except ImportError:
+    from lib.python.platform_code_vocab import platform_altlabels_per_preflabel
 
 from functools import lru_cache
 
