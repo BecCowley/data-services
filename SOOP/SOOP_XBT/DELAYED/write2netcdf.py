@@ -28,18 +28,14 @@ def create_filename_output(output_folder, prof, hist, imosformat=True, profile_r
         if 'TPR' in hist['HISTORY_QC_CODE'].values:
             filename = filename + 'TEST'
         filename = os.path.join(output_folder, filename + '.nc')
-        # if the filename already exists, add one minute to the time and check again until a unique filename is found
-        while os.path.exists(filename):
-            # display a message that the filename already exists and we are adding one minute to the time
-            print(f"Filename {filename} already exists, adding one minute to the time.")
-            xbt_time_dt = datetime.strptime(prof['TIME'].iloc[0].strftime('%Y%m%dT%H%M%SZ'), '%Y%m%dT%H%M%SZ') + pd.Timedelta(minutes=1)
-            prof['TIME'].iloc[0] = xbt_time_dt
-            filename = 'IMOS_SOOP-XBT_T_%s_%s_%s_%s' % (
-                prof['TIME'].iloc[0].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line_label'].iloc[0], fv,
-                prof['Cruise_ID'].iloc[0])
-            if 'TPR' in hist['HISTORY_QC_CODE'].values:
-                filename = filename + 'TEST'
-            filename = os.path.join(output_folder, filename + '.nc')
+        # if the filename already exists, add a '-RX' where X is the number of times the file has been created, starting with 1, until a unique filename is found
+        if os.path.exists(filename):
+            count = 1
+            while os.path.exists(filename):
+                filename = os.path.join(output_folder, 'IMOS_SOOP-XBT_T_%s_%s_%s_%s-R%s.nc' % (
+                    prof['TIME'].iloc[0].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line_label'].iloc[0], fv,
+                    prof['Cruise_ID'].iloc[0], count))
+                count += 1
     else:
         # format is VNHF_202507231645_D_001.nc
         # where VNHF is the ship Callsign, 202507231645 is the time of the profile,
@@ -60,13 +56,12 @@ def create_filename_output(output_folder, prof, hist, imosformat=True, profile_r
         # create the filename
         filename = os.path.join(output_folder, f"{xbt_callsign}_{xbt_time}_{qc_flag}.nc")
 
-        # if the filename already exists, add one minute to the time and check again until a unique filename is found
-        while os.path.exists(filename):
-            # display a message that the filename already exists and we are adding one minute to the time
-            print(f"Filename {filename} already exists, adding one minute to the time.")
-            xbt_time_dt = datetime.strptime(xbt_time, '%Y%m%d%H%M') + pd.Timedelta(minutes=1)
-            xbt_time = xbt_time_dt.strftime('%Y%m%d%H%M')
-            filename = os.path.join(output_folder, f"{xbt_callsign}_{xbt_time}_{qc_flag}.nc")
+        # if the filename already exists, add a '-RX' where X is the number of times the file has been created, starting with 1, until a unique filename is found
+        if os.path.exists(filename):
+            count = 1
+            while os.path.exists(filename):
+                filename = os.path.join(output_folder, f"{xbt_callsign}_{xbt_time}_{qc_flag}-R{count}.nc")
+                count += 1
 
     return filename
 
