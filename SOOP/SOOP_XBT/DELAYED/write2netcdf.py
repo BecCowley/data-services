@@ -7,7 +7,6 @@ from datetime import datetime
 from time import strftime, gmtime
 
 import numpy as np
-from numpy.strings import zfill
 import pandas as pd
 from netCDF4 import Dataset, date2num
 
