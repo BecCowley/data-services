@@ -360,6 +360,7 @@ if __name__ == '__main__':
     # get the input and output folders
     input_folder = args.input
     output_folder = args.output
+    globals_input_file = args.globals
     # add subscript '_oceantrax' to the output folder for oceantrax format files
     output_folder_oceantrax = output_folder.rstrip('/') + '_oceantrax'
 
@@ -383,7 +384,6 @@ if __name__ == '__main__':
         # remove the HISTORY_PREVIOUS_VALUE column from the histories dataframe if it exists as it is not needed for the netcdf output
         if 'HISTORY_PREVIOUS_VALUE' in histories.columns:
             histories = histories.drop(columns=['HISTORY_PREVIOUS_VALUE'])
-        globals_input_file = args.globals
         # if the latest date is prior to 2017, append "_pre2016.csv" to the globals_input_file path to use the older version of the global attributes file which is more appropriate for older data
         if profiles['TIME'].max() < datetime(2017, 1, 1) and profiles['Institution'].iloc[0] == "Australia Commonwealth Scientific and Industrial Research Organization (CSIRO)":
             globals_input_file = globals_input_file.replace(".csv", "_pre2016.csv")
@@ -434,7 +434,7 @@ if __name__ == '__main__':
                     output_folder_line_year = os.path.join(output_folder_oceantrax, line_label, str(year))
                     if not os.path.exists(output_folder_line_year):
                         os.makedirs(output_folder_line_year)
-                    write_output_nc(output_folder_line_year, profile, profile_histories, globals_file_path='netcdfGlobalAtts_OceanTraX.csv', profile_raw=False, historic_flags=True, imosformat=False)
+                    write_output_nc(output_folder_line_year, profile, profile_histories, globals_file_path=os.path.join(os.path.dirname(globals_input_file), 'netcdfGlobalAtts_OceanTraX.csv'), profile_raw=False, historic_flags=True, imosformat=False)
                 else:
                     raise ValueError(f"Unknown output format: {output_format}")
             successful_exports_by_line[line_label] += 1
