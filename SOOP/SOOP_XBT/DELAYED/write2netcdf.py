@@ -4,6 +4,7 @@ import glob
 import os
 from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
 from time import strftime, gmtime
 
 import numpy as np
@@ -12,6 +13,9 @@ from netCDF4 import Dataset, date2num
 
 from xbt_utils import make_transect_id
 from xbt_utils import read_flag_quality_table, read_variables_config, read_globals_config
+
+CSIRO_INSTITUTION = "Australia Commonwealth Scientific and Industrial Research Organization (CSIRO)"
+BOM_INSTITUTION = "Australia Bureau of Meteorology (BoM)"
 
 def create_filename_output(output_folder, prof, hist, imosformat=True, profile_raw=False):
     if imosformat:
@@ -65,11 +69,59 @@ def create_filename_output(output_folder, prof, hist, imosformat=True, profile_r
 
     return filename
 
-def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGlobalAtts.csv', profile_raw=False, historic_flags=False, imosformat=True):
+
+def _append_suffix_to_filename(path, suffix):
+    """Return a sibling file path by appending suffix before the extension."""
+    pth = Path(path)
+    return str(pth.with_name(f"{pth.stem}{suffix}{pth.suffix}"))
+
+
+def build_globals_file_paths(globals_input_file):
+    """Build expected globals CSV file paths from the base IMOS globals file."""
+    return {
+        'default': globals_input_file,
+        'csiro_pre2016': _append_suffix_to_filename(globals_input_file, "_pre2016"),
+        'bom': _append_suffix_to_filename(globals_input_file, "_BOM"),
+        'oceantrax': _append_suffix_to_filename(globals_input_file, "_OceanTraX")
+    }
+
+
+def preload_globals_configs(globals_input_file):
+    """Read globals CSV files once and keep them in memory for profile-level selection."""
+    globals_paths = build_globals_file_paths(globals_input_file)
+    globals_configs = {}
+
+    for key, path in globals_paths.items():
+        if os.path.exists(path):
+            globals_configs[key] = read_globals_config(path)
+        elif key in ['default', 'oceantrax']:
+            raise FileNotFoundError(f"Required globals file not found: {path}")
+        else:
+            print(f"Optional globals file not found: {path}. Using defaults when needed.")
+
+    return globals_configs
+
+
+def select_imos_globals_config(globals_configs, profile):
+    """Select preloaded IMOS globals config for a profile."""
+    institution = profile['Institution'].iloc[0] if 'Institution' in profile.columns else None
+    latest_time = profile['TIME'].max() if 'TIME' in profile.columns else None
+
+    if institution == CSIRO_INSTITUTION and pd.notna(latest_time) and latest_time < datetime(2017, 1, 1):
+        if 'csiro_pre2016' in globals_configs:
+            return globals_configs['csiro_pre2016']
+    elif institution == BOM_INSTITUTION:
+        if 'bom' in globals_configs:
+            return globals_configs['bom']
+
+    return globals_configs['default']
+
+def write_output_nc(output_folder, profile, history, globals_attrs=None, globals_file_path='netcdfGlobalAtts.csv', profile_raw=False, historic_flags=False, imosformat=True):
     """output the data to the IMOS format netcdf version
     :param output_folder: the folder to write the netcdf file to
     :param profile: the profile DataFrame
     :param history: the history DataFrame
+    :param globals_attrs: optional preloaded globals attribute dictionary
     :param profile_raw: if True, the create a FV00 file, if False create a FV01 file, default is False
     :param imosformat: if True, create a file in IMOS format, otherwise create a file in OceanTrax format
     """
@@ -98,8 +150,11 @@ def write_output_nc(output_folder, profile, history, globals_file_path='netcdfGl
     else:
         profile['SOT_ID'] = None  # default value if SOT_ID is not present
         profile['WIGOS_ID'] = None  # default value if SOT_ID is not present
-    # read the global attributes config file
-    globals_list = read_globals_config(globals_file_path)
+    # read global attributes config, or use preloaded attributes
+    if globals_attrs is not None:
+        globals_list = globals_attrs.copy()
+    else:
+        globals_list = read_globals_config(globals_file_path)
     # first get a list of the attributes attached to the variables
     extra_atts = vars[vars['is_var_att_global'] == 'att']
     # get a list of the global attributes
@@ -356,6 +411,7 @@ if __name__ == '__main__':
     input_folder = args.input
     output_folder = args.output
     globals_input_file = args.globals
+    globals_configs = preload_globals_configs(globals_input_file)
     # add subscript '_oceantrax' to the output folder for oceantrax format files
     output_folder_oceantrax = output_folder.rstrip('/') + '_oceantrax'
 
@@ -379,12 +435,6 @@ if __name__ == '__main__':
         # remove the HISTORY_PREVIOUS_VALUE column from the histories dataframe if it exists as it is not needed for the netcdf output
         if 'HISTORY_PREVIOUS_VALUE' in histories.columns:
             histories = histories.drop(columns=['HISTORY_PREVIOUS_VALUE'])
-        # if the latest date is prior to 2017, append "_pre2016.csv" to the globals_input_file path to use the older version of the global attributes file which is more appropriate for older data
-        if profiles['TIME'].max() < datetime(2017, 1, 1) and profiles['Institution'].iloc[0] == "Australia Commonwealth Scientific and Industrial Research Organization (CSIRO)":
-            globals_input_file = globals_input_file.replace(".csv", "_pre2016.csv")
-        # if the profiles['Institution'] is "Australia Bureau of Meteorology (BoM)", replace the globals_input_file path with the globals_input_file path with "_bom.csv" appended to the file name to use the version of the global attributes file which is more appropriate for BoM data
-        if profiles['Institution'].iloc[0] == "Australia Bureau of Meteorology (BoM)":
-            globals_input_file = globals_input_file.replace(".csv", "_BOM.csv")
         # put a fix in here for already made parquet files where we have changed the column name from PROBE_manufacture_date to PROBE_manufacture_date_YYYYMMDD
         if 'PROBE_manufacture_date' in profiles.columns:
             profiles = profiles.rename(columns={'PROBE_manufacture_date': 'PROBE_manufacture_date_YYYYMMDD'})
@@ -415,6 +465,7 @@ if __name__ == '__main__':
             # add some paths to the output_folder based on the 'SOOP_line_label' and year of the profile time
             line_label = profile['SOOP_line_label'][0]
             year = profile['TIME'][0].year
+            profile_globals_attrs = select_imos_globals_config(globals_configs, profile)
 
             # write the profile to the netcdf file in imos format, then in oceantrax format
             for output_format in ['imos', 'oceantrax']:
@@ -423,13 +474,13 @@ if __name__ == '__main__':
                     output_folder_line_year = os.path.join(output_folder, line_label, str(year))
                     if not os.path.exists(output_folder_line_year):
                         os.makedirs(output_folder_line_year)
-                    write_output_nc(output_folder_line_year, profile, profile_histories, globals_input_file, profile_raw=False, historic_flags=True, imosformat=True)
+                    write_output_nc(output_folder_line_year, profile, profile_histories, globals_attrs=profile_globals_attrs, profile_raw=False, historic_flags=True, imosformat=True)
                 elif output_format == 'oceantrax':
                     # output folder is output_folder/line_label/year
                     output_folder_line_year = os.path.join(output_folder_oceantrax, line_label, str(year))
                     if not os.path.exists(output_folder_line_year):
                         os.makedirs(output_folder_line_year)
-                    write_output_nc(output_folder_line_year, profile, profile_histories, globals_file_path=os.path.join(os.path.dirname(globals_input_file), 'netcdfGlobalAtts_OceanTraX.csv'), profile_raw=False, historic_flags=True, imosformat=False)
+                    write_output_nc(output_folder_line_year, profile, profile_histories, globals_attrs=globals_configs['oceantrax'], profile_raw=False, historic_flags=True, imosformat=False)
                 else:
                     raise ValueError(f"Unknown output format: {output_format}")
             successful_exports_by_line[line_label] += 1
