@@ -485,6 +485,7 @@ if __name__ == '__main__':
                         os.makedirs(output_folder_line_year)
                     write_output_nc(output_folder_line_year, profile, profile_histories, globals_attrs=profile_globals_attrs, profile_raw=False, historic_flags=True, imosformat=True)
                 elif output_format == 'oceantrax':
+                    continue  # skip oceantrax output for now, as it is not needed for the current use case
                     # output folder is output_folder/line_label/year
                     output_folder_line_year = os.path.join(output_folder_oceantrax, line_label, str(year))
                     if not os.path.exists(output_folder_line_year):
