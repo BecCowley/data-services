@@ -19,7 +19,8 @@ def make_transect_id(soop_line, date_like, count):
     Return a unique transect id like: soop_line-YYYYMMII
     where I starts at 1 and increments until the id is not in existing_ids.
     """
-    yyyy = pd.to_datetime(date_like).strftime('%Y')
+    # date_like is a int32 of the yyyy
+    yyyy = str(date_like)
   
     candidate = f"{soop_line}-{yyyy}{str(count).zfill(2)}"
     return candidate

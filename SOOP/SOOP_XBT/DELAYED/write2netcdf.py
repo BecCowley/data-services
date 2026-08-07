@@ -457,20 +457,31 @@ if __name__ == '__main__':
         histories = histories.sort_values('station_number').reset_index(drop=True)
         # make an empty transect_id column in the profiles dataframe
         profiles['transect_id'] = None
-        # create a transect_id column in the profiles dataframe by concatenating the SOOP_line_label and the year of the TIME column
-        # use groupby to group the profiles by year then Cruise_ID, keeping them in the same order and assign a transect_id to each group based on the SOOP_line_label and the year of the TIME column
-        # reset count to 0 for each SOOP_line_label and each year, then increment it for each Cruise_ID in that year
-        profiles['transect_id'] = (
-            profiles.groupby([profiles['TIME'].dt.year, 'SOOP_line_label', 'Cruise_ID'], sort=False)['SOOP_line_label']
-            .transform(lambda group: make_transect_id(group.name[1], group.name[0]))
+        # create a transect_id per unique Cruise_ID within each (year, SOOP_line_label)
+        # count starts at 1 for each (year, SOOP_line_label) and increments by Cruise_ID order of appearance
+        profiles['transect_year'] = profiles['TIME'].dt.year
+        transect_groups = profiles[['transect_year', 'SOOP_line_label', 'Cruise_ID']].drop_duplicates()
+        transect_groups['transect_count'] = (
+            transect_groups.groupby(['transect_year', 'SOOP_line_label'], sort=False).cumcount() + 1
+        )
+        profiles = profiles.merge(
+            transect_groups,
+            on=['transect_year', 'SOOP_line_label', 'Cruise_ID'],
+            how='left'
+        )
+        profiles['transect_id'] = profiles.apply(
+            lambda row: make_transect_id(row['SOOP_line_label'], row['transect_year'], int(row['transect_count'])),
+            axis=1
         )
 
         # Sanity check: every (year, line, cruise) group must map to exactly one transect_id.
         transect_counts = profiles.groupby(
-            [profiles['TIME'].dt.year, 'SOOP_line_label', 'Cruise_ID']
+            ['transect_year', 'SOOP_line_label', 'Cruise_ID']
         )['transect_id'].nunique()
         if (transect_counts > 1).any():
             raise ValueError("Inconsistent transect_id values found within a year/line/cruise group.")
+
+        profiles = profiles.drop(columns=['transect_year', 'transect_count'])
 
         # there are multiple profiles in the profiles dataframe, loop through unique station numbers
         for station in profiles['station_number'].unique():
