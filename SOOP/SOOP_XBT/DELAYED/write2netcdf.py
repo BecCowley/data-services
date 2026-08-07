@@ -9,6 +9,7 @@ from time import strftime, gmtime
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 from netCDF4 import Dataset, date2num
 
 from xbt_utils import make_transect_id
@@ -403,6 +404,54 @@ def write_output_nc(output_folder, profile, history, globals_attrs=None, globals
                 att_value = 'Unknown'
             output_netcdf_obj.setncattr(att_name, att_value)
 
+
+def build_transect_lookup(parquet_files):
+    """Build a transect lookup from all input parquet files using only required columns."""
+    required_cols = ['TIME', 'SOOP_line_label', 'Cruise_ID']
+    frames = []
+
+    for file_path in parquet_files:
+        schema_cols = set(pq.read_schema(file_path).names)
+        if 'transect_id' in schema_cols:
+            continue
+
+        missing_cols = [col for col in required_cols if col not in schema_cols]
+        if missing_cols:
+            raise ValueError(
+                f"Cannot build transect_id for {file_path}. Missing required columns: {missing_cols}"
+            )
+
+        table = pq.read_table(file_path, columns=required_cols)
+        frame = table.to_pandas()
+        frame['TIME'] = pd.to_datetime(frame['TIME'], errors='coerce')
+        frame = frame.dropna(subset=['TIME', 'SOOP_line_label', 'Cruise_ID'])
+        if frame.empty:
+            continue
+        frames.append(frame)
+
+    if not frames:
+        return pd.DataFrame(columns=['transect_year', 'SOOP_line_label', 'Cruise_ID', 'transect_id'])
+
+    all_profiles = pd.concat(frames, ignore_index=True)
+    all_profiles = all_profiles.sort_values(by=['SOOP_line_label', 'TIME', 'Cruise_ID']).reset_index(drop=True)
+    all_profiles['transect_year'] = all_profiles['TIME'].dt.year.astype(int)
+
+    transect_groups = all_profiles[['transect_year', 'SOOP_line_label', 'Cruise_ID']].drop_duplicates()
+    transect_groups['transect_count'] = (
+        transect_groups.groupby(['transect_year', 'SOOP_line_label'], sort=False).cumcount() + 1
+    )
+    transect_groups['transect_id'] = transect_groups.apply(
+        lambda row: make_transect_id(
+            row['SOOP_line_label'],
+            row['transect_year'],
+            int(row['transect_count'])
+        ),
+        axis=1
+    )
+
+    transect_lookup = transect_groups[['transect_year', 'SOOP_line_label', 'Cruise_ID', 'transect_id']].copy()
+    return transect_lookup
+
 # main function
 if __name__ == '__main__':
     """
@@ -435,6 +484,9 @@ if __name__ == '__main__':
     # Track successful profile exports per SOOP line label.
     successful_exports_by_line = defaultdict(int)
 
+    # Pre-compute transect_id across all files missing transect_id using only required columns.
+    transect_lookup = build_transect_lookup(parquet_data)
+
     # write the output netcdf files
     for data_file in parquet_data:
         print("Processing file %s" % data_file)
@@ -449,39 +501,38 @@ if __name__ == '__main__':
             profiles = profiles.rename(columns={'PROBE_manufacture_date': 'PROBE_manufacture_date_YYYYMMDD'})
         if 'PROBE_manufacture_date_YYYY-MM-DD' in profiles.columns:
             profiles = profiles.rename(columns={'PROBE_manufacture_date_YYYY-MM-DD': 'PROBE_manufacture_date_YYYYMMDD'})
+        # If transect_id already exists, keep it unchanged. Otherwise assign from precomputed lookup.
+        if 'transect_id' not in profiles.columns:
+            if transect_lookup.empty:
+                raise ValueError(f"No transect lookup data available to assign transect_id for {data_file}")
+
+            profiles['transect_year'] = pd.to_datetime(profiles['TIME'], errors='coerce').dt.year
+            profiles = profiles.merge(
+                transect_lookup,
+                on=['transect_year', 'SOOP_line_label', 'Cruise_ID'],
+                how='left'
+            )
+
+            if profiles['transect_id'].isna().any():
+                missing_count = int(profiles['transect_id'].isna().sum())
+                raise ValueError(
+                    f"Missing transect_id for {missing_count} rows in {data_file}. "
+                    "Check TIME, SOOP_line_label, and Cruise_ID values."
+                )
+
+            profiles = profiles.drop(columns=['transect_year'])
         # sort the dataframes by line label and TIME
         profiles = profiles.sort_values(by=['SOOP_line_label', 'TIME', 'DEPTH']).reset_index(drop=True)
         # get the station_number order from profiles and apply it to histories so that they are in the same order
         station_number_order = profiles['station_number'].unique()
         histories['station_number'] = pd.Categorical(histories['station_number'], categories=station_number_order, ordered=True)
         histories = histories.sort_values('station_number').reset_index(drop=True)
-        # make an empty transect_id column in the profiles dataframe
-        profiles['transect_id'] = None
-        # create a transect_id per unique Cruise_ID within each (year, SOOP_line_label)
-        # count starts at 1 for each (year, SOOP_line_label) and increments by Cruise_ID order of appearance
-        profiles['transect_year'] = profiles['TIME'].dt.year
-        transect_groups = profiles[['transect_year', 'SOOP_line_label', 'Cruise_ID']].drop_duplicates()
-        transect_groups['transect_count'] = (
-            transect_groups.groupby(['transect_year', 'SOOP_line_label'], sort=False).cumcount() + 1
-        )
-        profiles = profiles.merge(
-            transect_groups,
-            on=['transect_year', 'SOOP_line_label', 'Cruise_ID'],
-            how='left'
-        )
-        profiles['transect_id'] = profiles.apply(
-            lambda row: make_transect_id(row['SOOP_line_label'], row['transect_year'], int(row['transect_count'])),
-            axis=1
-        )
-
         # Sanity check: every (year, line, cruise) group must map to exactly one transect_id.
         transect_counts = profiles.groupby(
-            ['transect_year', 'SOOP_line_label', 'Cruise_ID']
+            [profiles['TIME'].dt.year, 'SOOP_line_label', 'Cruise_ID']
         )['transect_id'].nunique()
         if (transect_counts > 1).any():
             raise ValueError("Inconsistent transect_id values found within a year/line/cruise group.")
-
-        profiles = profiles.drop(columns=['transect_year', 'transect_count'])
 
         # there are multiple profiles in the profiles dataframe, loop through unique station numbers
         for station in profiles['station_number'].unique():
