@@ -47,6 +47,11 @@ def create_filename_output(output_folder, prof, hist, imosformat=True, profile_r
         # and 001 is optional: number of deployment at this date/time and location from the same vessel
         """create the filename for the output netcdf file"""
 
+        # if the profile histories contains TP, do not create the file and return None
+        if 'TPR' in hist['HISTORY_QC_CODE'].values:
+            print("Profile contains TP, not creating netcdf file")
+            return None
+
         # get the Callsign and time from the profile
         xbt_callsign = prof['Callsign'].iloc[0].strip()
         xbt_time = prof['TIME'].iloc[0].strftime('%Y%m%d%H%M')
@@ -128,6 +133,10 @@ def write_output_nc(output_folder, profile, history, globals_attrs=None, globals
 
     # now begin write out to new format
     netcdf_filepath = create_filename_output(output_folder, profile, history, imosformat, profile_raw)
+    # if netcdf_filepath is None:
+    if netcdf_filepath is None:
+        print("No netcdf file created for this %s profile due to TP in history or other conditions %s." % (imosformat, profile['station_number'].iloc[0]))
+        return
     print('Creating output %s' % netcdf_filepath)
 
     # reset the index of the profile DataFrame
