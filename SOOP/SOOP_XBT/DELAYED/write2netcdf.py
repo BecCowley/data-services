@@ -458,13 +458,20 @@ if __name__ == '__main__':
         # make an empty transect_id column in the profiles dataframe
         profiles['transect_id'] = None
         # create a transect_id column in the profiles dataframe by concatenating the SOOP_line_label and the year of the TIME column
-        for soop_line_label in profiles['SOOP_line_label'].unique():
-            # use groupby to group the profiles by Cruise_ID, keeping them in the same order and assign a transect_id to each group based on the SOOP_line_label and the year of the TIME column
-            count = 0
-            for cruise_id, group in profiles[profiles['SOOP_line_label'] == soop_line_label].groupby('Cruise_ID', sort=False):
-                count += 1
-                transect_id = make_transect_id(soop_line_label, group['TIME'].iloc[0], count)
-                profiles.loc[group.index, 'transect_id'] = transect_id
+        # use groupby to group the profiles by year then Cruise_ID, keeping them in the same order and assign a transect_id to each group based on the SOOP_line_label and the year of the TIME column
+        # reset count to 0 for each SOOP_line_label and each year, then increment it for each Cruise_ID in that year
+        profiles['transect_id'] = (
+            profiles.groupby([profiles['TIME'].dt.year, 'SOOP_line_label', 'Cruise_ID'], sort=False)['SOOP_line_label']
+            .transform(lambda group: make_transect_id(group.name[1], group.name[0]))
+        )
+
+        # Sanity check: every (year, line, cruise) group must map to exactly one transect_id.
+        transect_counts = profiles.groupby(
+            [profiles['TIME'].dt.year, 'SOOP_line_label', 'Cruise_ID']
+        )['transect_id'].nunique()
+        if (transect_counts > 1).any():
+            raise ValueError("Inconsistent transect_id values found within a year/line/cruise group.")
+
         # there are multiple profiles in the profiles dataframe, loop through unique station numbers
         for station in profiles['station_number'].unique():
             # get the profile and history data for this station
