@@ -37,9 +37,7 @@ def create_filename_output(output_folder, prof, hist, imosformat=True, profile_r
         if os.path.exists(filename):
             count = 1
             while os.path.exists(filename):
-                filename = os.path.join(output_folder, 'IMOS_SOOP-XBT_T_%s_%s_%s_%s-R%s.nc' % (
-                    prof['TIME'].iloc[0].strftime('%Y%m%dT%H%M%SZ'), prof['SOOP_line_label'].iloc[0], fv,
-                    prof['Cruise_ID'].iloc[0], count))
+                filename = filename.replace('.nc', '-R%s.nc' % count)
                 count += 1
     else:
         # format is VNHF_202507231645_D_001.nc
