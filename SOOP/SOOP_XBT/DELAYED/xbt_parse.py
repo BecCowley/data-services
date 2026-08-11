@@ -935,6 +935,14 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
 
     for ind in range(vv.__len__()):
         item_val = profile_qc.data['PROBE_TYPE' + vv[ind]].unique().item()
+        if item_val == '':
+            profile_qc.data['PROBE_TYPE' + vv[ind]] = '1023'
+            profile_qc.data['PROBE_TYPE_name' + vv[ind]]  = 'Unknown'
+            profile_qc.data['PROBE_TYPE_coefficient_a' + vv[ind]] = np.nan
+            profile_qc.data['PROBE_TYPE_coefficient_b' + vv[ind]] = np.nan
+            if ind == 0:
+                profile_qc.data['PROBE_TYPE_quality_control'] = 0
+            LOGGER.error('PROBE_TYPE is missing from %s' % profile_qc.Input_filename)
         # if histories is not empty, check for TPR code
         if not profile_qc.histories.empty and \
                 profile_qc.histories['HISTORY_QC_CODE'].str.contains('TPR').any():
