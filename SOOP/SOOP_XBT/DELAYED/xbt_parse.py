@@ -935,7 +935,7 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
 
     for ind in range(vv.__len__()):
         item_val = profile_qc.data['PROBE_TYPE' + vv[ind]].unique().item()
-        if item_val == '':
+        if item_val == '' or pd.isna(item_val):
             profile_qc.data['PROBE_TYPE' + vv[ind]] = '1023'
             profile_qc.data['PROBE_TYPE_name' + vv[ind]]  = 'Unknown'
             profile_qc.data['PROBE_TYPE_coefficient_a' + vv[ind]] = np.nan
