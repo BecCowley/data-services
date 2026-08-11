@@ -943,6 +943,7 @@ def get_fallrate_eq_coef(profile_qc, profile_noqc):
             if ind == 0:
                 profile_qc.data['PROBE_TYPE_quality_control'] = 0
             LOGGER.error('PROBE_TYPE is missing from %s' % profile_qc.Input_filename)
+            return profile_qc
         # if histories is not empty, check for TPR code
         if not profile_qc.histories.empty and \
                 profile_qc.histories['HISTORY_QC_CODE'].str.contains('TPR').any():
