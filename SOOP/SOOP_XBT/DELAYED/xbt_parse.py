@@ -2242,8 +2242,8 @@ if __name__ == '__main__':
                 dfhist['station_number'] = pd.Series(dtype='int64')
 
                 for f in stations:
-                    if f != 774521:
-                        continue
+                    # if f != 632806:
+                        # continue
                     fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
                     fname = os.path.join(keysall.dbase_name, fpath)
                     # make input_filename here
