@@ -1679,7 +1679,7 @@ def restore_temp_val(profile):
                 # get the depths of the SPA, IPA or HFA flags
                 depths2 = profile.histories.loc[idx2, 'HISTORY_START_DEPTH'].values
                 # find the depths in the profile data
-                ind2 = np.in1d(np.round(df['DEPTH'], 2), np.round(depths2, 2)).nonzero()[0]
+                ind2 = np.isin(np.round(df['DEPTH'], 2), np.round(depths2, 2)).nonzero()[0]
                 temps = profile.histories['HISTORY_PREVIOUS_VALUE'][ind2].values.astype('float32')
                 # is the first value of ind2 only one different from last value of ind?
                 if (ind2[0] - ind[-1]) == 1:
@@ -1776,18 +1776,9 @@ def create_flag_feature(profile):
     if idx.any():
         LOGGER.warning('TEMP_quality_control values are 0 and TEMP_RAW_quality_control values are not. Updating. %s'
                        % profile.Input_filename)
+        # index the rows where the TEMP_quality_control values are 0 and the TEMP_RAW_quality_control values are not
+        idx = (df_data['TEMP_quality_control'] == 0) & (df_data['TEMP_RAW_quality_control'] != 0)
         df_data.loc[idx, 'TEMP_quality_control'] = df_data.loc[idx, 'TEMP_RAW_quality_control']
-        # add QCA to the history
-        codes = codes._append({'HISTORY_INSTITUTION': profile.data['Institution'],
-                               'HISTORY_QC_CODE': 'QCA',
-                               'HISTORY_PARAMETER': 'TEMP',
-                               'HISTORY_SOFTWARE': 'Australian XBT Quality Control Cookbook Version 2.1',
-                               'HISTORY_DATE': pd.datetime(pd.Timestamp.now()).strftime('%Y-%m-%d'),
-                               'HISTORY_START_DEPTH': df_data['DEPTH'].values[0],
-                               'HISTORY_QC_CODE_DESCRIPTION': 'scientific_qc_applied',
-                               'HISTORY_QC_CODE_VALUE': np.int8(1),
-                               'HISTORY_SOFTWARE_RELEASE': '2.1',
-                               'HISTORY_PREVIOUS_VALUE': '0'}, ignore_index=True)
 
     # only continue if there are codes to map
     if codes.empty:
