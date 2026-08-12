@@ -1036,6 +1036,9 @@ def parse_histories_nc(profile):
                 if code_strings:
                     vv = [vv[i] for i in code_strings]
                     nhist = len(vv)
+                else:
+                    vv = []
+                    nhist = 0
             else:
                 # convert the byte array to a string
                 vv = [''.join(chr(x) for x in bytearray(xx))
@@ -2015,6 +2018,9 @@ def check_nc_to_be_created(profile):
     # transform the date to a datetime object
     date1 = convert_time_string(woce_date, '%Y%m%d')
     date2 = convert_time_string(woce_date, '%d%m%Y')
+    if pd.isna(date1) and pd.isna(date2):
+        LOGGER.error('Profile not processed, date is not valid: %s' % profile.Input_filename)
+        return False
     year = (date1 if not pd.isna(date1) else date2).year
 
     if np.sum(~depth.mask) == 0:
