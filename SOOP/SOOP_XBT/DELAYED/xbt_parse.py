@@ -1542,7 +1542,7 @@ def combine_histories(profile_qc, profile_noqc):
             ii = np.where(np.isclose(np.round(profile_qc.data['DEPTH'], 2), np.round(row['HISTORY_START_DEPTH'], 2),
                             atol=0.01))[0]
             # check the previous value is the same as the TEMP_RAW value
-            if not np.isclose(round(float(row['HISTORY_PREVIOUS_VALUE']), 2), np.round(profile_qc.data['TEMP_RAW'][ii], 2).item(), atol=0.01):
+            if not np.isclose(round(float(row['HISTORY_PREVIOUS_VALUE']), 2), np.round(profile_qc.data['TEMP_RAW'][ii[0]], 2).item(), atol=0.01):
                 # remove this row from the dataframe
                 profile_qc.histories = profile_qc.histories.drop(idx)
                 # log the error
@@ -2242,8 +2242,8 @@ if __name__ == '__main__':
                 dfhist['station_number'] = pd.Series(dtype='int64')
 
                 for f in stations:
-                    # if f != 61013321:
-                    #     continue
+                    if f != 774521:
+                        continue
                     fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
                     fname = os.path.join(keysall.dbase_name, fpath)
                     # make input_filename here
