@@ -541,8 +541,7 @@ def parse_data_nc(profile_qc, profile_noqc, profile_raw, station_number):
         for ivar, var in data_vars.items():
             # we want the DEPTH to be a single dataset, but read all depths for each variable
             if 'P' in decode_bytearray(s.netcdf_file_obj.variables['D_P_Code'][ivar]):
-                LOGGER.error('Pressure data found in %s. This is not a valid XBT file' % s.Input_filename)
-                continue
+                LOGGER.error('Pressure data found in %s. Assuming this is DEPTH and continuing. %s' % (var, s.Input_filename))
             dep = np.round(s.netcdf_file_obj.variables['Depthpress'][ivar, :], 4)
             # if there are any depths that are less than 0, set them to NaN
             dep[dep < 0] = np.nan
@@ -1098,6 +1097,11 @@ def parse_histories_nc(profile):
     date1 = convert_time_string(df['HISTORY_DATE'], '%Y%m%d')
     date2 = convert_time_string(df['HISTORY_DATE'],'%d%m%Y')
     df['HISTORY_DATE'] = date1.fillna(date2)
+
+    # special fix for DUA flags which are not in the qc_df list, but are used in some files. remove the DUA flag from the histories
+    if df['HISTORY_QC_CODE'].str.contains('DU').any() and profile.data['TEMP_quality_control'].unique().any() in [1, 2, 5]:
+        df = df.loc[~df['HISTORY_QC_CODE'].str.contains('DU')]
+        nhist = len(df)
 
     # append the 'A' or 'R' to each code
     for idx, row in df.iterrows():
@@ -1833,9 +1837,12 @@ def create_flag_feature(profile):
                     if row['tempqc'] in [5]:
                         # check the TEMP_quality_control values in df_data at the depths deeper than row['HISTORY_START_DEPTH'] and get the next value that is not 5
                         deeper_tempqc = df_data.loc[df_data['DEPTH'] > row['HISTORY_START_DEPTH'], 'TEMP_quality_control'].values
-                        deeper_tempqc = deeper_tempqc[deeper_tempqc != 5][0]
-                        if deeper_tempqc.size == 0:
+                        if deeper_tempqc.size <= 1:
                             deeper_tempqc = 5
+                        else:
+                            deeper_tempqc = deeper_tempqc[deeper_tempqc != 5][0]
+                            if deeper_tempqc.size == 0:
+                                deeper_tempqc = 5
                     else:
                         deeper_tempqc = row['tempqc']
                     # if so, then we need to check that the TEMP_quality_control value is in the same category as the tempqc value
@@ -1999,10 +2006,14 @@ def check_nc_to_be_created(profile):
     # will probably need to think about XCTD data!!
 
     data_type = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Data_Type'][:].data)).strip()
-    duplicate_flag = ''.join(chr(x) for x in bytearray(profile.netcdf_file_obj['Dup_Flag'][0].data)).strip()
     nhist = int(profile.netcdf_file_obj['Num_Hists'][0].data)
     histcodes = [''.join(chr(x) for x in bytearray(xx)).strip()
                  for xx in profile.netcdf_file_obj['Act_Code'][0:nhist].data]
+    prof_flag = profile.netcdf_file_obj.variables['ProfQP'][0, 0, :, 0, 0].flatten()
+    # resize the arrays to eliminate empty values
+    prof_flag = np.ma.masked_array(prof_flag.compressed())
+    prof_flag = np.ma.masked_array(
+        invalid_to_ma_array(prof_flag, fillvalue=99))
     depth = np.round(profile.netcdf_file_obj.variables['Depthpress'][:], 2)
     woce_date = profile.netcdf_file_obj['woce_date'][0]
     # turn the woce_date into a string that is 8 characters long with spaces filled with zeros
@@ -2028,12 +2039,7 @@ def check_nc_to_be_created(profile):
         LOGGER.error('Profile not processed, date is before 1950: %s' % profile.Input_filename)
         return False
 
-    if duplicate_flag == 'D':
-        LOGGER.error(
-            'Profile not processed. Tagged as duplicate profile in original netcdf file %s' % profile.Input_filename)
-        return False
-
-    if 'DU' in histcodes:
+    if 'DU' in histcodes and prof_flag.all() > 2:
         LOGGER.error(
             'Profile not processed. Tagged as duplicate profile in original netcdf file %s' % profile.Input_filename)
         return False
@@ -2243,8 +2249,8 @@ if __name__ == '__main__':
                 dfhist['station_number'] = pd.Series(dtype='int64')
 
                 for f in stations:
-                    # if f != 470789:
-                    #     continue
+                    # if f != 1774595:
+                        # continue
                     fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
                     fname = os.path.join(keysall.dbase_name, fpath)
                     # make input_filename here
