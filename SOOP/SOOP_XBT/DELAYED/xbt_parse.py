@@ -1277,26 +1277,10 @@ def parse_histories_nc(profile):
     for idx, row in single_code_short_df.iterrows():
         mask = df['HISTORY_QC_CODE'].str[:2] == row['code']
         if any(mask):
-            # for PER there should be two rows, one with 'LATI' and one with 'LONG' and need to set HISTORY_PARAMETER to LATITUDE or LONGITUDE
-            if row['full_code'] == 'PER':
-                mask_lat = mask & df['HISTORY_PARAMETER'].str.contains('LATI')
-                df.loc[mask_lat, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['full_code'],
-                                                                                                row['TEMP_quality_control'],
-                                                                                                'LATITUDE']
-                mask_long = mask & df['HISTORY_PARAMETER'].str.contains('LONG')
-                df.loc[mask_long, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['full_code'],
+            df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['full_code'],
                                                                                             row['TEMP_quality_control'],
-                                                                                            'LONGITUDE']
-                mask_latlong = mask & df['HISTORY_PARAMETER'].str.contains('LALO')
-                if any(mask_latlong):
-                    # break here with information
-                    LOGGER.warning('HISTORY_QC_CODE %s has HISTORY_PARAMETER %s which is not valid. Please review output for this file %s'
-                                   % (row['full_code'], 'LALO', profile.Input_filename))
-                    exit(1)
-            else:
-                df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['full_code'],
-                                                                                                row['TEMP_quality_control'],
-                                                                                                row['Parameter']]
+                                                                                            row['Parameter']]
+    
     # add the QC description information
     df["HISTORY_QC_CODE_DESCRIPTION"] = [''] * nhist
     # map the qc_df['code'] to the df['HISTORY_QC_CODE'] and add the description to the df['HISTORY_QC_CODE_DESCRIPTION']
@@ -2259,7 +2243,7 @@ if __name__ == '__main__':
                 dfhist['station_number'] = pd.Series(dtype='int64')
 
                 for f in stations:
-                    # if f != 1190395:
+                    # if f != 470789:
                     #     continue
                     fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
                     fname = os.path.join(keysall.dbase_name, fpath)
