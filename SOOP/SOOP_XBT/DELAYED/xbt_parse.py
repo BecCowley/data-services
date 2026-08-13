@@ -1138,7 +1138,7 @@ def parse_histories_nc(profile):
 
     # Combine duplicated TEA flags to a single TEA for TIME variable TEMP_QC_CODE_VALUE is set to 2, not 5
     # Also change just DATE TEA flags to TIME
-    dfTEA = df[df['HISTORY_QC_CODE'] == 'TEA'].copy()
+    dfTEA = df[df['HISTORY_QC_CODE'].isin(['TEA','TER'])].copy()
     if len(dfTEA) > 0:
         # check that the history parameter is TIME or DATE
         if not dfTEA['HISTORY_PARAMETER'].isin(['TIME', 'DATE']).all():
@@ -1155,7 +1155,7 @@ def parse_histories_nc(profile):
 
         # first tidy up the TIME variable and DATE variable
         # if any of timerows['HISTORY_PREVIOUS_VALUE'] contains a variation with 9's then set to 0
-        pattern = re.compile(r'^9{1,5}(?:\.\d+)?$')
+        pattern = re.compile(r'^\s*0*9{1,5}0*(?:\.\d+)?\s*$')
         timeidx = df['HISTORY_PARAMETER'] == 'TIME'
         if timeidx.any():
             if df.loc[timeidx, 'HISTORY_PREVIOUS_VALUE'].str.contains(pattern).any():
@@ -1277,9 +1277,26 @@ def parse_histories_nc(profile):
     for idx, row in single_code_short_df.iterrows():
         mask = df['HISTORY_QC_CODE'].str[:2] == row['code']
         if any(mask):
-            df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['full_code'],
-                                                                                               row['TEMP_quality_control'],
-                                                                                               row['Parameter']]
+            # for PER there should be two rows, one with 'LATI' and one with 'LONG' and need to set HISTORY_PARAMETER to LATITUDE or LONGITUDE
+            if row['full_code'] == 'PER':
+                mask_lat = mask & df['HISTORY_PARAMETER'].str.contains('LATI')
+                df.loc[mask_lat, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['full_code'],
+                                                                                                row['TEMP_quality_control'],
+                                                                                                'LATITUDE']
+                mask_long = mask & df['HISTORY_PARAMETER'].str.contains('LONG')
+                df.loc[mask_long, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['full_code'],
+                                                                                            row['TEMP_quality_control'],
+                                                                                            'LONGITUDE']
+                mask_latlong = mask & df['HISTORY_PARAMETER'].str.contains('LALO')
+                if any(mask_latlong):
+                    # break here with information
+                    LOGGER.warning('HISTORY_QC_CODE %s has HISTORY_PARAMETER %s which is not valid. Please review output for this file %s'
+                                   % (row['full_code'], 'LALO', profile.Input_filename))
+                    exit(1)
+            else:
+                df.loc[mask, ['HISTORY_QC_CODE', 'HISTORY_QC_CODE_VALUE', 'HISTORY_PARAMETER']] = [row['full_code'],
+                                                                                                row['TEMP_quality_control'],
+                                                                                                row['Parameter']]
     # add the QC description information
     df["HISTORY_QC_CODE_DESCRIPTION"] = [''] * nhist
     # map the qc_df['code'] to the df['HISTORY_QC_CODE'] and add the description to the df['HISTORY_QC_CODE_DESCRIPTION']
@@ -1395,9 +1412,9 @@ def combine_histories(profile_qc, profile_noqc):
                     combined_histories.loc[
                         combined_histories['HISTORY_QC_CODE'].str.contains('TER'), ['HISTORY_QC_CODE',
                                     'HISTORY_QC_CODE_VALUE']] = ['TEA', 2]
-    # find rows in combined_histories where the HISTORY_QC_CODE contains PER and HISTORY_PARAMETER is not 'LATITUDE, LONGITUDE':
+    # find rows in combined_histories where the HISTORY_QC_CODE contains PER and HISTORY_PARAMETER is not 'LATITUDE LONGITUDE':
     if combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('PER') \
-                    & ~combined_histories['HISTORY_PARAMETER'].str.contains('LATITUDE, LONGITUDE')].shape[0] > 0:
+                    & ~combined_histories['HISTORY_PARAMETER'].str.contains('LATITUDE LONGITUDE')].shape[0] > 0:
         # in this case, the PER has to be changed to LAA if 'HISTORY_PARAMETER' is 'LATITUDE' and LOA if 'HISTORY_PARAMETER' is 'LONGITUDE'
         # find the rows where the HISTORY_QC_CODE contains PER and HISTORY_PARAMETER is 'LATITUDE'
         if combined_histories.loc[combined_histories['HISTORY_QC_CODE'].str.contains('PER') \
@@ -1427,7 +1444,7 @@ def combine_histories(profile_qc, profile_noqc):
         if dup_idx.any():
             # TODO: if DEPTH is duplicated, check the previous value is the same as the DEPTH_RAW value, will need indexing
             dup_idx = dup_idx.reindex(non_temp_codes.index, fill_value=False)
-            if vv not in ['LONGITUDE', 'TIME', 'LATITUDE']:
+            if vv not in ['LONGITUDE', 'TIME', 'LATITUDE', 'LATITUDE LONGITUDE']:
                 if vv in ['DEPTH']:
                     print('HISTORY: Duplicate %s flags found, need to troubleshoot. %s' % (vv, profile_qc.Input_filename))
                     exit(1)
@@ -2242,8 +2259,8 @@ if __name__ == '__main__':
                 dfhist['station_number'] = pd.Series(dtype='int64')
 
                 for f in stations:
-                    # if f != 632806:
-                        # continue
+                    if f != 1190395:
+                        continue
                     fpath = '/'.join(re.findall('..?', str(f))) + 'ed.nc'
                     fname = os.path.join(keysall.dbase_name, fpath)
                     # make input_filename here
