@@ -37,6 +37,9 @@ def create_filename_output(output_folder, prof, hist, imosformat=True, profile_r
         if os.path.exists(filename):
             count = 1
             while os.path.exists(filename):
+                # if there is already a '-RX' in the filename, remove it before adding the new '-RX'
+                if '-R' in filename:
+                    filename = filename[:filename.rfind('-R')] + '.nc'
                 filename = filename.replace('.nc', '-R%s.nc' % count)
                 count += 1
     else:
@@ -68,6 +71,9 @@ def create_filename_output(output_folder, prof, hist, imosformat=True, profile_r
         if os.path.exists(filename):
             count = 1
             while os.path.exists(filename):
+                # if there is already a '-RX' in the filename, remove it before adding the new '-RX'
+                if '-R' in filename:
+                    filename = filename[:filename.rfind('-R')] + '.nc'
                 filename = os.path.join(output_folder, f"{xbt_callsign}_{xbt_time}_{qc_flag}-R{count}.nc")
                 count += 1
 
