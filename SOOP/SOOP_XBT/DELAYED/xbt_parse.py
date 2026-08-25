@@ -1054,8 +1054,8 @@ def parse_histories_nc(profile):
     # change HISTORY_START_DEPTH and HISTORY_PREVIOUS_VALUE to float64
     df['HISTORY_START_DEPTH'] = df['HISTORY_START_DEPTH'].astype('float32')
     df['HISTORY_PREVIOUS_VALUE'] = df['HISTORY_PREVIOUS_VALUE'].astype('string')
-    # change HISTORY_QC_CODE_VALUE to int32
-    df['HISTORY_QC_CODE_VALUE'] = df['HISTORY_QC_CODE_VALUE'].astype('int8')
+    # change HISTORY_QC_CODE_VALUE to int32 if it is not nan, otherwise set it to 0. This is because some files have a HISTORY_QC_CODE_VALUE of NaN which is not valid.
+    df['HISTORY_QC_CODE_VALUE'] = df['HISTORY_QC_CODE_VALUE'].fillna(0).astype('int8')
 
     if nhist == 0:
         # no history records
