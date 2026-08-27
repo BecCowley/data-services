@@ -1,6 +1,6 @@
 ﻿Attribute Name,Attribute Value
 abstract,"The variables in this file are from XBT data which measure Temperature (TEMP). DEPTH is derived from a fall rate equation with coefficients as shown in the PROBE variable. Data in *RAW variables and attributes contains the original data and metadata from the XBT profile. The user should, in all cases, use the non-RAW variables (eg, TEMP and DEPTH) as these contain the BEST version of the data. For example, TEMP will potentially contain modified data, where spikes and noise have been interpolated. Another example is where DEPTH may be changed due to an incorrect probe type in the RAW data."
-acknowledgement,Any users of OceanTraX data are required to clearly acknowledge the source of the material in the format: Data was sourced from the OceanTraX Data Management Team. 
+acknowledgement,"Any users of OceanTraX data are required to clearly acknowledge the source of the material in the format: ""Data was sourced from the OceanTraX Data Management Team."" "
 author,"Rebecca Cowley, CSIRO Australia; Lisa Krummel, BOM Australia"
 author_email,rebecca.cowley@csiro.au; lisa.krummel@bom.gov.au
 cdm_data_type,profile
