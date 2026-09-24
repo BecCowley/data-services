@@ -73,8 +73,6 @@ def read_flag_quality_table(all=False):
     df = df.reset_index(drop=True)
     # remove the historic_extra_code column
     df = df.drop(columns=['historic_extra_code'])
-    # replace the NaN values with 0 in depth column
-    df['depth'] = df['depth'].fillna(1)
     # convert the depth and rule_direction columns to match categories in the xbt_config file
     df['depth'] = df['depth'].map({0: 'ACT_CODES_FULL_PROFILE', 1: 'ACT_CODES_TO_NEXT_FLAG', 3.6: 'ACT_CODES_SINGLE_POINT'})
     # drop the rows with NaN values in the XBT_accept_code column

@@ -258,7 +258,7 @@ def write_output_nc(output_folder, profile, history, globals_attrs=None, globals
         setattr(output_netcdf_obj.variables['QC_reject_code'], 'valid_max', int(dfr['QC_reject_code'].values.sum()))
         setattr(output_netcdf_obj.variables['QC_reject_code'], 'flag_masks', dfr['QC_reject_code'].values.astype(np.int32))
         setattr(output_netcdf_obj.variables['QC_reject_code'], 'flag_meanings', ' '.join(dfr['name'].values))
-        setattr(output_netcdf_obj.variables['QC_reject_code'], 'flag_codes', ' '.join(dfr['code'].values))
+        setattr(output_netcdf_obj.variables['QC_reject_code'], 'flag_codes', ' '.join(dfr['full_code'].values))
 
         # if SAMPLE_TIME is in the output_netcdf_obj, add the units based on the TIME variable
         if 'SAMPLE_TIME' in output_netcdf_obj.variables:
