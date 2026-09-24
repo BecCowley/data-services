@@ -16,8 +16,8 @@ TEMP,temperature,,var,,DEPTH,1,1,float32,999999,TIME LATITUDE LONGITUDE DEPTH,se
 TEMP_uncertainty,,,var,,DEPTH,1,1,float32,999999,,sea_water_temperature standard_error,sea_water_temperature uncertainty_estimate,,Celsius,,-2.5,40,,,,,,
 TEMP_RAW,temperature,,var,,DEPTH,1,1,float32,999999,TIME LATITUDE LONGITUDE DEPTH,sea_water_temperature,sea_water_temperature,,Celsius,,-2.5,40,,,,,,
 TEMP_quality_control,,,var,,DEPTH,1,1,int8,-9,,sea_water_temperature status_flag,sea_water_temperature quality_flag,,,,0,9,,,,IMOS standard flags,0 1 2 3 4 5 6 7 8 9,No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value
-QC_accept_code,,,var,,DEPTH,0,0,int64,0,,,accept_code,,,, ,        ,,,,,,
-QC_reject_code,,,var,,DEPTH,0,0,int64,0,,,reject_code,,,, ,        ,,,,,,
+QC_accept_code,,,var,,DEPTH,0,0,uint32,0,,status_flag,reason_for_accept_quality_flag,,,,0,67108863,,,,,,
+QC_reject_code,,,var,,DEPTH,0,0,uint32,0,,status_flag,reason_for_reject_quality_flag,,,,0,1048575,,,,,,
 PROBE,,,var,,,0,1,int8,0,,,probe_information,,,,,,WMO code table 1770,,,,,
 PROBE_TYPE,Code,PEQ$;PTYP;PRT$,att,PROBE,,0,1,str,          ,,,probe_type,, ,, ,        ,WMO code table 1770,,PROBE_TYPE_quality_control,,,
 PROBE_TYPE_name,,,att,PROBE,,0,1,str,          ,,,probe_type_name,,,, ,        ,WMO code table 1770,,,,,
